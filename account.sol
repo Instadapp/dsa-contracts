@@ -1,7 +1,7 @@
 pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
-interface RegistryInterface {
+interface IndexInterface {
     function connectors() external view returns (address);
     function check() external view returns (address);
 }
@@ -16,18 +16,18 @@ interface CheckInterface {
 
 
 /**
- * @title Address Registry Record
+ * @title address record
  */
-contract AddressRecord {
+contract Record {
 
     /**
-     * @dev address registry of system, logic and wallet addresses
+     * @dev addresses of index and auth
      */
-    address public constant registry = 0x0000000000000000000000000000000000000000; // Check9898 - Random address for now
+    address public constant index = 0x0000000000000000000000000000000000000000; // Check9898 - Random address for now
     mapping (address => bool) public auth;
 
     function setBasics(address _owner) external {
-        require(msg.sender == registry, "Not-registry");
+        require(msg.sender == index, "not-index");
         auth[_owner] = true;
     }
 
@@ -37,7 +37,7 @@ contract AddressRecord {
 /**
  * @dev logging the execute events
  */
-contract UserNote is AddressRecord {
+contract Note is Record { // TODO: you sure about the Note thing??
     event LogNote(
         bytes4 indexed sig,
         address indexed origin,
@@ -45,7 +45,6 @@ contract UserNote is AddressRecord {
         uint wad,
         bytes fax
     );
-
     modifier note(address origin) {
         emit LogNote(
             msg.sig,
@@ -59,9 +58,9 @@ contract UserNote is AddressRecord {
 }
 
 /**
- * @title User Owned Contract Wallet
+ * @title User Owned Smart Account
  */
-contract Module is UserNote {
+contract SmartAccount is Note {
 
     receive() external payable {}
 
@@ -79,40 +78,35 @@ contract Module is UserNote {
     note(_origin)
     returns (bytes[] memory responses)
     {
-        RegistryInterface registryContract = RegistryInterface(registry);
-        require(ConnectorsInterface(registryContract.connectors()).logic(_targets), "Not-connector");
-        require(auth[msg.sender] || msg.sender == registry, "permission-denied");
+        IndexInterface indexContract = IndexInterface(index);
+        require(ConnectorsInterface(indexContract.connectors()).logic(_targets), "not-connector");
+        require(auth[msg.sender] || msg.sender == index, "permission-denied");
 
         responses = new bytes[](_targets.length);
         for (uint i = 0; i < _targets.length; i++) {
             responses[i] = spell(_targets[i], _datas[i]);
         }
 
-        address _check = registryContract.check();
-        if (_check != address(0)) require(CheckInterface(_check).isOk(), "Check-not-ok");
+        address _check = indexContract.check();
+        if (_check != address(0)) require(CheckInterface(_check).isOk(), "not-ok");
     }
 
     /**
-     * @dev Execute authorised calls via delegate call
+     * @dev execute authorised calls via delegate call
      * @param _target logic proxy address
      * @param _data delegate call data
      */
     function spell(address _target, bytes memory _data) internal returns (bytes memory response) {
-
         require(_target != address(0), "target-invalid");
-
-        // call contract in current context
-        assembly {
-            // Check9898 - think on replacing 'sub(gas(), 5000)' with 'gas()'
+        assembly { // call contract in current context
+            // TODO: - think on replacing 'sub(gas(), 5000)' with 'gas()'
             let succeeded := delegatecall(sub(gas(), 5000), _target, add(_data, 0x20), mload(_data), 0, 32)
             response := mload(0)      // load delegatecall output
             switch iszero(succeeded)
             case 1 {
-                // throw if delegatecall failed
-                revert(0, 0)
+                revert(0, 0) // throw if delegatecall failed
             }
         }
-
     }
 
 }
