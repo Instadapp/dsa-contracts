@@ -23,7 +23,7 @@ contract Record {
     /**
      * @dev addresses of index and auth
      */
-    address public constant index = 0x0000000000000000000000000000000000000000; // Check9898 - Random address for now
+    address public constant index = 0x0000000000000000000000000000000000000000; // TODO: you know what to do here
     mapping (address => bool) public auth;
 
     function setBasics(address _owner) external {
@@ -37,7 +37,7 @@ contract Record {
 /**
  * @dev logging the execute events
  */
-contract Note is Record { // TODO: you sure about the Note thing??
+contract Note is Record { // TODO: let's remove the sig & data?? Change it to LogCast()
     event LogNote(
         bytes4 indexed sig,
         address indexed origin,
@@ -64,9 +64,9 @@ contract SmartAccount is Note {
 
     receive() external payable {}
 
-    mapping (uint => bytes32) internal memoryBytes; // Use it to store execute data and delete in the same transaction
-    mapping (uint => uint) internal memoryUint; // Use it to store execute data and delete in the same transaction
-    mapping (uint => address) internal memoryAddr; // Use it to store execute data and delete in the same transaction
+    mapping (uint => bytes32) internal mbytes; // Use it to store execute data and delete in the same transaction
+    mapping (uint => uint) internal muint; // Use it to store execute data and delete in the same transaction
+    mapping (uint => address) internal maddr; // Use it to store execute data and delete in the same transaction
 
     function cast(
         address[] calldata _targets,
@@ -99,9 +99,9 @@ contract SmartAccount is Note {
     function spell(address _target, bytes memory _data) internal returns (bytes memory response) {
         require(_target != address(0), "target-invalid");
         assembly { // call contract in current context
-            // TODO: - think on replacing 'sub(gas(), 5000)' with 'gas()'
+            // TODO: WTF?? - think on replacing 'sub(gas(), 5000)' with 'gas()'
             let succeeded := delegatecall(sub(gas(), 5000), _target, add(_data, 0x20), mload(_data), 0, 32)
-            response := mload(0)      // load delegatecall output
+            response := mload(0) // load delegatecall output
             switch iszero(succeeded)
             case 1 {
                 revert(0, 0) // throw if delegatecall failed
