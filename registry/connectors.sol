@@ -1,14 +1,11 @@
 pragma solidity ^0.6.0;
 
 
-interface RegistryInterface {
+interface IndexInterface {
     function master() external view returns (address);
 }
 
 
-/// @title LogicRegistry
-/// @notice
-/// @dev LogicRegistry
 contract Controllers {
 
     event LogAddController(address addr);
@@ -16,13 +13,13 @@ contract Controllers {
 
     /// @notice Map of logic proxy state
 
-    address private constant registry = 0xa7615CD307F323172331865181DC8b80a2834324; // Check9898 - Random address for now
+    address private constant index = 0xa7615CD307F323172331865181DC8b80a2834324; // Check9898 - Random address for now
 
     mapping(address => bool) public chief;
     mapping(address => bool) public connectors;
 
     modifier isChief {
-        require(chief[msg.sender] || msg.sender == RegistryInterface(registry).master(), "Not-an-admin");
+        require(chief[msg.sender] || msg.sender == IndexInterface(index).master(), "Not-an-admin");
         _;
     }
 

@@ -1,6 +1,6 @@
 pragma solidity ^0.6.0;
 
-interface RegistryInterface {
+interface IndexInterface {
     function SLAID(address _module) external view returns(uint id);
 }
 
@@ -20,7 +20,7 @@ contract DSMath {
 
 contract VarDef is DSMath {
 
-    address public constant registry = 0xa7615CD307F323172331865181DC8b80a2834324; // Check9898 - random address for now
+    address public constant index = 0xa7615CD307F323172331865181DC8b80a2834324; // Check9898 - random address for now
 
     // SLA Details
     /// @notice Address to UserWallet proxy map
@@ -130,7 +130,7 @@ contract ListUpdate is VarDef {
 contract List is ListUpdate {
 
     function addAuthModReg(address _owner, address _SLA) external {
-        require(msg.sender == registry, "Not-registry");
+        require(msg.sender == index, "Not-index");
         SLACount++;
         SLAID[_SLA] = SLACount;
         SLAModule[SLACount] = _SLA;

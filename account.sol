@@ -35,32 +35,11 @@ contract Record {
 
 
 /**
- * @dev logging the execute events
- */
-contract Note is Record { // TODO: let's remove the sig & data?? Change it to LogCast()
-    event LogNote(
-        bytes4 indexed sig,
-        address indexed origin,
-        address indexed guy,
-        uint wad,
-        bytes fax
-    );
-    modifier note(address origin) {
-        emit LogNote(
-            msg.sig,
-            origin,
-            msg.sender,
-            msg.value,
-            msg.data
-        );
-        _;
-    }
-}
-
-/**
  * @title User Owned Smart Account
  */
-contract SmartAccount is Note {
+contract SmartAccount is Record {
+
+    event LogCast(address indexed origin, address indexed guy, uint wad);
 
     receive() external payable {}
 
@@ -75,7 +54,6 @@ contract SmartAccount is Note {
     )
     external
     payable
-    note(_origin)
     returns (bytes[] memory responses)
     {
         IndexInterface indexContract = IndexInterface(index);
@@ -89,6 +67,8 @@ contract SmartAccount is Note {
 
         address _check = indexContract.check();
         if (_check != address(0)) require(CheckInterface(_check).isOk(), "not-ok");
+
+        emit LogCast(_origin, msg.sender, msg.value);
     }
 
     /**

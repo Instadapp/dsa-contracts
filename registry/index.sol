@@ -11,7 +11,7 @@ interface listInterface {
 }
 
 
-contract AddressRegistry {
+contract AddressIndex {
 
     event LogNewMaster(address newMaster);
     event LogNewCheck(address newMaster);
@@ -43,7 +43,7 @@ contract AddressRegistry {
 
 }
 
-contract CloneFactory is AddressRegistry {
+contract CloneFactory is AddressIndex {
 
     function createClone() internal returns (address result) {
         bytes20 targetBytes = bytes20(account); // Check9898 - keep address already in byte20
@@ -74,7 +74,7 @@ contract CloneFactory is AddressRegistry {
     }
 }
 
-contract WalletRegistry is CloneFactory {
+contract WalletIndex is CloneFactory {
 
     event SLACreated(address indexed sender, address indexed owner, address SLA, address _origin);
 
