@@ -23,7 +23,7 @@ contract AddressIndex {
     address public account;
 
     modifier isMaster() {
-        require(msg.sender == master, "Not-old-master");
+        require(msg.sender == master, "not-old-master");
         _;
     }
 
@@ -117,7 +117,7 @@ contract WalletIndex is CloneFactory {
             list == address(0) &&
             account == address(0) &&
             connectors == address(0),
-            "Already-defined"
+            "already-defined"
         );
         master = _master;
         list = _list;
