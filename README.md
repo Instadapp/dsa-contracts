@@ -1,1 +1,1 @@
-# Contracts for Smart Wallet Account
+# Smart Wallet Account

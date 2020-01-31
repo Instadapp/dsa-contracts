@@ -1,6 +1,10 @@
 pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
+interface RegistryInterface {
+    function connectors() external view returns (address);
+    function check() external view returns (address);
+}
 
 interface ConnectorsInterface {
     function logic(address[] calldata logicAddr) external view returns (bool);
@@ -8,11 +12,6 @@ interface ConnectorsInterface {
 
 interface CheckInterface {
     function isOk() external view returns (bool);
-}
-
-interface RegistryInterface {
-    function connectors() external view returns (address);
-    function check() external view returns (address);
 }
 
 
@@ -24,12 +23,12 @@ contract AddressRecord {
     /**
      * @dev address registry of system, logic and wallet addresses
      */
-    address public constant registry = 0xa7615CD307F323172331865181DC8b80a2834324; // Check9898 - Random address for now
-    mapping (address => bool) public authModules;
+    address public constant registry = 0x0000000000000000000000000000000000000000; // Check9898 - Random address for now
+    mapping (address => bool) public auth;
 
     function setBasics(address _owner) external {
         require(msg.sender == registry, "Not-registry");
-        authModules[_owner] = true;
+        auth[_owner] = true;
     }
 
 }
@@ -82,7 +81,7 @@ contract Module is UserNote {
     {
         RegistryInterface registryContract = RegistryInterface(registry);
         require(ConnectorsInterface(registryContract.connectors()).logic(_targets), "Not-connector");
-        require(authModules[msg.sender] || msg.sender == registry, "permission-denied");
+        require(auth[msg.sender] || msg.sender == registry, "permission-denied");
 
         responses = new bytes[](_targets.length);
         for (uint i = 0; i < _targets.length; i++) {
