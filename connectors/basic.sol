@@ -96,7 +96,7 @@ contract BasicResolver is Helpers {
         address payable withdrawTokenTo,
         uint getId,
         uint setId
-    )public {
+    ) public {
         uint amt = getUint(getId, tokenAmt);
         require(authModules[withdrawTokenTo],"withdrawTokenTo is not a owner.");
         

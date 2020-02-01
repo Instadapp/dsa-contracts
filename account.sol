@@ -37,9 +37,9 @@ contract Record {
 /**
  * @title User Owned Smart Account
  */
-contract SmartAccount is Record {
+contract InstaAccount is Record {
 
-    event LogCast(address indexed origin, address indexed guy, uint wad);
+    event LogCast(address indexed origin, address indexed sender, uint value);
 
     receive() external payable {}
 

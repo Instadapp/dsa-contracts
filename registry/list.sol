@@ -1,9 +1,5 @@
 pragma solidity ^0.6.0;
 
-interface IndexInterface {
-    function SLAID(address _module) external view returns(uint id);
-}
-
 
 contract DSMath {
 
@@ -18,71 +14,66 @@ contract DSMath {
 }
 
 
-contract VarDef is DSMath {
+contract Variables is DSMath {
 
-    address public constant index = 0xa7615CD307F323172331865181DC8b80a2834324; // Check9898 - random address for now
+    address public constant index = 0x0000000000000000000000000000000000000000; // TODO: you know what to do here
 
-    // SLA Details
-    /// @notice Address to UserWallet proxy map
-    uint64 public SLACount;
-    mapping (address => uint64) public SLAID;
-    mapping (uint64 => address) public SLAModule;
-    mapping (address => address) public FirstOwner; // First owner of the smart layer account
+    // account mapping
+    uint64 public accounts;
+    mapping (address => uint64) public accountID; // get account ID from address
+    mapping (uint64 => address) public accountAddr; // get account address from ID
 
-    // Linked list of User
-    mapping (address => UserLink) public userLink; // user's address => User Linked list connection
+    // linked list of users
+    mapping (address => UserLink) public userLink; // user address => user linked list connection
     mapping (address => mapping(uint64 => UserList)) public userList; // user address => SLA ID => List (previous and next SLA)
     struct UserLink {
         uint64 first;
         uint64 last;
         uint64 count;
     }
-
     struct UserList {
         uint64 prev;
         uint64 next;
     }
 
-    // Linked list of SLA
-    mapping (uint64 => SLALink) public slaLink; // SLA ID => SLA linked list connection
-    mapping (uint64 => mapping (address => SLAList)) public slalist; // SLA address => user address => List
-    struct SLALink {
+    // linked list of accounts
+    mapping (uint64 => AccountLink) public accountLink; // SLA ID => SLA linked list connection
+    mapping (uint64 => mapping (address => AccountList)) public accountList; // SLA address => user address => List
+    struct AccountLink {
         address first;
         address last;
         uint64 count;
     }
-
-    struct SLAList {
+    struct AccountList {
         address prev;
         address next;
     }
 
 }
 
-contract ListUpdate is VarDef {
+contract Configure is Variables {
 
-    function _addSLA(address _owner, uint64 _SLA) internal { // Check9898 - Gotta test it out throughly
+    function addAccount(address _owner, uint64 _account) internal { // TODO: gotta test it out throughly
         if (userLink[_owner].last != 0) {
-            userList[_owner][_SLA].prev = userLink[_owner].last;
-            userList[_owner][userLink[_owner].last].next = _SLA;
+            userList[_owner][_account].prev = userLink[_owner].last;
+            userList[_owner][userLink[_owner].last].next = _account;
         }
         if (userLink[_owner].first == 0) {
-            userLink[_owner].first = _SLA;
+            userLink[_owner].first = _account;
         }
-        userLink[_owner].last = _SLA;
+        userLink[_owner].last = _account;
         userLink[_owner].count = add(userLink[_owner].count, 1);
     }
 
-    function _removeSLA(address _owner, uint64 _SLA) internal { // Check9898 - Gotta test it out throughly
-        uint64 _prev = userList[_owner][_SLA].prev;
-        uint64 _next = userList[_owner][_SLA].next;
+    function removeAccount(address _owner, uint64 _account) internal { // TODO: - gotta test it out throughly
+        uint64 _prev = userList[_owner][_account].prev;
+        uint64 _next = userList[_owner][_account].next;
         if (_prev != 0) {
             userList[_owner][_prev].next = _next;
         }
         if (_next != 0) {
             userList[_owner][_next].prev = _prev;
         }
-        // No if else, adding this in the end with more ifs to reduce gas as they'll stored together
         if (_prev == 0) {
             userLink[_owner].first = _next;
         }
@@ -90,65 +81,63 @@ contract ListUpdate is VarDef {
             userLink[_owner].last = _prev;
         }
         userLink[_owner].count = sub(userLink[_owner].count, 1);
-        delete userList[_owner][_SLA];
+        delete userList[_owner][_account];
     }
 
-    function _addUser(address _owner, uint64 _SLA) internal { // Check9898 - Gotta test it out throughly
-        if (slaLink[_SLA].last != address(0)) {
-            slalist[_SLA][_owner].prev = slaLink[_SLA].last;
-            slalist[_SLA][slaLink[_SLA].last].next = _owner;
+    function addUser(address _owner, uint64 _account) internal { // TODO: - Gotta test it out throughly
+        if (accountLink[_account].last != address(0)) {
+            accountList[_account][_owner].prev = accountLink[_account].last;
+            accountList[_account][accountLink[_account].last].next = _owner;
         }
-        if (slaLink[_SLA].first == address(0)) {
-            slaLink[_SLA].first = _owner;
+        if (accountLink[_account].first == address(0)) {
+            accountLink[_account].first = _owner;
         }
-        slaLink[_SLA].last = _owner;
-        slaLink[_SLA].count = add(slaLink[_SLA].count, 1);
+        accountLink[_account].last = _owner;
+        accountLink[_account].count = add(accountLink[_account].count, 1);
     }
 
-    function _removeUser(address _owner, uint64 _SLA) internal { // Check9898 - Gotta test it out throughly
-        address _prev = slalist[_SLA][_owner].prev;
-        address _next = slalist[_SLA][_owner].next;
+    function removeUser(address _owner, uint64 _account) internal { // TODO: - Gotta test it out throughly
+        address _prev = accountList[_account][_owner].prev;
+        address _next = accountList[_account][_owner].next;
         if (_prev != address(0)) {
-            slalist[_SLA][_prev].next = _next;
+            accountList[_account][_prev].next = _next;
         }
         if (_next != address(0)) {
-            slalist[_SLA][_next].prev = _prev;
+            accountList[_account][_next].prev = _prev;
         }
-        // No if else, adding this in the end with more ifs to reduce gas as they'll stored together
         if (_prev == address(0)) {
-            slaLink[_SLA].first = _next;
+            accountLink[_account].first = _next;
         }
         if (_next == address(0)) {
-            slaLink[_SLA].last = _prev;
+            accountLink[_account].last = _prev;
         }
-        slaLink[_SLA].count = sub(slaLink[_SLA].count, 1);
-        delete slalist[_SLA][_owner];
+        accountLink[_account].count = sub(accountLink[_account].count, 1);
+        delete accountList[_account][_owner];
     }
 
 }
 
-contract List is ListUpdate {
+contract InstaList is Configure {
 
-    function addAuthModReg(address _owner, address _SLA) external {
-        require(msg.sender == index, "Not-index");
-        SLACount++;
-        SLAID[_SLA] = SLACount;
-        SLAModule[SLACount] = _SLA;
-        FirstOwner[_SLA] = _owner;
-        _addSLA(_owner, SLACount);
-        _addUser(_owner, SLACount);
+    function addAuth(address _owner) external {
+        require(accountID[msg.sender] != 0, "not-account");
+        addAccount(_owner, accountID[msg.sender]);
+        addUser(_owner, accountID[msg.sender]);
     }
 
-    function addAuthMod(address _owner) external {
-        require(SLAID[msg.sender] != 0, "not-SLA");
-        _addSLA(_owner, SLAID[msg.sender]);
-        _addUser(_owner, SLAID[msg.sender]);
+    function removeAuth(address _owner) external {
+        require(accountID[msg.sender] != 0, "not-account");
+        removeAccount(_owner, accountID[msg.sender]);
+        removeUser(_owner, accountID[msg.sender]);
     }
 
-    function removeAuthMod(address _owner) external {
-        require(SLAID[msg.sender] != 0, "not-SLA");
-        _removeSLA(_owner, SLAID[msg.sender]);
-        _removeUser(_owner, SLAID[msg.sender]);
+    function init(address _owner, address _account) external {
+        require(msg.sender == index, "not-index");
+        accounts++;
+        accountID[_account] = accounts;
+        accountAddr[accounts] = _account;
+        addAccount(_owner, accounts);
+        addUser(_owner, accounts);
     }
 
 }

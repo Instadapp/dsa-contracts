@@ -11,9 +11,7 @@ contract Controllers {
     event LogAddController(address addr);
     event LogRemoveController(address addr);
 
-    /// @notice Map of logic proxy state
-
-    address private constant index = 0xa7615CD307F323172331865181DC8b80a2834324; // Check9898 - Random address for now
+    address private constant index = 0x0000000000000000000000000000000000000000; // TODO: you know what to do here
 
     mapping(address => bool) public chief;
     mapping(address => bool) public connectors;
@@ -23,12 +21,12 @@ contract Controllers {
         _;
     }
 
-    function enableChief(address _userAddress) external isAdminMod {
+    function enableChief(address _userAddress) external isChief {
         chief[_userAddress] = true;
         emit LogAddController(_userAddress);
     }
 
-    function disableChief(address _userAddress) external isAdminMod {
+    function disableChief(address _userAddress) external isChief {
         chief[_userAddress] = false;
         emit LogRemoveController(_userAddress);
     }
@@ -36,10 +34,10 @@ contract Controllers {
 }
 
 
-contract ConnectorsList is Controllers {
+contract LinkedList is Controllers {
 
-    event LogEnableConnector(address indexed _connector);
-    event LogDisableConnector(address indexed _connector);
+    event LogEnable(address indexed connector);
+    event LogDisable(address indexed connector);
 
     uint public count;
     address public first;
@@ -52,7 +50,6 @@ contract ConnectorsList is Controllers {
     }
 
     function addToList(address _connector) internal {
-        connectors[_connector] = true;
         if (first == address(0)) {
             first = _connector;
         }
@@ -63,11 +60,10 @@ contract ConnectorsList is Controllers {
         last = _connector;
         count = count++;
 
-        emit LogEnableConnector(_connector);
+        emit LogEnable(_connector);
     }
 
     function removeFromList(address _connector) internal {
-        connectors[_connector] = false;
         if (list[_connector].prev != address(0)) {
             list[list[_connector].prev].next = list[_connector].next;
         } else {
@@ -78,27 +74,29 @@ contract ConnectorsList is Controllers {
         } else {
             first = list[_connector].prev;
         }
-        count = count--; // Check9898 - use sub()
+        count = count--; // TODO: - use sub()
 
-        emit LogDisableConnector(_connector);
+        emit LogDisable(_connector);
     }
 
 }
 
 
-contract Connectors is ConnectorsList {
+contract InstaConnectors is LinkedList {
 
     /// @dev Enable logic proxy address
     /// @param _logicAddress (address)
-    function enableConnector(address _connector, bool _reset) external isAdminMod {
-        require(!connectors[_connector], "Already-enabled");
+    function enable(address _connector, bool _reset) external isChief {
+        require(!connectors[_connector], "already-enabled");
+        connectors[_connector] = true;
         addToList(_connector);
     }
 
     /// @dev Disable logic proxy address
     /// @param _logicAddress (address)
-    function disableConnector(address _connector, bool _reset) external isAdminMod {
+    function disable(address _connector, bool _reset) external isChief {
         require(connectors[_connector], "not-a-connector");
+        connectors[_connector] = false;
         removeFromList(_connector);
     }
 
