@@ -85,7 +85,6 @@ contract LinkedList is Controllers {
 contract InstaConnectors is LinkedList {
 
     /// @dev Enable logic proxy address
-    /// @param _logicAddress (address)
     function enable(address _connector, bool _reset) external isChief {
         require(!connectors[_connector], "already-enabled");
         connectors[_connector] = true;
@@ -93,7 +92,6 @@ contract InstaConnectors is LinkedList {
     }
 
     /// @dev Disable logic proxy address
-    /// @param _logicAddress (address)
     function disable(address _connector, bool _reset) external isChief {
         require(connectors[_connector], "not-a-connector");
         connectors[_connector] = false;
