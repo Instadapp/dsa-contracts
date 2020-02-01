@@ -7,7 +7,7 @@ const fs = require('fs');
 
 module.exports = async function(deployer) {
     await deployer.deploy(indexContract);
-    var indexContract = await indexContract.deployed();
+    // var indexContract = await indexContract.deployed();
     console.log("Registry Address:", indexContract.address)
     var filePaths = ['account.sol', 'registry/list.sol', 'registry/Connectors.sol']
     

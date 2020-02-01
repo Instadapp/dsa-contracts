@@ -23,7 +23,7 @@ contract Record {
     /**
      * @dev addresses of index and auth
      */
-    address public constant index = 0x0000000000000000000000000000000000000000; // TODO: you know what to do here
+    address public constant index = 0xf584D73E82376f4CB849bC9517f90dfB6a8CdEDD; // TODO: you know what to do here
     mapping (address => bool) public auth;
 
     function setBasics(address _owner) external {

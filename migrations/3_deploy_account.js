@@ -1,6 +1,7 @@
 const connectorsContract = artifacts.require("InstaConnectors");
 const listContract = artifacts.require("InstaList");
 const indexContract = artifacts.require("InstaIndex");
+const accountContract = artifacts.require("InstaAccount")
 
 const path = require('path');
 const replace = require('replace-in-file');
@@ -39,17 +40,17 @@ async function deployOtherContracts(deployer) {
 
 
 async function setBasicRegistry(accounts) {
-    var registryInstance = await indexContract.deployed();
-    var SLAInstance = await artifacts.require("InstaAccount").deployed();
-    var ConnectorsInsance = await connectorsContract.deployed();
-    var listInsance = await listContract.deployed();
-    console.log("Index Address:", registryInstance.address)
-    console.log("Account's index variable Address:",await SLAInstance.registry())
-    return await registryInstance.setBasics(
+    // var registryInstance = await indexContract.deployed();
+    // var SLAInstance = await artifacts.require("InstaAccount").deployed();
+    // var ConnectorsInsance = await connectorsContract.deployed();
+    // var listInsance = await listContract.deployed();
+    console.log("Index Address:", indexContract.address)
+    console.log("Account's index variable Address:",await accountContract.registry())
+    return await indexContract.setBasics(
         accounts[0],
-        listInsance.address,
-        SLAInstance.address,
-        ConnectorsInsance.address
+        listContract.address,
+        accountContract.address,
+        connectorsContract.address
     );
 
 
