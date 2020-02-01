@@ -2,8 +2,8 @@ pragma solidity ^0.6.0;
 
 
 interface ListInterface {
-    function addAuth(address owner, address account) external;
-    function removeAuth(address owner, address account) external;
+    function addAuth(address owner) external;
+    function removeAuth(address owner) external;
 }
 
 
@@ -25,7 +25,7 @@ contract SmartAuth {
         require(_owner != address(0), " not-address");
         require(!auth[_owner], "already-added");
         auth[_owner] = true;
-        ListInterface(getListAddr()).addAuth(_owner, address(this));
+        ListInterface(getListAddr()).addAuth(_owner);
         emit LogAddAuth(_owner);
     }
 
@@ -36,7 +36,7 @@ contract SmartAuth {
         require(_owner != address(0), "not-address");
         require(auth[_owner], "not-module");
         delete auth[_owner];
-        ListInterface(getListAddr()).removeAuth(_owner, address(this));
+        ListInterface(getListAddr()).removeAuth(_owner);
         emit LogRemoveAuth(_owner);
     }
 
