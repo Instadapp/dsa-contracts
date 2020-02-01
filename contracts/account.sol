@@ -7,7 +7,7 @@ interface IndexInterface {
 }
 
 interface ConnectorsInterface {
-    function logic(address[] calldata logicAddr) external view returns (bool);
+    function isConnector(address[] calldata logicAddr) external view returns (bool);
 }
 
 interface CheckInterface {
@@ -23,7 +23,7 @@ contract Record {
     /**
      * @dev addresses of index and auth
      */
-    address public constant index = 0xf584D73E82376f4CB849bC9517f90dfB6a8CdEDD; // TODO: you know what to do here
+    address public constant index = 0x0000000000000000000000000000000000000000; // TODO: you know what to do here
     mapping (address => bool) public auth;
 
     function setBasics(address _owner) external {
@@ -57,7 +57,7 @@ contract InstaAccount is Record {
     returns (bytes[] memory responses)
     {
         IndexInterface indexContract = IndexInterface(index);
-        require(ConnectorsInterface(indexContract.connectors()).logic(_targets), "not-connector");
+        require(ConnectorsInterface(indexContract.connectors()).isConnector(_targets), "not-connector");
         require(auth[msg.sender] || msg.sender == index, "permission-denied");
 
         responses = new bytes[](_targets.length);
