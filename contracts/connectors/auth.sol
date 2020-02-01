@@ -10,7 +10,7 @@ interface ListInterface {
 contract SmartAuth {
 
     function getListAddr() internal pure returns(address) {
-        return 0x0000000000000000000000000000000000000000; // TODO: you know what to do here
+        return 0x0000000000000000000000000000000000000000;//InstaList Address // TODO: you know what to do here
     }
 
     event LogAddModule(address indexed authModule);
