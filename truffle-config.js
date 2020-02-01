@@ -24,7 +24,6 @@ dotenv.config();
 
 const infuraKey = process.env.infura_key;
 //
-const fs = require('fs');
 const mnemonic = process.env.mnemonic_key;
 module.exports = {
   /**
@@ -37,7 +36,8 @@ module.exports = {
    * $ truffle test --network <network-name>
    */
   plugins: [
-    'truffle-plugin-verify'
+    'truffle-plugin-verify',
+    // 'truffle-verify'
   ],
   api_keys: {
     etherscan: process.env.etherscan_key
@@ -93,7 +93,7 @@ module.exports = {
   // Configure your compilers
   compilers: {
     solc: {
-      version: "0.6.2",    // Fetch exact version from solc-bin (default: truffle's version)
+      version: "v0.6.0",    // Fetch exact version from solc-bin (default: truffle's version)
       // docker: true,        // Use "0.5.1" you've installed locally with docker (default: false)
       // settings: {          // See the solidity docs for advice about optimization and evmVersion
       //  optimizer: {

@@ -7,8 +7,8 @@ const fs = require('fs');
 
 module.exports = async function(deployer) {
     await deployer.deploy(indexContract);
-    // var indexContract = await indexContract.deployed();
-    console.log("Registry Address:", indexContract.address)
+    var indexInstance = await indexContract.deployed();
+    console.log("Registry Address:", indexInstance.address)
     var filePaths = ['account.sol', 'registry/list.sol', 'registry/Connectors.sol']
     
     for (let i = 0; i < 3; i++) {
@@ -19,7 +19,7 @@ module.exports = async function(deployer) {
             const options = {
                 files: [filePath],
                 from: /constant index = (.*);/,
-                to: `constant index = ${indexContract.address};`,
+                to: `constant index = ${indexInstance.address};`,
                 countMatches: true
               };
             

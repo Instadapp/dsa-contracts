@@ -8,17 +8,17 @@ const replace = require('replace-in-file');
 
 module.exports = async function(deployer, networks, accounts) {
     await deployOtherContracts(deployer);
-    await setBasicRegistry(accounts)
+    await setBasicIndex(accounts)
     await changeAuthConnectListAddr()
 };
 
 async function changeAuthConnectListAddr() {
     var listInstance = await listContract.deployed();
     console.log("List Address:", listInstance.address)
-    const filePath = path.resolve(__dirname, '../contracts', 'Connectors/Auth/Auth.sol');
+    const filePath = path.resolve(__dirname, '../contracts', 'Connectors/Auth.sol');
     const options = {
         files: filePath,
-        from: /return (.*)InstaList address/,
+        from: /return (.*);\/\/InstaList Address/,
         to: `return ${listInstance.address};//InstaList Address`,
         };
     
@@ -39,18 +39,18 @@ async function deployOtherContracts(deployer) {
 
 
 
-async function setBasicRegistry(accounts) {
-    // var registryInstance = await indexContract.deployed();
-    // var SLAInstance = await artifacts.require("InstaAccount").deployed();
-    // var ConnectorsInsance = await connectorsContract.deployed();
-    // var listInsance = await listContract.deployed();
-    console.log("Index Address:", indexContract.address)
-    console.log("Account's index variable Address:",await accountContract.registry())
-    return await indexContract.setBasics(
+async function setBasicIndex(accounts) {
+    var indexInstance = await indexContract.deployed();
+    var accountInstance = await artifacts.require("InstaAccount").deployed();
+    var ConnectorsInsance = await connectorsContract.deployed();
+    var listInsance = await listContract.deployed();
+    console.log("Index Address:", indexInstance.address)
+    console.log("Account's index variable Address:",await accountInstance.index())
+    return await indexInstance.setBasics(
         accounts[0],
-        listContract.address,
-        accountContract.address,
-        connectorsContract.address
+        listInsance.address,
+        accountInstance.address,
+        ConnectorsInsance.address
     );
 
 
