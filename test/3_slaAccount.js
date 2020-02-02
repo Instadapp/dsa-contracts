@@ -3,9 +3,8 @@ const connectorsContract = artifacts.require("InstaConnectors");
 const indexContract = artifacts.require("InstaIndex");
 const accountContract = artifacts.require("InstaAccount");
 const listContract = artifacts.require("InstaList");
-const authConnnector = artifacts.require("SmartAuth");
+const authConnnector = artifacts.require("ConnectAuth");
 
-var abi = require('ethereumjs-abi')
 const web3Helper = require('web3-abi-helper').Web3Helper;
 
 contract("InstaAccount", async (accounts) => {
@@ -260,9 +259,3 @@ async function getSlaAddress(owner) {
     var slaAddr = await listInstance.accountAddr(listUserLink.last); // Get SLA Account Address using `ID`
     return slaAddr;
 }
-
-  // var connectorInstance = await connectorsContract.deployed();
-    // var isEnabled = await connectorInstance.connectors(basicConnector.address)
-    // var isEnabled3 = await connectorInstance.isConnector([basicConnector.address])
-    // var isEnabled2 = await accountInstance.auth(owner)
-    // console.log(isEnabled, isEnabled2, isEnabled3)

@@ -1,6 +1,6 @@
 
 module.exports = async function(deployer) {
-    await deployer.deploy(artifacts.require("SmartAuth")); //deploy auth.sol connector contract
+    await deployer.deploy(artifacts.require("ConnectAuth")); //deploy auth.sol connector contract
     await pause(10)
 };
 
