@@ -7,7 +7,9 @@ interface ListInterface {
 }
 
 
-contract SmartAuth {
+contract ConnectAuth {
+
+    string public name = "Auth-V1";
 
     function getListAddr() internal pure returns(address) {
         return 0x0000000000000000000000000000000000000000;//InstaList Address
@@ -22,7 +24,7 @@ contract SmartAuth {
      * @dev add new owner
      */
     function addModule(address _owner) public {
-        require(_owner != address(0), " not-address");
+        require(_owner != address(0), "not-address");
         require(!auth[_owner], "already-added");
         auth[_owner] = true;
         ListInterface(getListAddr()).addAuth(_owner);
