@@ -50,12 +50,12 @@ contract LinkedList is Controllers {
     }
 
     function addToList(address _connector) internal {
-        if (first == address(0)) {
-            first = _connector;
-        }
         if (last != address(0)) {
             list[_connector].prev = last;
             list[last].next = _connector;
+        }
+        if (first == address(0)) {
+            first = _connector;
         }
         last = _connector;
         count = count++;
