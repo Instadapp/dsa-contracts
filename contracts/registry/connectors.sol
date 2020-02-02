@@ -72,7 +72,7 @@ contract LinkedList is Controllers {
         if (list[_connector].next != address(0)) {
             list[list[_connector].next].prev = list[_connector].prev;
         } else {
-            first = list[_connector].prev;
+            last = list[_connector].prev;
         }
         count = count--; // TODO: - use sub()
 
