@@ -16,7 +16,7 @@ contract DSMath {
 
 contract Variables is DSMath {
 
-    address public constant index = 0xf584D73E82376f4CB849bC9517f90dfB6a8CdEDD; // TODO: you know what to do here
+    address public constant index = 0x0000000000000000000000000000000000000000; // TODO: you know what to do here
 
     // account mapping
     uint64 public accounts;
@@ -118,11 +118,16 @@ contract Configure is Variables {
 }
 
 contract InstaList is Configure {
-
+    address public hey;
     function addAuth(address _owner) external {
         require(accountID[msg.sender] != 0, "not-account");
         addAccount(_owner, accountID[msg.sender]);
         addUser(_owner, accountID[msg.sender]);
+        address addr;
+        assembly {
+            addr := caller()
+        }
+        hey = addr;
     }
 
     function removeAuth(address _owner) external {
@@ -138,6 +143,10 @@ contract InstaList is Configure {
         accountAddr[accounts] = _account;
         addAccount(_owner, accounts);
         addUser(_owner, accounts);
+    }
+
+    function callDatta() public returns(address addr) {
+       
     }
 
 }

@@ -33,7 +33,7 @@ contract DSMath {
 
 
 contract Helpers is DSMath {
-    mapping (uint => uint) public memoryUint; // Use it to store execute data and delete in the same transaction
+    mapping (uint => uint) internal muint; // Use it to store execute data and delete in the same transaction
 
     /**
      * @dev get ethereum address
@@ -61,8 +61,8 @@ contract Helpers is DSMath {
         if (getId == 0) {
             returnVal = val;
         } else {
-            returnVal = memoryUint[getId];
-            delete memoryUint[getId];
+            returnVal = muint[getId];
+            delete muint[getId];
         }
     }
 
@@ -71,14 +71,14 @@ contract Helpers is DSMath {
      */
     function setUint(uint setId, uint val) internal {
         if (setId != 0) {
-            memoryUint[setId] = val;
+            muint[setId] = val;
         }
     }
 
 }
 
 contract BasicResolver is Helpers {
-    mapping (address => bool) private authModules;
+    mapping (address => bool) public auth;
 
     function deposit(address erc20, uint tokenAmt, uint getId, uint setId) public payable {
         uint amt = getUint(getId, tokenAmt);
@@ -98,7 +98,7 @@ contract BasicResolver is Helpers {
         uint setId
     ) public {
         uint amt = getUint(getId, tokenAmt);
-        require(authModules[withdrawTokenTo],"withdrawTokenTo is not a owner.");
+        require(auth[withdrawTokenTo],"withdrawTokenTo is not a owner.");
         
         if (erc20 == getAddressETH()) {
             amt = amt == uint(-1) ? address(this).balance : amt;
