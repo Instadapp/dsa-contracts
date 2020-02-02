@@ -7,7 +7,8 @@ const authConnnector = artifacts.require("SmartAuth");
 
 var abi = require('ethereumjs-abi')
 const web3Helper = require('web3-abi-helper').Web3Helper;
-contract("Connectors", async (accounts) => {
+
+contract("InstaAccount", async (accounts) => {
     const accountOne = accounts[2];
     const accountTwo = accounts[3];
     const origin = accounts[5]
@@ -61,27 +62,27 @@ contract("Connectors", async (accounts) => {
 
 
 async function buildSla(owner) {
-    var indexInstance = await indexContract.deployed();
-    await indexInstance.build(owner, owner, {from: owner});
-    var slaAddr = await getSlaAddress(owner)
-    var accountInstance = await accountContract.at(slaAddr);
-    var indexAddress = await accountInstance.index();
+    var indexInstance = await indexContract.deployed(); //InstaIndex instance
+    await indexInstance.build(owner, owner, {from: owner}); // Create a new SLA account for `owner` 
+    var slaAddr = await getSlaAddress(owner) //Get SLA Account address by owner.
+    var accountInstance = await accountContract.at(slaAddr); //InstaAccount(SLA account of owner) instance 
+    var indexAddress = await accountInstance.index(); // get index address variable from SLA account.
     assert.equal(indexAddress, indexInstance.address)
 }
 
 async function balanceOf(owner, amt) {
-    var slaAddr = await getSlaAddress(owner)
-    var accountInstance = await accountContract.at(slaAddr);
-    let balance = await web3.eth.getBalance(accountInstance.address);
-    var reqBal = amt*10**18
+    var slaAddr = await getSlaAddress(owner) //Get SLA Account address by owner.
+    var accountInstance = await accountContract.at(slaAddr); //InstaAccount(SLA account of owner) instance 
+    let balance = await web3.eth.getBalance(accountInstance.address); // Get eth bal of SLA Account.
+    var reqBal = amt*10**18 //Convert to 18 decimals
     reqBal = reqBal.toFixed(0)
     assert.equal(balance, reqBal)
 }
 
 
 async function depositETH(owner, amtInDec) {
-    var slaAddr = await getSlaAddress(owner)
-    var accountInstance = await accountContract.at(slaAddr);
+    var slaAddr = await getSlaAddress(owner) //Get SLA Account address by owner.
+    var accountInstance = await accountContract.at(slaAddr); //InstaAccount(SLA account of owner) instance 
     var ABI = {
         "inputs": [
           {
@@ -110,28 +111,28 @@ async function depositETH(owner, amtInDec) {
         "stateMutability": "payable",
         "type": "function"
       }
-    var amt = amtInDec*10**18;
-    amt = amt.toFixed(0)
-    var inputs = [
+    var amt = amtInDec*10**18; //Convert to 18 decimals
+    amt = amt.toFixed(0) //Remove if any decimals
+    var inputs = [ // Inputs for `deposit()` function of connector.
         "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
         amt,
         "0",
         "0"
     ]
-    let encoded = web3Helper.encodeMethod(ABI, inputs);
-    var castInputs = [
+    let encoded = web3Helper.encodeMethod(ABI, inputs); // get calldata for `deposit()` function.
+    var castInputs = [ //Inputs for `cast()` function of SLA Account.
         [basicConnector.address],
         [encoded],
         owner
     
     ]
     
-    await accountInstance.cast(...castInputs, {from: owner, value:amt})
+    await accountInstance.cast(...castInputs, {from: owner, value:amt}) // Execute `cast()` function
 }
 
 async function withdrawETH(owner, withdrawETHTo, amtInDec) {
-    var slaAddr = await getSlaAddress(owner)
-    var accountInstance = await accountContract.at(slaAddr);
+    var slaAddr = await getSlaAddress(owner) //Get SLA Account address by owner.
+    var accountInstance = await accountContract.at(slaAddr); //InstaAccount(SLA account of owner) instance 
     var ABI = {
 		"inputs": [
 			{
@@ -165,33 +166,31 @@ async function withdrawETH(owner, withdrawETHTo, amtInDec) {
 		"stateMutability": "nonpayable",
 		"type": "function"
 	}
-    var amt = amtInDec*10**18;
-    amt = amt.toFixed(0)
-    var inputs = [
+    var amt = amtInDec*10**18; //Convert to 18 decimals
+    amt = amt.toFixed(0) //Remove if any decimals
+    var inputs = [ // Inputs for `withdraw()` function of connectors.
         "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
         amt,
         withdrawETHTo,
         "0",
         "0"
     ]
-    let encoded = web3Helper.encodeMethod(ABI, inputs);
-    var castInputs = [
+    let encoded = web3Helper.encodeMethod(ABI, inputs); // get calldata for `withdraw()` function.
+    var castInputs = [ //Inputs for `cast()` function of SLA Account.
         [basicConnector.address],
         [encoded],
         owner
     
     ]
-    
-    await accountInstance.cast(...castInputs, {from: owner})
+    await accountInstance.cast(...castInputs, {from: owner}) // Execute `cast()` function
 }
 
 async function addOwner(owner, newOwner) {
-    var slaAddr = await getSlaAddress(owner)
-    var accountInstance = await accountContract.at(slaAddr);
-    var inputs = [
-        newOwner
-    ]
-    var ABI = [{
+    var slaAddr = await getSlaAddress(owner) //Get SLA Account address by owner.
+    var accountInstance = await accountContract.at(slaAddr); //InstaAccount(SLA account of owner) instance 
+    var auth = await authConnnector.deployed(); //InstaAccount(SLA account of owner) instance 
+    console.log(await auth.name())
+    var addOwnerABI = {
         "inputs": [
           {
             "internalType": "address",
@@ -203,53 +202,28 @@ async function addOwner(owner, newOwner) {
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "address",
-            "name": "_owner",
-            "type": "address"
-          }
-        ],
-        "name": "removeModule",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      }]
-    var inputs = [
-        newOwner
-    ]
-    let encoded = web3Helper.encodeMethod(ABI[0], inputs);
-    var castInputs = [
+      }
+
+    var inputs = [ // Inputs for `addModule()` function of connectors.
+      newOwner
+  ]
+    let encoded = web3Helper.encodeMethod(addOwnerABI, inputs); // get calldata for `addModule()` function.
+    var castInputs = [ //Inputs for `cast()` function of SLA Account.
         [authConnnector.address],
         [encoded],
         owner
     ]
-    var isEnabled = await accountInstance.auth(newOwner)
+    var isEnabled = await accountInstance.auth(newOwner) // Check if the given address is enabled in auth
     assert.ok(!isEnabled, "connector already enabled")
-    await accountInstance.cast(...castInputs, {from: owner})
-    var isEnabled = await accountInstance.auth(newOwner)
+    await accountInstance.cast(...castInputs, {from: owner}) // Execute `cast()` function
+    var isEnabled = await accountInstance.auth(newOwner)  // Check if the given address is enabled in auth
     assert.ok(isEnabled, "not able enable")
 }
 
 async function removeOwner(owner, removeOwner) {
-    var slaAddr = await getSlaAddress(owner)
-    var accountInstance = await accountContract.at(slaAddr);
-    var ABI = [{
-        "inputs": [
-          {
-            "internalType": "address",
-            "name": "_owner",
-            "type": "address"
-          }
-        ],
-        "name": "addModule",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
+    var slaAddr = await getSlaAddress(owner) //Get SLA Account address by owner.
+    var accountInstance = await accountContract.at(slaAddr); //InstaAccount(SLA account of owner) instance 
+    var ABI = { 
         "inputs": [
           {
             "internalType": "address",
@@ -261,28 +235,29 @@ async function removeOwner(owner, removeOwner) {
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
-      }]
-    var inputs = [
+      }
+
+    var inputs = [ // Inputs for `removeModule()` function of connectors.
         removeOwner,
     ]
-    let encoded = web3Helper.encodeMethod(ABI[1], inputs);
-    var castInputs = [
+    let encoded = web3Helper.encodeMethod(ABI, inputs); // get calldata for `removeModule()` function.
+    var castInputs = [ //Inputs for `cast()` function of SLA Account.
         [authConnnector.address],
         [encoded],
         owner
     
     ]
-    var isEnabled = await accountInstance.auth(removeOwner)
+    var isEnabled = await accountInstance.auth(removeOwner)  // Check if the given address is enabled in auth
     assert.ok(isEnabled, "connector was not enabled before")
-    await accountInstance.cast(...castInputs, {from: owner})
-    var isEnabled = await accountInstance.auth(removeOwner)
-    assert.ok(!isEnabled, "not able disable")
+    await accountInstance.cast(...castInputs, {from: owner}) // Execute `cast()` function
+    var isEnabled = await accountInstance.auth(removeOwner)  // Check if the given address is enabled in auth
+    assert.ok(!isEnabled, "Not able disable")
 }
 
 async function getSlaAddress(owner) {
-    var listInstance = await listContract.deployed();
-    var listUserLink = await listInstance.userLink(owner);
-    var slaAddr = await listInstance.accountAddr(listUserLink.last);
+    var listInstance = await listContract.deployed(); //InstaIndex instance
+    var listUserLink = await listInstance.userLink(owner); // Get SLA account(IDs) using `owner`
+    var slaAddr = await listInstance.accountAddr(listUserLink.last); // Get SLA Account Address using `ID`
     return slaAddr;
 }
 
