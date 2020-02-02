@@ -285,3 +285,9 @@ async function getSlaAddress(owner) {
     var slaAddr = await listInstance.accountAddr(listUserLink.last);
     return slaAddr;
 }
+
+  // var connectorInstance = await connectorsContract.deployed();
+    // var isEnabled = await connectorInstance.connectors(basicConnector.address)
+    // var isEnabled3 = await connectorInstance.isConnector([basicConnector.address])
+    // var isEnabled2 = await accountInstance.auth(owner)
+    // console.log(isEnabled, isEnabled2, isEnabled3)
