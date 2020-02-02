@@ -187,8 +187,6 @@ async function withdrawETH(owner, withdrawETHTo, amtInDec) {
 async function addOwner(owner, newOwner) {
     var slaAddr = await getSlaAddress(owner) //Get SLA Account address by owner.
     var accountInstance = await accountContract.at(slaAddr); //InstaAccount(SLA account of owner) instance 
-    var auth = await authConnnector.deployed(); //InstaAccount(SLA account of owner) instance 
-    console.log(await auth.name())
     var addOwnerABI = {
         "inputs": [
           {
@@ -259,3 +257,4 @@ async function getSlaAddress(owner) {
     var slaAddr = await listInstance.accountAddr(listUserLink.last); // Get SLA Account Address using `ID`
     return slaAddr;
 }
+
