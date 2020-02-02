@@ -11,7 +11,7 @@ contract Controllers {
     event LogAddController(address addr);
     event LogRemoveController(address addr);
 
-    address private constant index = 0x0000000000000000000000000000000000000000; // TODO: you know what to do here
+    address public constant index = 0x0000000000000000000000000000000000000000; // TODO: you know what to do here
 
     mapping(address => bool) public chief;
     mapping(address => bool) public connectors;
