@@ -54,7 +54,7 @@ contract InstaAccount is Record {
     )
     external
     payable
-    returns (bytes32[] memory responses)
+    returns (bytes32[] memory responses) // TODO: Does return has any use case
     {
         IndexInterface indexContract = IndexInterface(index);
         require(ConnectorsInterface(indexContract.connectors()).isConnector(_targets), "not-connector");
