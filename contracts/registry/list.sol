@@ -118,16 +118,11 @@ contract Configure is Variables {
 }
 
 contract InstaList is Configure {
-    address public hey;
+
     function addAuth(address _owner) external {
         require(accountID[msg.sender] != 0, "not-account");
         addAccount(_owner, accountID[msg.sender]);
         addUser(_owner, accountID[msg.sender]);
-        address addr;
-        assembly {
-            addr := caller()
-        }
-        hey = addr;
     }
 
     function removeAuth(address _owner) external {
@@ -143,10 +138,6 @@ contract InstaList is Configure {
         accountAddr[accounts] = _account;
         addAccount(_owner, accounts);
         addUser(_owner, accounts);
-    }
-
-    function callDatta() public returns(address addr) {
-       
     }
 
 }
