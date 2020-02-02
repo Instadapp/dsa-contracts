@@ -14,7 +14,7 @@ module.exports = async function(deployer, networks, accounts) {
 
 async function changeAuthConnectListAddr() {
     var listInstance = await listContract.deployed();
-    console.log("List Address:", listInstance.address)
+    console.log("\nList Address:", listInstance.address)
     const filePath = path.resolve(__dirname, '../contracts', 'Connectors/Auth.sol');
     const options = {
         files: filePath,
