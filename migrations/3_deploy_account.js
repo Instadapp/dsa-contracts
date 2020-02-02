@@ -23,11 +23,12 @@ async function changeAuthConnectListAddr() {
         };
     
     replace(options).then(results => {
-        console.log(`Connectors/Auth/Auth.sol has changed`, results[0].hasChanged);
+        console.log(`Connectors/Auth.sol has changed`, results[0].hasChanged);
     }).catch(error => {
-        console.error(`Connectors/Auth/Auth.sol`, error);
+        console.error(`Connectors/Auth.sol`, error);
     });
-    await pause(10)
+    await pause(10);
+    return;
 }
 
 async function deployOtherContracts(deployer) {
@@ -42,21 +43,23 @@ async function deployOtherContracts(deployer) {
 async function setBasicIndex(accounts) {
     var indexInstance = await indexContract.deployed();
     var accountInstance = await artifacts.require("InstaAccount").deployed();
-    var ConnectorsInsance = await connectorsContract.deployed();
+    var connectorsInsance = await connectorsContract.deployed();
     var listInsance = await listContract.deployed();
+    console.log("account.sol Address:", accountInstance.address)
+    console.log("list.sol Address:", listInsance.address)
+    console.log("connectors.sol Address:", connectorsInsance.address)
     console.log("Index Address:", indexInstance.address)
-    console.log("Account's index variable Address:",await accountInstance.index())
+    console.log("account.sol contract index variable Address:",await accountInstance.index())
+    console.log("list.sol contract index variable Address:",await listInsance.index())
+    console.log("connectors.sol contract index variable Address:",await connectorsInsance.index())
+
     return await indexInstance.setBasics(
         accounts[0],
         listInsance.address,
         accountInstance.address,
-        ConnectorsInsance.address
+        connectorsInsance.address
     );
-
-
 }
-
-
 
 function pause(ms) {
     return new Promise((resolve) => {
