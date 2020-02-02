@@ -58,9 +58,7 @@ contract Configure is Variables {
             userList[_owner][_account].prev = userLink[_owner].last;
             userList[_owner][userLink[_owner].last].next = _account;
         }
-        if (userLink[_owner].first == 0) {
-            userLink[_owner].first = _account;
-        }
+        if (userLink[_owner].first == 0) userLink[_owner].first = _account;
         userLink[_owner].last = _account;
         userLink[_owner].count = add(userLink[_owner].count, 1);
     }
@@ -68,18 +66,10 @@ contract Configure is Variables {
     function removeAccount(address _owner, uint64 _account) internal { // TODO: - gotta test it out throughly
         uint64 _prev = userList[_owner][_account].prev;
         uint64 _next = userList[_owner][_account].next;
-        if (_prev != 0) {
-            userList[_owner][_prev].next = _next;
-        }
-        if (_next != 0) {
-            userList[_owner][_next].prev = _prev;
-        }
-        if (_prev == 0) {
-            userLink[_owner].first = _next;
-        }
-        if (_next == 0) {
-            userLink[_owner].last = _prev;
-        }
+        if (_prev != 0) userList[_owner][_prev].next = _next;
+        if (_next != 0) userList[_owner][_next].prev = _prev;
+        if (_prev == 0) userLink[_owner].first = _next;
+        if (_next == 0) userLink[_owner].last = _prev;
         userLink[_owner].count = sub(userLink[_owner].count, 1);
         delete userList[_owner][_account];
     }
@@ -89,9 +79,7 @@ contract Configure is Variables {
             accountList[_account][_owner].prev = accountLink[_account].last;
             accountList[_account][accountLink[_account].last].next = _owner;
         }
-        if (accountLink[_account].first == address(0)) {
-            accountLink[_account].first = _owner;
-        }
+        if (accountLink[_account].first == address(0)) accountLink[_account].first = _owner;
         accountLink[_account].last = _owner;
         accountLink[_account].count = add(accountLink[_account].count, 1);
     }
@@ -99,18 +87,10 @@ contract Configure is Variables {
     function removeUser(address _owner, uint64 _account) internal { // TODO: - Gotta test it out throughly
         address _prev = accountList[_account][_owner].prev;
         address _next = accountList[_account][_owner].next;
-        if (_prev != address(0)) {
-            accountList[_account][_prev].next = _next;
-        }
-        if (_next != address(0)) {
-            accountList[_account][_next].prev = _prev;
-        }
-        if (_prev == address(0)) {
-            accountLink[_account].first = _next;
-        }
-        if (_next == address(0)) {
-            accountLink[_account].last = _prev;
-        }
+        if (_prev != address(0)) accountList[_account][_prev].next = _next;
+        if (_next != address(0)) accountList[_account][_next].prev = _prev;
+        if (_prev == address(0)) accountLink[_account].first = _next;
+        if (_next == address(0)) accountLink[_account].last = _prev;
         accountLink[_account].count = sub(accountLink[_account].count, 1);
         delete accountList[_account][_owner];
     }
