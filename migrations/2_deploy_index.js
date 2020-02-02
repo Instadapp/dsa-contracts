@@ -6,33 +6,33 @@ const fs = require('fs');
 
 
 module.exports = async function(deployer) {
-    await deployer.deploy(indexContract);
+    await deployer.deploy(indexContract); // InstaIndex contract(index.sol) will be deployed.
     var indexInstance = await indexContract.deployed();
     console.log("Registry Address:", indexInstance.address)
+    //Use to change index address const variable in 'account.sol', 'registry/list.sol', 'registry/Connectors.sol'
     var filePaths = ['account.sol', 'registry/list.sol', 'registry/Connectors.sol']
-    
     for (let i = 0; i < 3; i++) {
-        const element = filePaths[i];
-        const filePath = path.resolve(__dirname, '../contracts', element);
+        const file = filePaths[i];
+        const filePath = path.resolve(__dirname, '../contracts', file);
         
-        fs.readFile(filePath, "utf8", async  (err, data) => {
-            const options = {
-                files: [filePath],
-                from: /constant index = (.*);/,
-                to: `constant index = ${indexInstance.address};`,
-                countMatches: true
-              };
-            
-            await replace(options).then(results => {
-                console.log(`\n${element} has changed`, results[0].hasChanged);
-            }).catch(error => {
-                console.error(`${element}`, error);
-            });
-
+        // fs.readFile(filePath, "utf8", async  (err, data) => {
+        const options = {
+            files: [filePath],
+            from: /constant index = (.*);/,
+            to: `constant index = ${indexInstance.address};`,
+            countMatches: true
+            };
+        //replace the index address variable in the contract.
+        await replace(options).then(results => {
+            console.log(`\n${file} has changed`, results[0].hasChanged);
+        }).catch(error => {
+            console.error(`${file}`, error);
         });
 
+        // });
+
     }
-    
+    // wait untill `truffle watch` compile the contracts again.
     await pause(10)
     return;
 };
