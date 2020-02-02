@@ -54,13 +54,13 @@ contract InstaAccount is Record {
     )
     external
     payable
-    returns (bytes[] memory responses)
+    returns (bytes32[] memory responses)
     {
         IndexInterface indexContract = IndexInterface(index);
         require(ConnectorsInterface(indexContract.connectors()).isConnector(_targets), "not-connector");
         require(auth[msg.sender] || msg.sender == index, "permission-denied");
 
-        responses = new bytes[](_targets.length);
+        responses = new bytes32[](_targets.length);
         for (uint i = 0; i < _targets.length; i++) {
             responses[i] = spell(_targets[i], _datas[i]);
         }
@@ -76,7 +76,7 @@ contract InstaAccount is Record {
      * @param _target logic proxy address
      * @param _data delegate call data
      */
-    function spell(address _target, bytes memory _data) internal returns (bytes memory response) {
+    function spell(address _target, bytes memory _data) internal returns (bytes32 memory response) {
         require(_target != address(0), "target-invalid");
         assembly { // call contract in current context
             // TODO: WTF?? - think on replacing 'sub(gas(), 5000)' with 'gas()'
