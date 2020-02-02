@@ -76,7 +76,7 @@ contract InstaAccount is Record {
      * @param _target logic proxy address
      * @param _data delegate call data
      */
-    function spell(address _target, bytes memory _data) internal returns (bytes32 memory response) {
+    function spell(address _target, bytes memory _data) internal returns (bytes32 response) {
         require(_target != address(0), "target-invalid");
         assembly { // call contract in current context
             // TODO: WTF?? - think on replacing 'sub(gas(), 5000)' with 'gas()'
