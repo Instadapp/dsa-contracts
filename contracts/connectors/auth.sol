@@ -7,9 +7,7 @@ interface ListInterface {
 }
 
 
-contract ConnectAuth {
-
-    string public name = "Auth-V1";
+contract Auth {
 
     function getListAddr() internal pure returns(address) {
         return 0x0000000000000000000000000000000000000000;//InstaList Address
@@ -41,5 +39,12 @@ contract ConnectAuth {
         ListInterface(getListAddr()).removeAuth(_owner);
         emit LogRemoveAuth(_owner);
     }
+
+}
+
+
+contract ConnectAuth is Auth {
+
+    string public name = "Auth-V1";
 
 }
