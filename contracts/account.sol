@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 interface IndexInterface {
     function connectors() external view returns (address);
     function check() external view returns (address);
+    function list() external view returns (address);
 }
 
 interface ConnectorsInterface {
@@ -32,7 +33,6 @@ contract Record {
      * @dev addresses of index and auth
      */
     address public constant index = 0x0000000000000000000000000000000000000000; // TODO: you know what to do here
-    address public constant list = 0x0000000000000000000000000000000000000000; // TODO: you know what to do here
     mapping (address => bool) private auth;
 
     function isAuth(address _user) public view returns (bool) {
@@ -49,7 +49,7 @@ contract Record {
         require(_newAuth == address(0), "Not-valid");
         require(!auth[_newAuth], "Already-authenticated");
         auth[_newAuth] = true;
-        ListInterface(list).addAuth(_newAuth);
+        ListInterface(IndexInterface(index).list()).addAuth(_newAuth);
         emit LogEnable(_newAuth);
     }
 
@@ -58,7 +58,7 @@ contract Record {
         require(_auth == address(0), "Not-valid");
         require(auth[_auth], "not-authenticated");
         auth[_auth] = false;
-        ListInterface(list).removeAuth(_auth);
+        ListInterface(IndexInterface(index).list()).removeAuth(_auth);
         emit LogDisable(_auth);
     }
 
