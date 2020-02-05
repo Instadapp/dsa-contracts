@@ -14,21 +14,52 @@ interface CheckInterface {
     function isOk() external view returns (bool);
 }
 
+interface ListInterface {
+    function addAuth(address _owner) external;
+    function removeAuth(address _owner) external;
+}
+
 
 /**
  * @title address record
  */
 contract Record {
 
+    event LogEnable(address indexed auth);
+    event LogDisable(address indexed auth);
+
     /**
      * @dev addresses of index and auth
      */
     address public constant index = 0x0000000000000000000000000000000000000000; // TODO: you know what to do here
-    mapping (address => bool) public auth;
+    address public constant list = 0x0000000000000000000000000000000000000000; // TODO: you know what to do here
+    mapping (address => bool) private auth;
+
+    function isAuth(address _user) public view returns (bool) {
+        return auth[_user];
+    }
 
     function setBasics(address _owner) external {
         require(msg.sender == index, "not-index");
         auth[_owner] = true;
+    }
+
+    function enable(address _newAuth) public {
+        require(msg.sender == address(this), "Not-valid");
+        require(_newAuth == address(0), "Not-valid");
+        require(!auth[_newAuth], "Already-authenticated");
+        auth[_newAuth] = true;
+        ListInterface(list).addAuth(_newAuth);
+        emit LogEnable(_newAuth);
+    }
+
+    function disable(address _auth) public {
+        require(msg.sender == address(this), "Not-valid");
+        require(_auth == address(0), "Not-valid");
+        require(auth[_auth], "not-authenticated");
+        auth[_auth] = false;
+        ListInterface(list).removeAuth(_auth);
+        emit LogDisable(_auth);
     }
 
 }
@@ -58,7 +89,7 @@ contract InstaAccount is Record {
     {
         IndexInterface indexContract = IndexInterface(index);
         require(ConnectorsInterface(indexContract.connectors()).isConnector(_targets), "not-connector");
-        require(auth[msg.sender] || msg.sender == index, "permission-denied");
+        require(isAuth(msg.sender) || msg.sender == index, "permission-denied");
 
         responses = new bytes32[](_targets.length);
         for (uint i = 0; i < _targets.length; i++) {

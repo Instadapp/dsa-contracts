@@ -8,6 +8,10 @@ interface ERC20Interface {
     function transferFrom(address, address, uint) external returns (bool);
 }
 
+interface AccountInterface {
+    function isAuth(address _user) external view returns (bool);
+}
+
 
 contract DSMath {
 
@@ -98,7 +102,7 @@ contract BasicResolver is Helpers {
         uint setId
     ) public {
         uint amt = getUint(getId, tokenAmt);
-        require(auth[withdrawTokenTo],"withdrawTokenTo is not a owner.");
+        require(AccountInterface(address(this)).isAuth(withdrawTokenTo), "withdrawTokenTo is not a owner.");
         
         if (erc20 == getAddressETH()) {
             amt = amt == uint(-1) ? address(this).balance : amt;
