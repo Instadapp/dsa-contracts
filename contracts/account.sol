@@ -46,7 +46,7 @@ contract Record {
 
     function enable(address _newAuth) public {
         require(msg.sender == address(this), "Not-valid");
-        require(_newAuth == address(0), "Not-valid");
+        require(_newAuth != address(0), "Not-valid");
         require(!auth[_newAuth], "Already-authenticated");
         auth[_newAuth] = true;
         ListInterface(IndexInterface(index).list()).addAuth(_newAuth);
@@ -55,7 +55,7 @@ contract Record {
 
     function disable(address _auth) public {
         require(msg.sender == address(this), "Not-valid");
-        require(_auth == address(0), "Not-valid");
+        require(_auth != address(0), "Not-valid");
         require(auth[_auth], "not-authenticated");
         auth[_auth] = false;
         ListInterface(IndexInterface(index).list()).removeAuth(_auth);
