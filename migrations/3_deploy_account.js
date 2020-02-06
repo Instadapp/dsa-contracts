@@ -3,38 +3,10 @@ const listContract = artifacts.require("InstaList");
 const indexContract = artifacts.require("InstaIndex");
 const accountContract = artifacts.require("InstaAccount")
 
-const path = require('path');
-const replace = require('replace-in-file');
-
 module.exports = async function(deployer, networks, accounts) {
     await deployOtherContracts(deployer); // deploy other 3 contracts => account.sol, connectors.sol, list.sol
     await setBasicIndex(accounts) // update the (account.sol, connectors.sol, list.sol) contracts address in InstaIndex contract
-    await changeAuthConnectListAddr() // change listAddr variable in auth.sol connector.
 };
-
-// change listAddr variable in auth.sol connector.
-async function changeAuthConnectListAddr() { 
-    var listInstance = await listContract.deployed(); //list.sol contract instance
-    console.log("\nList Address:", listInstance.address)
-
-    const filePath = path.resolve(__dirname, '../contracts', 'Connectors/Auth.sol');
-    const options = {
-        files: filePath,
-        from: /return (.*);\/\/InstaList Address/,
-        to: `return ${listInstance.address};//InstaList Address`,
-        };
-    
-    //replace the list address in the auth connector contract.
-    replace(options).then(results => {
-        console.log(`Connectors/Auth.sol has changed`, results[0].hasChanged);
-    }).catch(error => {
-        console.error(`Connectors/Auth.sol`, error);
-    });
-
-    // wait untill `truffle watch` compile the contracts again.
-    await pause(10);
-    return;
-}
 
 // deploy 3 other contracts
 async function deployOtherContracts(deployer) {

@@ -8,9 +8,9 @@ const authConnnector = artifacts.require("ConnectAuth");
 const web3Helper = require('web3-abi-helper').Web3Helper;
 
 contract("InstaAccount", async (accounts) => {
-    const accountOne = accounts[2];
-    const accountTwo = accounts[3];
-    const origin = accounts[5]
+    const accountOne = accounts[3];
+    const accountTwo = accounts[2];
+    const origin = accounts[6]
     const amtToTransfer =  0.01;
 
     it("Deployed new SLA.(From: accountOne).", async () =>
@@ -20,7 +20,7 @@ contract("InstaAccount", async (accounts) => {
 
     it("Deposited ETH to SLA Account using Basic connector.(From: accountOne).", async () =>
     {
-        await depositETH(accountOne, amtToTransfer)
+        await depositETH(accountOne, amtToTransfer, 0, 0)
     })
 
     it("Balance of SLA.", async () =>
@@ -30,7 +30,7 @@ contract("InstaAccount", async (accounts) => {
 
     it("Withdrawn ETH from SLA Account to accountOne.(From: accountOne).", async () =>
     {
-        await withdrawETH(accountOne, accountOne, amtToTransfer)
+        await withdrawETH(accountOne, accountOne, amtToTransfer, 0, 0)
     })
 
     it("Added new owner(accountTwo).(From: accountOne).", async () =>
@@ -40,7 +40,7 @@ contract("InstaAccount", async (accounts) => {
 
     it("Deposited ETH to SLA using Basic connector.(From: accountTwo).", async () =>
     {
-        await depositETH(accountTwo, amtToTransfer)
+        await depositETH(accountTwo, amtToTransfer, 0, 0)
     })
 
     it("Balance of SLA.", async () =>
@@ -50,7 +50,27 @@ contract("InstaAccount", async (accounts) => {
 
     it("Withdrawn ETH from SLA using Basic connector.(From: accountTwo).", async () =>
     {
-        await withdrawETH(accountTwo, accountOne, amtToTransfer)
+        await withdrawETH(accountTwo, accountOne, amtToTransfer, 0, 0)
+    })
+
+    it("Deposit and Withdraw ETH from SLA using Basic connector mVar.(From: accountOne).", async () =>
+    {
+        await depositAndWithdrawETH(accountOne, accountOne, amtToTransfer)
+    })
+
+    it("Balance of SLA(0ETH).", async () =>
+    {
+        await balanceOf(accountOne, amtToTransfer)
+    })
+
+    it("Deposit and Withdraw ETH in single tx in SLA using Basic connector mVar.(From: accountTwo).", async () =>
+    {
+        await depositAndWithdrawETH(accountTwo, accountOne, amtToTransfer)
+    })
+
+    it("Balance of SLA(0ETH).", async () =>
+    {
+        await balanceOf(accountTwo, amtToTransfer)
     })
 
     it("Removed owner(accountTwo).(From: accountOne).", async () =>
@@ -79,7 +99,7 @@ async function balanceOf(owner, amt) {
 }
 
 
-async function depositETH(owner, amtInDec) {
+async function depositETH(owner, amtInDec, getId, setId) {
     var slaAddr = await getSlaAddress(owner) //Get SLA Account address by owner.
     var accountInstance = await accountContract.at(slaAddr); //InstaAccount(SLA account of owner) instance 
     var ABI = {
@@ -115,8 +135,8 @@ async function depositETH(owner, amtInDec) {
     var inputs = [ // Inputs for `deposit()` function of connector.
         "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
         amt,
-        "0",
-        "0"
+        getId,
+        setId
     ]
     let encoded = web3Helper.encodeMethod(ABI, inputs); // get calldata for `deposit()` function.
     var castInputs = [ //Inputs for `cast()` function of SLA Account.
@@ -129,7 +149,7 @@ async function depositETH(owner, amtInDec) {
     await accountInstance.cast(...castInputs, {from: owner, value:amt}) // Execute `cast()` function
 }
 
-async function withdrawETH(owner, withdrawETHTo, amtInDec) {
+async function withdrawETH(owner, withdrawETHTo, amtInDec, getId, setId) {
     var slaAddr = await getSlaAddress(owner) //Get SLA Account address by owner.
     var accountInstance = await accountContract.at(slaAddr); //InstaAccount(SLA account of owner) instance 
     var ABI = {
@@ -171,8 +191,8 @@ async function withdrawETH(owner, withdrawETHTo, amtInDec) {
         "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
         amt,
         withdrawETHTo,
-        "0",
-        "0"
+        getId,
+        setId
     ]
     let encoded = web3Helper.encodeMethod(ABI, inputs); // get calldata for `withdraw()` function.
     var castInputs = [ //Inputs for `cast()` function of SLA Account.
@@ -181,7 +201,7 @@ async function withdrawETH(owner, withdrawETHTo, amtInDec) {
         owner
     
     ]
-    await accountInstance.cast(...castInputs, {from: owner}) // Execute `cast()` function
+    await debug( accountInstance.cast(...castInputs, {from: owner})) // Execute `cast()` function
 }
 
 async function addOwner(owner, newOwner) {
@@ -210,10 +230,10 @@ async function addOwner(owner, newOwner) {
         [encoded],
         owner
     ]
-    var isEnabled = await accountInstance.auth(newOwner) // Check if the given address is enabled in auth
+    var isEnabled = await accountInstance.isAuth(newOwner) // Check if the given address is enabled in auth
     assert.ok(!isEnabled, "connector already enabled")
     await accountInstance.cast(...castInputs, {from: owner}) // Execute `cast()` function
-    var isEnabled = await accountInstance.auth(newOwner)  // Check if the given address is enabled in auth
+    var isEnabled = await accountInstance.isAuth(newOwner)  // Check if the given address is enabled in auth
     assert.ok(isEnabled, "not able enable")
 }
 
@@ -244,10 +264,10 @@ async function removeOwner(owner, removeOwner) {
         owner
     
     ]
-    var isEnabled = await accountInstance.auth(removeOwner)  // Check if the given address is enabled in auth
+    var isEnabled = await accountInstance.isAuth(removeOwner)  // Check if the given address is enabled in auth
     assert.ok(isEnabled, "connector was not enabled before")
     await accountInstance.cast(...castInputs, {from: owner}) // Execute `cast()` function
-    var isEnabled = await accountInstance.auth(removeOwner)  // Check if the given address is enabled in auth
+    var isEnabled = await accountInstance.isAuth(removeOwner)  // Check if the given address is enabled in auth
     assert.ok(!isEnabled, "Not able disable")
 }
 
@@ -258,3 +278,8 @@ async function getSlaAddress(owner) {
     return slaAddr;
 }
 
+
+async function depositAndWithdrawETH(owner, withdrawETHTo, amtInDec) {
+  depositETH(owner, amtInDec, 0, 2);
+  withdrawETH(owner, withdrawETHTo, amtInDec, 2, 0);
+}

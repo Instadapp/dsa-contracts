@@ -121,7 +121,7 @@ async function createSLA(owner, accounts) {
     
     var slaAddr = await listInstance.accountAddr(Number(slaOwnerLink.first)) // get SLA address of `owner` using ID 
     var slaInstance = await accountContract.at(slaAddr); // SLA account(owner) instance
-    var isOwner = await slaInstance.auth(owner); // check if owner if has auth in his SLA account
+    var isOwner = await slaInstance.isAuth(owner); // check if owner if has auth in his SLA account
     assert.ok(isOwner);
 }
 
