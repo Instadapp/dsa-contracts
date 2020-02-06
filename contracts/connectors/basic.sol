@@ -89,6 +89,9 @@ contract Helpers is DSMath {
 
 contract BasicResolver is Helpers {
 
+    event LogDeposit(address erc20, uint tokenAmt, uint getId, uint setId);
+    event LogWithdraw(address erc20, uint tokenAmt, uint getId, uint setId);
+
     function deposit(address erc20, uint tokenAmt, uint getId, uint setId) public payable {
         uint amt = getUint(getId, tokenAmt);
         if (erc20 != getAddressETH()) {
@@ -97,6 +100,7 @@ contract BasicResolver is Helpers {
             token.transferFrom(msg.sender, address(this), amt);
         }
         setUint(setId, amt);
+        emit LogDeposit(erc20, amt, getId, setId);
     }
 
     function withdraw(
@@ -119,11 +123,15 @@ contract BasicResolver is Helpers {
             token.transfer(withdrawTokenTo, amt);
         }
         setUint(setId, amt);
+        emit LogWithdraw(erc20, amt, getId, setId);
     }
 
 }
 
 
-contract Basic is BasicResolver {
+contract ConnectBasic is BasicResolver {
+
     receive() external payable {}
+    string public name = "Basic-V1";
+
 }
