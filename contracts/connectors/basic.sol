@@ -88,7 +88,6 @@ contract Helpers is DSMath {
 }
 
 contract BasicResolver is Helpers {
-    mapping (address => bool) public auth;
 
     function deposit(address erc20, uint tokenAmt, uint getId, uint setId) public payable {
         uint amt = getUint(getId, tokenAmt);
