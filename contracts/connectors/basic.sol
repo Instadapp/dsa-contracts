@@ -45,8 +45,8 @@ contract Helpers is DSMath {
     /**
      * @dev get ethereum address
      */
-    function getAddressETH() public pure returns (address eth) {
-        eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    function getAddressETH() public pure returns (address) {
+        return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     }
 
     function getMVar() public pure returns (address) {
