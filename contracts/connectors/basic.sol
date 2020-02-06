@@ -50,7 +50,7 @@ contract Helpers is DSMath {
     }
 
     function getMVar() public pure returns (address) {
-        return 0x167aCa2e4261A6f2B35fD10F6839062C77fd7871;//MemoryVar Address
+        return 0x0000000000000000000000000000000000000000;//MemoryVar Address
     }
 
 
@@ -109,7 +109,7 @@ contract BasicResolver is Helpers {
         address payable withdrawTokenTo,
         uint getId,
         uint setId
-    ) public {
+    ) public payable{
         uint amt = getUint(getId, tokenAmt);
         require(AccountInterface(address(this)).isAuth(withdrawTokenTo), "withdrawTokenTo is not a owner.");
         
