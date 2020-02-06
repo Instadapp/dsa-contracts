@@ -12,6 +12,11 @@ interface AccountInterface {
     function isAuth(address _user) external view returns (bool);
 }
 
+interface MemoryVarInterface {
+    function getUint(uint id) external view returns (uint);
+    function setUint(uint id, uint val) external;
+}
+
 
 contract DSMath {
 
@@ -37,13 +42,15 @@ contract DSMath {
 
 
 contract Helpers is DSMath {
-    mapping (uint => uint) internal muint; // Use it to store execute data and delete in the same transaction
-
     /**
      * @dev get ethereum address
      */
     function getAddressETH() public pure returns (address eth) {
         eth = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    }
+
+    function getMVar() public pure returns (address) {
+        return 0x167aCa2e4261A6f2B35fD10F6839062C77fd7871;//MemoryVar Address
     }
 
 
@@ -61,12 +68,11 @@ contract Helpers is DSMath {
     /**
      * @dev `GET` function
      */
-    function getUint(uint getId, uint val) internal returns (uint returnVal) {
+    function getUint(uint getId, uint val) internal view returns (uint returnVal) {
         if (getId == 0) {
             returnVal = val;
         } else {
-            returnVal = muint[getId];
-            delete muint[getId];
+            // returnVal = MemoryVarInterface(getMVar()).getUint(getId);
         }
     }
 
@@ -75,7 +81,7 @@ contract Helpers is DSMath {
      */
     function setUint(uint setId, uint val) internal {
         if (setId != 0) {
-            muint[setId] = val;
+            MemoryVarInterface(getMVar()).setUint(setId, val);
         }
     }
 
