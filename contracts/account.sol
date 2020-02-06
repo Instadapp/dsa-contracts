@@ -45,7 +45,7 @@ contract Record {
     }
 
     function enable(address _newAuth) public {
-        require(msg.sender == address(this), "Not-valid");
+        require(msg.sender == address(this), "Not-this-account");
         require(_newAuth != address(0), "Not-valid");
         require(!auth[_newAuth], "Already-authenticated");
         auth[_newAuth] = true;
@@ -54,7 +54,7 @@ contract Record {
     }
 
     function disable(address _auth) public {
-        require(msg.sender == address(this), "Not-valid");
+        require(msg.sender == address(this), "Not-this-account");
         require(_auth != address(0), "Not-valid");
         require(auth[_auth], "not-authenticated");
         auth[_auth] = false;
