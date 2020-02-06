@@ -23,7 +23,7 @@ contract("InstaAccount", async (accounts) => {
         await depositETH(accountOne, amtToTransfer, 0, 0)
     })
 
-    it("Balance of SLA.", async () =>
+    it("Balance of SLA(0.01ETH).", async () =>
     {
         await balanceOf(accountOne, amtToTransfer)
     })
@@ -43,7 +43,7 @@ contract("InstaAccount", async (accounts) => {
         await depositETH(accountTwo, amtToTransfer, 0, 0)
     })
 
-    it("Balance of SLA.", async () =>
+    it("Balance of SLA(0.01ETH).", async () =>
     {
         await balanceOf(accountTwo, amtToTransfer)
     })
@@ -53,24 +53,24 @@ contract("InstaAccount", async (accounts) => {
         await withdrawETH(accountTwo, accountOne, amtToTransfer, 0, 0)
     })
 
-    it("Deposit and Withdraw ETH from SLA using Basic connector mVar.(From: accountOne).", async () =>
+    it("Deposit and Withdraw ETH in single tx using Basic connector mVar.(From: accountOne).", async () =>
     {
         await depositAndWithdrawETH(accountOne, accountOne, amtToTransfer)
     })
 
     it("Balance of SLA(0ETH).", async () =>
     {
-        await balanceOf(accountOne, amtToTransfer)
+        await balanceOf(accountOne, 0)
     })
 
-    it("Deposit and Withdraw ETH in single tx in SLA using Basic connector mVar.(From: accountTwo).", async () =>
+    it("Deposit and Withdraw ETH in single tx using Basic connector mVar.(From: accountTwo).", async () =>
     {
         await depositAndWithdrawETH(accountTwo, accountOne, amtToTransfer)
     })
 
     it("Balance of SLA(0ETH).", async () =>
     {
-        await balanceOf(accountTwo, amtToTransfer)
+        await balanceOf(accountTwo, 0)
     })
 
     it("Removed owner(accountTwo).(From: accountOne).", async () =>
@@ -201,7 +201,7 @@ async function withdrawETH(owner, withdrawETHTo, amtInDec, getId, setId) {
         owner
     
     ]
-    await debug( accountInstance.cast(...castInputs, {from: owner})) // Execute `cast()` function
+    await (accountInstance.cast(...castInputs, {from: owner})) // Execute `cast()` function
 }
 
 async function addOwner(owner, newOwner) {
@@ -280,6 +280,6 @@ async function getSlaAddress(owner) {
 
 
 async function depositAndWithdrawETH(owner, withdrawETHTo, amtInDec) {
-  depositETH(owner, amtInDec, 0, 2);
-  withdrawETH(owner, withdrawETHTo, amtInDec, 2, 0);
+  depositETH(owner, amtInDec, 0, 2); //Deposit and set deposit val variable to ID 2
+  withdrawETH(owner, withdrawETHTo, 0, 2, 0);//Get withdraw val from ID 2 and withdraw
 }
