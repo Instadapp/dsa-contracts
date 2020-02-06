@@ -13,7 +13,7 @@ interface AccountInterface {
 }
 
 interface MemoryVarInterface {
-    function getUint(uint id) external view returns (uint);
+    function getUint(uint _id) external returns (uint _num);
     function setUint(uint id, uint val) external;
 }
 
@@ -68,11 +68,11 @@ contract Helpers is DSMath {
     /**
      * @dev `GET` function
      */
-    function getUint(uint getId, uint val) internal view returns (uint returnVal) {
+    function getUint(uint getId, uint val) internal returns (uint returnVal) {
         if (getId == 0) {
             returnVal = val;
         } else {
-            // returnVal = MemoryVarInterface(getMVar()).getUint(getId);
+            returnVal = MemoryVarInterface(getMVar()).getUint(getId);
         }
     }
 
