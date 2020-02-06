@@ -1,4 +1,4 @@
-const basicConnector = artifacts.require("basic");
+const basicConnector = artifacts.require("ConnectBasic");
 const mVar = artifacts.require("MemoryVar");
 
 const path = require('path');

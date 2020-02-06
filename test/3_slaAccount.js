@@ -1,4 +1,4 @@
-const basicConnector = artifacts.require("basic");
+const basicConnector = artifacts.require("ConnectBasic");
 const connectorsContract = artifacts.require("InstaConnectors");
 const indexContract = artifacts.require("InstaIndex");
 const accountContract = artifacts.require("InstaAccount");
@@ -280,6 +280,101 @@ async function getSlaAddress(owner) {
 
 
 async function depositAndWithdrawETH(owner, withdrawETHTo, amtInDec) {
-  depositETH(owner, amtInDec, 0, 2); //Deposit and set deposit val variable to ID 2
-  withdrawETH(owner, withdrawETHTo, 0, 2, 0);//Get withdraw val from ID 2 and withdraw
+  var slaAddr = await getSlaAddress(owner) //Get SLA Account address by owner.
+  var accountInstance = await accountContract.at(slaAddr); //InstaAccount(SLA account of owner) instance 
+  var depositABI = {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "erc20",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "tokenAmt",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "getId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "setId",
+          "type": "uint256"
+        }
+      ],
+      "name": "deposit",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    }
+  var amt = amtInDec*10**18; //Convert to 18 decimals
+  amt = amt.toFixed(0) //Remove if any decimals
+  var dInputs = [ // Inputs for `deposit()` function of connector.
+      "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+      amt,
+      0,
+      "2"
+  ]
+
+  var withdrawABI = {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "erc20",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenAmt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address payable",
+        "name": "withdrawTokenTo",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "getId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "setId",
+        "type": "uint256"
+      }
+    ],
+    "name": "withdraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+    var wInputs = [ // Inputs for `withdraw()` function of connectors.
+        "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+        amt,
+        withdrawETHTo,
+        "2",
+        "0"
+    ]
+  let depositEncoded = web3Helper.encodeMethod(depositABI, dInputs); // get calldata for `deposit()` function.
+  let withdrawEncoded = web3Helper.encodeMethod(withdrawABI, wInputs); // get calldata for `deposit()` function.
+  var castInputs = [ //Inputs for `cast()` function of SLA Account.
+      [
+        basicConnector.address,
+        basicConnector.address
+      ],
+      [
+        depositEncoded,
+        withdrawEncoded
+      ],
+      owner
+  
+  ]
+
+  await (accountInstance.cast(...castInputs, {from: owner, value:amt})) // Execute `cast()` function
+
 }
+

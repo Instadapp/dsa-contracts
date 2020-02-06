@@ -1,4 +1,4 @@
-const basicConnector = artifacts.require("basic");
+const basicConnector = artifacts.require("ConnectBasic");
 const connectorsContract = artifacts.require("InstaConnectors");
 const indexContract = artifacts.require("InstaIndex");
 const accountContract = artifacts.require("InstaAccount");
