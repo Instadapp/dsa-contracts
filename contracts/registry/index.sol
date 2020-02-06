@@ -79,7 +79,7 @@ contract InstaIndex is CloneFactory {
     event AccountCreated(address sender, address indexed owner, address account, address indexed origin);
 
     // build account with call data
-    function buildCast(
+    function buildAndCast(
         address _owner,
         address[] calldata _targets,
         bytes[] calldata _datas,
