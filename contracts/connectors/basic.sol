@@ -18,30 +18,7 @@ interface MemoryInterface {
 }
 
 
-contract DSMath {
-
-    function add(uint x, uint y) internal pure returns (uint z) {
-        require((z = x + y) >= x, "math-not-safe");
-    }
-
-    function mul(uint x, uint y) internal pure returns (uint z) {
-        require(y == 0 || (z = x * y) / y == x, "math-not-safe");
-    }
-
-    uint constant WAD = 10 ** 18;
-
-    function wmul(uint x, uint y) internal pure returns (uint z) {
-        z = add(mul(x, y), WAD / 2) / WAD;
-    }
-
-    function wdiv(uint x, uint y) internal pure returns (uint z) {
-        z = add(mul(x, WAD), y / 2) / y;
-    }
-
-}
-
-
-contract Helpers is DSMath {
+contract Helpers {
     /**
      * @dev get ethereum address
      */
@@ -53,36 +30,18 @@ contract Helpers is DSMath {
         return 0x0000000000000000000000000000000000000000; // MemoryVar Address
     }
 
-
-    /**
-     * @dev give allowance if required
-     */
-    function setApproval(address erc20, uint srcAmt, address to) internal {
-        ERC20Interface token = ERC20Interface(erc20);
-        uint tokenAllowance = token.allowance(address(this), to);
-        if (srcAmt > tokenAllowance) {
-            token.approve(to, srcAmt);
-        }
-    }
-
     /**
      * @dev `GET` function
      */
     function getUint(uint getId, uint val) internal returns (uint returnVal) {
-        if (getId == 0) {
-            returnVal = val;
-        } else {
-            returnVal = MemoryInterface(getMVar()).getUint(getId);
-        }
+        returnVal = getId == 0 ? val : MemoryInterface(getMVar()).getUint(getId);
     }
 
     /**
      * @dev `SET` function
      */
     function setUint(uint setId, uint val) internal {
-        if (setId != 0) {
-            MemoryInterface(getMVar()).setUint(setId, val);
-        }
+        if (setId != 0) MemoryInterface(getMVar()).setUint(setId, val);
     }
 
 }
@@ -119,7 +78,6 @@ contract BasicResolver is Helpers {
         } else {
             ERC20Interface token = ERC20Interface(erc20);
             amt = amt == uint(-1) ? token.balanceOf(address(this)) : amt;
-            setApproval(erc20, amt, withdrawTokenTo);
             token.transfer(withdrawTokenTo, amt);
         }
         setUint(setId, amt);
