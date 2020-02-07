@@ -26,9 +26,6 @@ contract Record {
     event LogEnable(address indexed auth);
     event LogDisable(address indexed auth);
 
-    /**
-     * @dev addresses of index and auth
-     */
     address public constant index = 0x0000000000000000000000000000000000000000; // TODO: index contract address
     mapping (address => bool) private auth;
 
