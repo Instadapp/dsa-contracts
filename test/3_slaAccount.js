@@ -354,7 +354,7 @@ async function depositAndWithdrawETH(owner, withdrawETHTo, amtInDec) {
   }
     var wInputs = [ // Inputs for `withdraw()` function of connectors.
         "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-        amt,
+        "0",
         withdrawETHTo,
         "2",
         "0"

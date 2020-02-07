@@ -14,13 +14,13 @@ module.exports = async function(deployer) {
 // change mvar variable in basic.sol connector.
 async function changeBasicConnectMemoryVarAddr() { 
     var mvarInstance = await mVar.deployed(); //memoryVar.sol contract instance
-    console.log("\mVar Address:", mvarInstance.address)
+    console.log("\nInstaMemory Address:", mvarInstance.address)
 
     const filePath = path.resolve(__dirname, '../contracts', 'Connectors/basic.sol');
     const options = {
         files: filePath,
-        from: /return (.*);\/\/InstaMemory Address/,
-        to: `return ${mvarInstance.address};//InstaMemory Address`,
+        from: /return (.*); \/\/InstaMemory Address/,
+        to: `return ${mvarInstance.address}; //InstaMemory Address`,
         };
     
     //replace the mvar address in the basic connector contract.
