@@ -19,8 +19,8 @@ async function changeBasicConnectMemoryVarAddr() {
     const filePath = path.resolve(__dirname, '../contracts', 'Connectors/basic.sol');
     const options = {
         files: filePath,
-        from: /return (.*);\/\/InstaMemory Address/,
-        to: `return ${mvarInstance.address};//InstaMemory Address`,
+        from: /return (.*); \/\/InstaMemory Address/,
+        to: `return ${mvarInstance.address}; //InstaMemory Address`,
         };
     
     //replace the mvar address in the basic connector contract.

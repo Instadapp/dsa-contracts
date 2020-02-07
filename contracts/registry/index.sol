@@ -95,8 +95,8 @@ contract InstaIndex is CloneFactory {
         address _origin
     ) public payable returns (address _account) {
         _account = createClone();
-        AccountInterface(_account).enable(_owner);
         ListInterface(list).init(_account);
+        AccountInterface(_account).enable(_owner);
         emit AccountCreated(msg.sender, _owner, _account, _origin);
     }
 

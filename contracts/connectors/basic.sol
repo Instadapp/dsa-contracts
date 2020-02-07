@@ -21,7 +21,7 @@ interface MemoryInterface {
 contract Memory {
 
     function getMemoryAddr() public pure returns (address) {
-        return 0x0000000000000000000000000000000000000000; // TODO: Memory Contract Address
+        return 0x0000000000000000000000000000000000000000; //InstaMemory Address
     }
 
     function getUint(uint getId, uint val) internal returns (uint returnVal) {
