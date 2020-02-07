@@ -49,7 +49,7 @@ contract Helpers {
 contract BasicResolver is Helpers {
 
     event LogDeposit(address erc20, uint tokenAmt, uint getId, uint setId);
-    event LogWithdraw(address erc20, uint tokenAmt, uint getId, uint setId);
+    event LogWithdraw(address erc20, uint tokenAmt, address to, uint getId, uint setId);
 
     function deposit(address erc20, uint tokenAmt, uint getId, uint setId) public payable {
         uint amt = getUint(getId, tokenAmt);
@@ -65,23 +65,23 @@ contract BasicResolver is Helpers {
     function withdraw(
         address erc20,
         uint tokenAmt,
-        address payable withdrawTokenTo,
+        address payable to,
         uint getId,
         uint setId
     ) public payable {
+        require(AccountInterface(address(this)).isAuth(to), "invalid-address-to");
+
         uint amt = getUint(getId, tokenAmt);
-        require(AccountInterface(address(this)).isAuth(withdrawTokenTo), "withdrawTokenTo is not a owner.");
-        
         if (erc20 == getAddressETH()) {
             amt = amt == uint(-1) ? address(this).balance : amt;
-            withdrawTokenTo.transfer(amt);
+            to.transfer(amt);
         } else {
             ERC20Interface token = ERC20Interface(erc20);
             amt = amt == uint(-1) ? token.balanceOf(address(this)) : amt;
-            token.transfer(withdrawTokenTo, amt);
+            token.transfer(to, amt);
         }
         setUint(setId, amt);
-        emit LogWithdraw(erc20, amt, getId, setId);
+        emit LogWithdraw(erc20, amt, to, getId, setId);
     }
 
 }

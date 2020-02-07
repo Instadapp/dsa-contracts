@@ -71,8 +71,11 @@ contract Record {
 contract InstaAccount is Record {
 
     event LogCast(address indexed origin, address indexed sender, uint value);
+    event LogEthDeposit(address indexed _sender, uint _amt);
 
-    receive() external payable {}
+    receive() external payable {
+        emit LogEthDeposit(msg.sender, msg.value);
+    }
 
     mapping (uint => bytes32) internal mbytes; // Use it to store execute data and delete in the same transaction
     mapping (uint => uint) internal muint; // Use it to store execute data and delete in the same transaction
