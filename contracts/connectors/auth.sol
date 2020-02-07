@@ -11,14 +11,14 @@ contract Auth {
     /**
      * @dev add new owner
      */
-    function addModule(address _owner) public {
+    function addModule(address _owner) public payable {
         AccountInterface(address(this)).enable(_owner);
     }
 
     /**
      * @dev remove new owner
      */
-    function removeModule(address _owner) public {
+    function removeModule(address _owner) public payable {
         AccountInterface(address(this)).disable(_owner);
     }
 

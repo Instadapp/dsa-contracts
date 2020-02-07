@@ -109,7 +109,7 @@ contract BasicResolver is Helpers {
         address payable withdrawTokenTo,
         uint getId,
         uint setId
-    ) public payable{
+    ) public payable {
         uint amt = getUint(getId, tokenAmt);
         require(AccountInterface(address(this)).isAuth(withdrawTokenTo), "withdrawTokenTo is not a owner.");
         
