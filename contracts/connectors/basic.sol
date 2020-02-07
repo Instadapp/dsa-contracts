@@ -88,8 +88,5 @@ contract BasicResolver is Helpers {
 
 
 contract ConnectBasic is BasicResolver {
-
-    receive() external payable {}
     string public name = "Basic-V1";
-
 }

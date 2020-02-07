@@ -26,8 +26,5 @@ contract Auth {
 
 
 contract ConnectAuth is Auth {
-
-    receive() external payable {}
     string public name = "Auth-V1";
-
 }
