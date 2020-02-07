@@ -16,39 +16,39 @@ interface CheckInterface {
 }
 
 interface ListInterface {
-    function addAuth(address _owner) external;
-    function removeAuth(address _owner) external;
+    function addAuth(address chief) external;
+    function removeAuth(address chief) external;
 }
 
 
 contract Record {
 
-    event LogEnable(address indexed auth);
-    event LogDisable(address indexed auth);
+    event LogEnable(address indexed chief);
+    event LogDisable(address indexed chief);
 
     address public constant index = 0x0000000000000000000000000000000000000000; // TODO: index contract address
     mapping (address => bool) private auth;
 
-    function isAuth(address _user) public view returns (bool) {
-        return auth[_user];
+    function isAuth(address chief) public view returns (bool) {
+        return auth[chief];
     }
 
-    function enable(address _auth) public {
+    function enable(address chief) public {
         require(msg.sender == address(this) || msg.sender == index, "not-self-index");
-        require(_auth != address(0), "not-valid");
-        require(!auth[_auth], "already-enabled");
-        auth[_auth] = true;
-        ListInterface(IndexInterface(index).list()).addAuth(_auth);
-        emit LogEnable(_auth);
+        require(chief != address(0), "not-valid");
+        require(!auth[chief], "already-enabled");
+        auth[chief] = true;
+        ListInterface(IndexInterface(index).list()).addAuth(chief);
+        emit LogEnable(chief);
     }
 
-    function disable(address _auth) public {
+    function disable(address chief) public {
         require(msg.sender == address(this), "not-self");
-        require(_auth != address(0), "not-valid");
-        require(auth[_auth], "already-disabled");
-        auth[_auth] = false;
-        ListInterface(IndexInterface(index).list()).removeAuth(_auth);
-        emit LogDisable(_auth);
+        require(chief != address(0), "not-valid");
+        require(auth[chief], "already-disabled");
+        auth[chief] = false;
+        ListInterface(IndexInterface(index).list()).removeAuth(chief);
+        emit LogDisable(chief);
     }
 
 }
