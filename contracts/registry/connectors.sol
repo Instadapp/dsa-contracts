@@ -11,13 +11,13 @@ contract Controllers {
     event LogAddController(address addr);
     event LogRemoveController(address addr);
 
-    address public constant index = 0x0000000000000000000000000000000000000000; // TODO: you know what to do here
+    address public constant index = 0x0000000000000000000000000000000000000000; // TODO: Index Contract Address
 
     mapping(address => bool) public chief;
     mapping(address => bool) public connectors;
 
     modifier isChief {
-        require(chief[msg.sender] || msg.sender == IndexInterface(index).master(), "Not-an-admin");
+        require(chief[msg.sender] || msg.sender == IndexInterface(index).master(), "not-an-chief");
         _;
     }
 
@@ -93,7 +93,7 @@ contract InstaConnectors is LinkedList {
 
     /// @dev Disable logic proxy address
     function disable(address _connector) external isChief {
-        require(connectors[_connector], "not-a-connector");
+        require(connectors[_connector], "not-connector");
         connectors[_connector] = false;
         removeFromList(_connector);
     }

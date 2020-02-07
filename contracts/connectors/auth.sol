@@ -26,5 +26,5 @@ contract Auth {
 
 
 contract ConnectAuth is Auth {
-    string public name = "Auth-V1";
+    string public name = "Auth-v1";
 }

@@ -20,7 +20,7 @@ contract DSMath {
 
 contract Variables is DSMath {
 
-    address public constant index = 0x0000000000000000000000000000000000000000; // TODO: you know what to do here
+    address public constant index = 0x0000000000000000000000000000000000000000; // TODO: Index Contract Address
 
     // account mapping
     uint64 public accounts;
@@ -105,14 +105,14 @@ contract InstaList is Configure {
 
     function addAuth(address _owner) external {
         require(accountID[msg.sender] != 0, "not-account");
-        require(AccountInterface(msg.sender).isAuth(_owner), "not-authenticated");
+        require(AccountInterface(msg.sender).isAuth(_owner), "not-owner");
         addAccount(_owner, accountID[msg.sender]);
         addUser(_owner, accountID[msg.sender]);
     }
 
     function removeAuth(address _owner) external {
         require(accountID[msg.sender] != 0, "not-account");
-        require(!AccountInterface(msg.sender).isAuth(_owner), "already-authenticated");
+        require(!AccountInterface(msg.sender).isAuth(_owner), "already-owner");
         removeAccount(_owner, accountID[msg.sender]);
         removeUser(_owner, accountID[msg.sender]);
     }

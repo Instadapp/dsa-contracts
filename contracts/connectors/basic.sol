@@ -14,46 +14,38 @@ interface AccountInterface {
 
 interface MemoryInterface {
     function getUint(uint _id) external returns (uint _num);
-    function setUint(uint id, uint val) external;
+    function setUint(uint _id, uint _val) external;
 }
 
 
-contract Helpers {
-    /**
-     * @dev get ethereum address
-     */
-    function getAddressETH() public pure returns (address) {
-        return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+contract Memory {
+
+    function getMemoryAddr() public pure returns (address) {
+        return 0x0000000000000000000000000000000000000000; // TODO: Memory Contract Address
     }
 
-    function getMVar() public pure returns (address) { // TODO: name
-        return 0x0000000000000000000000000000000000000000; // MemoryVar Address
-    }
-
-    /**
-     * @dev `GET` function
-     */
     function getUint(uint getId, uint val) internal returns (uint returnVal) {
-        returnVal = getId == 0 ? val : MemoryInterface(getMVar()).getUint(getId);
+        returnVal = getId == 0 ? val : MemoryInterface(getMemoryAddr()).getUint(getId);
     }
 
-    /**
-     * @dev `SET` function
-     */
     function setUint(uint setId, uint val) internal {
-        if (setId != 0) MemoryInterface(getMVar()).setUint(setId, val);
+        if (setId != 0) MemoryInterface(getMemoryAddr()).setUint(setId, val);
     }
 
 }
 
-contract BasicResolver is Helpers {
+contract BasicResolver is Memory {
 
     event LogDeposit(address erc20, uint tokenAmt, uint getId, uint setId);
     event LogWithdraw(address erc20, uint tokenAmt, address to, uint getId, uint setId);
 
+    function getEthAddr() public pure returns (address) {
+        return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    }
+
     function deposit(address erc20, uint tokenAmt, uint getId, uint setId) public payable {
         uint amt = getUint(getId, tokenAmt);
-        if (erc20 != getAddressETH()) {
+        if (erc20 != getEthAddr()) {
             ERC20Interface token = ERC20Interface(erc20);
             amt = amt == uint(-1) ? token.balanceOf(msg.sender) : amt;
             token.transferFrom(msg.sender, address(this), amt);
@@ -70,9 +62,8 @@ contract BasicResolver is Helpers {
         uint setId
     ) public payable {
         require(AccountInterface(address(this)).isAuth(to), "invalid-address-to");
-
         uint amt = getUint(getId, tokenAmt);
-        if (erc20 == getAddressETH()) {
+        if (erc20 == getEthAddr()) {
             amt = amt == uint(-1) ? address(this).balance : amt;
             to.transfer(amt);
         } else {
@@ -88,5 +79,5 @@ contract BasicResolver is Helpers {
 
 
 contract ConnectBasic is BasicResolver {
-    string public name = "Basic-V1";
+    string public name = "Basic-v1";
 }
