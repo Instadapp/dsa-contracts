@@ -1,5 +1,5 @@
 const basicConnector = artifacts.require("ConnectBasic");
-const mVar = artifacts.require("MemoryVar");
+const mVar = artifacts.require("InstaMemory");
 
 const path = require('path');
 const replace = require('replace-in-file');
@@ -19,8 +19,8 @@ async function changeBasicConnectMemoryVarAddr() {
     const filePath = path.resolve(__dirname, '../contracts', 'Connectors/basic.sol');
     const options = {
         files: filePath,
-        from: /return (.*);\/\/MemoryVar Address/,
-        to: `return ${mvarInstance.address};//MemoryVar Address`,
+        from: /return (.*);\/\/InstaMemory Address/,
+        to: `return ${mvarInstance.address};//InstaMemory Address`,
         };
     
     //replace the mvar address in the basic connector contract.
