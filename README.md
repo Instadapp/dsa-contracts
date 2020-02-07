@@ -1,5 +1,5 @@
 # Smart Account
-Smart contracts comprising the logics of InstaDApp interface.
+Improved version of smart contracts powering InstaDApp interface.
 
 ## Installation
 
