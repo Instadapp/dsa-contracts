@@ -33,18 +33,13 @@ contract Record {
         return auth[_user];
     }
 
-    function setBasics(address _owner) external {
-        require(msg.sender == index, "not-index");
-        auth[_owner] = true;
-    }
-
-    function enable(address _newAuth) public {
-        require(msg.sender == address(this), "not-self");
-        require(_newAuth != address(0), "not-valid");
-        require(!auth[_newAuth], "already-enabled");
-        auth[_newAuth] = true;
-        ListInterface(IndexInterface(index).list()).addAuth(_newAuth);
-        emit LogEnable(_newAuth);
+    function enable(address _auth) public {
+        require(msg.sender == address(this) || msg.sender == index, "not-self-index");
+        require(_auth != address(0), "not-valid");
+        require(!auth[_auth], "already-enabled");
+        auth[_auth] = true;
+        ListInterface(IndexInterface(index).list()).addAuth(_auth);
+        emit LogEnable(_auth);
     }
 
     function disable(address _auth) public {

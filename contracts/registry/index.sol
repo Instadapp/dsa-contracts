@@ -2,7 +2,7 @@ pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
 interface AccountInterface {
-    function setBasics(address _owner) external;
+    function enable(address authority) external;
     function cast(address[] calldata _targets, bytes[] calldata _datas, address _origin) external payable returns (bytes32[] memory responses);
 }
 
@@ -95,7 +95,7 @@ contract InstaIndex is CloneFactory {
         address _origin
     ) public payable returns (address _account) {
         _account = createClone();
-        AccountInterface(_account).setBasics(_owner);
+        AccountInterface(_account).enable(_owner);
         ListInterface(list).init(_owner, _account);
         emit AccountCreated(msg.sender, _owner, _account, _origin);
     }
