@@ -12,7 +12,7 @@ interface AccountInterface {
     function isAuth(address _user) external view returns (bool);
 }
 
-interface MemoryVarInterface {
+interface MemoryInterface {
     function getUint(uint _id) external returns (uint _num);
     function setUint(uint id, uint val) external;
 }
@@ -49,8 +49,8 @@ contract Helpers is DSMath {
         return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     }
 
-    function getMVar() public pure returns (address) {
-        return 0x0000000000000000000000000000000000000000;//MemoryVar Address
+    function getMVar() public pure returns (address) { // TODO: name
+        return 0x0000000000000000000000000000000000000000; // MemoryVar Address
     }
 
 
@@ -72,7 +72,7 @@ contract Helpers is DSMath {
         if (getId == 0) {
             returnVal = val;
         } else {
-            returnVal = MemoryVarInterface(getMVar()).getUint(getId);
+            returnVal = MemoryInterface(getMVar()).getUint(getId);
         }
     }
 
@@ -81,7 +81,7 @@ contract Helpers is DSMath {
      */
     function setUint(uint setId, uint val) internal {
         if (setId != 0) {
-            MemoryVarInterface(getMVar()).setUint(setId, val);
+            MemoryInterface(getMVar()).setUint(setId, val);
         }
     }
 
