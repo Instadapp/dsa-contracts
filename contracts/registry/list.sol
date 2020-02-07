@@ -117,13 +117,11 @@ contract InstaList is Configure {
         removeUser(_owner, accountID[msg.sender]);
     }
 
-    function init(address _owner, address _account) external {
+    function init(address _account) external {
         require(msg.sender == index, "not-index");
         accounts++;
         accountID[_account] = accounts;
         accountAddr[accounts] = _account;
-        addAccount(_owner, accounts);
-        addUser(_owner, accounts);
     }
 
 }

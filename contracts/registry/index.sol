@@ -7,7 +7,7 @@ interface AccountInterface {
 }
 
 interface ListInterface {
-    function init(address _owner, address _account) external;
+    function init(address _account) external;
 }
 
 
@@ -96,7 +96,7 @@ contract InstaIndex is CloneFactory {
     ) public payable returns (address _account) {
         _account = createClone();
         AccountInterface(_account).enable(_owner);
-        ListInterface(list).init(_owner, _account);
+        ListInterface(list).init(_account);
         emit AccountCreated(msg.sender, _owner, _account, _origin);
     }
 
