@@ -17,8 +17,8 @@ contract AddressIndex {
     event LogNewCheck(address check);
 
     address public master;
-    mapping (uint => address) public connectors;
     address public list;
+    mapping (uint => address) public connectors;
     mapping (uint => address) public check;
     mapping (uint => address) public account;
     uint versionCount;
@@ -105,7 +105,7 @@ contract InstaIndex is CloneFactory {
         uint accountVersion,
         address _origin
     ) public payable returns (address _account) {
-        require(accountVersion != 0 && accountVersion > versionCount, "Not-valid-account");
+        require(accountVersion != 0 && accountVersion <= versionCount, "Not-valid-account");
         _account = createClone(accountVersion);
         ListInterface(list).init(_account);
         AccountInterface(_account).enable(_owner);
