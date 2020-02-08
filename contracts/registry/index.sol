@@ -17,10 +17,11 @@ contract AddressIndex {
     event LogNewCheck(address check);
 
     address public master;
-    address public connectors;
+    mapping (uint => address) public connectors;
     address public list;
-    address public check;
-    address public account;
+    mapping (uint => address) public check;
+    mapping (uint => address) public account;
+    uint versionCount;
 
     modifier isMaster() {
         require(msg.sender == master, "not-master");
@@ -34,19 +35,27 @@ contract AddressIndex {
         emit LogNewMaster(_newMaster);
     }
 
-    function changeCheck(address _newCheck) external isMaster {
-        require(_newCheck != check, "already-a-check");
+    function changeCheck(uint accountVersion, address _newCheck) external isMaster {
+        require(_newCheck != check[accountVersion], "already-a-check");
         require(_newCheck != address(0), "not-valid-address");
-        check = _newCheck;
+        check[accountVersion] = _newCheck;
         emit LogNewCheck(_newCheck);
+    }
+
+    function addNewAccount(address _newAccount, address _connectors, address _check) external isMaster {
+        require(_newAccount != address(0), "not-valid-address");
+        versionCount++;
+        account[versionCount] = _newAccount;
+        if (_connectors != address(0)) connectors[versionCount] = _connectors;
+        if (_check != address(0)) check[versionCount] = _check;
     }
 
 }
 
 contract CloneFactory is AddressIndex {
 
-    function createClone() internal returns (address result) {
-        bytes20 targetBytes = bytes20(account); // TODO: - keep address already in byte20
+    function createClone(uint version) internal returns (address result) {
+        bytes20 targetBytes = bytes20(account[version]); // TODO: - keep address already in byte20
         assembly {
             let clone := mload(0x40)
             mstore(clone, 0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000)
@@ -56,8 +65,8 @@ contract CloneFactory is AddressIndex {
         }
     }
 
-    function isClone(address query) internal view returns (bool result) {
-        bytes20 targetBytes = bytes20(account);
+    function isClone(uint version, address query) internal view returns (bool result) {
+        bytes20 targetBytes = bytes20(account[version]);
         assembly {
             let clone := mload(0x40)
             mstore(clone, 0x363d3d373d3d3d363d7300000000000000000000000000000000000000000000)
@@ -81,20 +90,23 @@ contract InstaIndex is CloneFactory {
     // build account with call data
     function buildWithCast(
         address _owner,
+        uint accountVersion,
         address[] calldata _targets,
         bytes[] calldata _datas,
         address _origin
     ) external payable returns (address _account) {
-        _account = build(_owner, _origin);
+        _account = build(_owner, accountVersion, _origin);
         if (_targets.length > 0) AccountInterface(_account).cast(_targets, _datas, _origin);
     }
 
     // build account
     function build(
         address _owner,
+        uint accountVersion,
         address _origin
     ) public payable returns (address _account) {
-        _account = createClone();
+        require(accountVersion != 0 && accountVersion > versionCount, "Not-valid-account");
+        _account = createClone(accountVersion);
         ListInterface(list).init(_account);
         AccountInterface(_account).enable(_owner);
         emit AccountCreated(msg.sender, _owner, _account, _origin);
@@ -109,14 +121,16 @@ contract InstaIndex is CloneFactory {
         require(
             master == address(0) &&
             list == address(0) &&
-            account == address(0) &&
-            connectors == address(0),
+            account[1] == address(0) &&
+            connectors[1] == address(0) &&
+            versionCount == 0,
             "already-defined"
         );
         master = _master;
         list = _list;
-        account = _account;
-        connectors = _connectors;
+        versionCount++;
+        account[versionCount] = _account;
+        connectors[versionCount] = _connectors;
     }
 
 }

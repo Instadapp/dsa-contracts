@@ -2,8 +2,8 @@ pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
 interface IndexInterface {
-    function connectors() external view returns (address);
-    function check() external view returns (address);
+    function connectors(uint version) external view returns (address);
+    function check(uint version) external view returns (address);
     function list() external view returns (address);
 }
 
@@ -27,6 +27,7 @@ contract Record {
     event LogDisable(address indexed user);
 
     address public constant index = 0x0000000000000000000000000000000000000000; // TODO: index contract address
+    uint public constant version = 1;
     mapping (address => bool) private auth;
 
     function isAuth(address user) public view returns (bool) {
@@ -85,7 +86,7 @@ contract InstaAccount is Record {
     returns (bytes32[] memory responses) // TODO: does return has any use case?
     {
         IndexInterface indexContract = IndexInterface(index);
-        require(ConnectorsInterface(indexContract.connectors()).isConnector(_targets), "not-connector");
+        require(ConnectorsInterface(indexContract.connectors(version)).isConnector(_targets), "not-connector");
         require(isAuth(msg.sender) || msg.sender == index, "permission-denied");
 
         responses = new bytes32[](_targets.length);
@@ -93,7 +94,7 @@ contract InstaAccount is Record {
             responses[i] = spell(_targets[i], _datas[i]);
         }
 
-        address _check = indexContract.check();
+        address _check = indexContract.check(version);
         if (_check != address(0)) require(CheckInterface(_check).isOk(), "not-ok");
 
         emit LogCast(_origin, msg.sender, msg.value);
