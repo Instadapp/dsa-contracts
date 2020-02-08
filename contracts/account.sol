@@ -61,10 +61,10 @@ contract Record {
 contract InstaAccount is Record {
 
     event LogCast(address indexed origin, address indexed sender, uint value);
-    event LogDeposit(address indexed _sender, uint _amt);
+    event LogEthDeposit(address indexed _sender, uint _amt);
 
     receive() external payable {
-        emit LogDeposit(msg.sender, msg.value);
+        emit LogEthDeposit(msg.sender, msg.value);
     }
 
     function spell(address _target, bytes memory _data) internal returns (bytes32 response) {
