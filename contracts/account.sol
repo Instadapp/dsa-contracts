@@ -16,39 +16,39 @@ interface CheckInterface {
 }
 
 interface ListInterface {
-    function addAuth(address chief) external;
-    function removeAuth(address chief) external;
+    function addAuth(address user) external;
+    function removeAuth(address user) external;
 }
 
 
 contract Record {
 
-    event LogEnable(address indexed chief);
-    event LogDisable(address indexed chief);
+    event LogEnable(address indexed user);
+    event LogDisable(address indexed user);
 
     address public constant index = 0x0000000000000000000000000000000000000000; // TODO: index contract address
     mapping (address => bool) private auth;
 
-    function isAuth(address chief) public view returns (bool) {
-        return auth[chief];
+    function isAuth(address user) public view returns (bool) {
+        return auth[user];
     }
 
-    function enable(address chief) public {
+    function enable(address user) public {
         require(msg.sender == address(this) || msg.sender == index, "not-self-index");
-        require(chief != address(0), "not-valid");
-        require(!auth[chief], "already-enabled");
-        auth[chief] = true;
-        ListInterface(IndexInterface(index).list()).addAuth(chief);
-        emit LogEnable(chief);
+        require(user != address(0), "not-valid");
+        require(!auth[user], "already-enabled");
+        auth[user] = true;
+        ListInterface(IndexInterface(index).list()).addAuth(user);
+        emit LogEnable(user);
     }
 
-    function disable(address chief) public {
+    function disable(address user) public {
         require(msg.sender == address(this), "not-self");
-        require(chief != address(0), "not-valid");
-        require(auth[chief], "already-disabled");
-        auth[chief] = false;
-        ListInterface(IndexInterface(index).list()).removeAuth(chief);
-        emit LogDisable(chief);
+        require(user != address(0), "not-valid");
+        require(auth[user], "already-disabled");
+        auth[user] = false;
+        ListInterface(IndexInterface(index).list()).removeAuth(user);
+        emit LogDisable(user);
     }
 
 }
