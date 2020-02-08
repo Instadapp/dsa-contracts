@@ -15,6 +15,7 @@ contract AddressIndex {
 
     event LogNewMaster(address master);
     event LogNewCheck(address check);
+    event LogNewAccount(address _newAccount, address _connectors, address _check);
 
     address public master;
     mapping (uint => address) public connectors;
@@ -48,6 +49,7 @@ contract AddressIndex {
         account[versionCount] = _newAccount;
         if (_connectors != address(0)) connectors[versionCount] = _connectors;
         if (_check != address(0)) check[versionCount] = _check;
+        emit LogNewAccount(_newAccount, _connectors, _check);
     }
 
 }
