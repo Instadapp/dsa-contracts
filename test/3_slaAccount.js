@@ -280,7 +280,6 @@ async function getSlaAddress(owner) {
     var listInstance = await listContract.deployed(); //InstaIndex instance
     var listUserLink = await listInstance.userLink(owner); // Get SLA account(IDs) using `owner`
     var slaAddr = await listInstance.accountAddr(listUserLink.last); // Get SLA Account Address using `ID`
-    console.log(slaAddr)
     return slaAddr;
 }
 
