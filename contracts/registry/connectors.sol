@@ -109,6 +109,7 @@ contract InstaConnectors is LinkedList {
         staticCount++;
         staticList[staticCount] = _connector;
         staticConnectors[_connector] = true;
+        emit LogEnableStatic(_connector);
     }
 
     function isConnector(address[] calldata _connectors) external view returns (bool isOk) {
