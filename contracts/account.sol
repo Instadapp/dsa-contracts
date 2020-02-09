@@ -26,6 +26,7 @@ contract Record {
 
     event LogEnable(address indexed user);
     event LogDisable(address indexed user);
+    event LogSwitchShield(bool _shield);
 
     address public constant index = 0x0000000000000000000000000000000000000000; // TODO: index contract address
     uint public constant version = 1;
@@ -39,6 +40,7 @@ contract Record {
     function switchShield() public {
         require(auth[msg.sender], "Not-self");
         shield = shield ? false : true;
+        emit LogSwitchShield(shield);
     }
 
     function enable(address user) public {
