@@ -13,9 +13,14 @@ contract("InstaAccount", async (accounts) => {
     const origin = accounts[6]
     const amtToTransfer =  0.01;
 
+    let accountVersion;
+    before(async() => {
+       accountVersion = await getAccountVersion();
+   })
+
     it("Deployed new SLA.(From: accountOne).", async () =>
     {
-        await buildSla(accountOne, origin)
+        await buildSla(accountOne, origin, accountVersion)
     })
 
     it("Deposited ETH to SLA Account using Basic connector.(From: accountOne).", async () =>
@@ -80,9 +85,9 @@ contract("InstaAccount", async (accounts) => {
   });
 
 
-async function buildSla(owner) {
+async function buildSla(owner, origin, accountVersion) {
     var indexInstance = await indexContract.deployed(); //InstaIndex instance
-    await indexInstance.build(owner, owner, {from: owner}); // Create a new SLA account for `owner` 
+    await indexInstance.build(owner, accountVersion, origin, {from: owner}); // Create a new SLA account for `owner` 
     var slaAddr = await getSlaAddress(owner) //Get SLA Account address by owner.
     var accountInstance = await accountContract.at(slaAddr); //InstaAccount(SLA account of owner) instance 
     var indexAddress = await accountInstance.index(); // get index address variable from SLA account.
@@ -375,6 +380,11 @@ async function depositAndWithdrawETH(owner, withdrawETHTo, amtInDec) {
   ]
 
   await (accountInstance.cast(...castInputs, {from: owner, value:amt})) // Execute `cast()` function
+}
 
+
+async function getAccountVersion() {
+  var indexInstance = await indexContract.deployed(); // InstaIndex instance
+  return await indexInstance.versionCount();
 }
 
