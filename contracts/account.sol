@@ -9,6 +9,7 @@ interface IndexInterface {
 
 interface ConnectorsInterface {
     function isConnector(address[] calldata logicAddr) external view returns (bool);
+    function isStaticConnector(address[] calldata logicAddr) external view returns (bool);
 }
 
 interface CheckInterface {
@@ -29,9 +30,15 @@ contract Record {
     address public constant index = 0x0000000000000000000000000000000000000000; // TODO: index contract address
     uint public constant version = 1;
     mapping (address => bool) private auth;
+    bool public shield;
 
     function isAuth(address user) public view returns (bool) {
         return auth[user];
+    }
+
+    function switchShield() public {
+        require(auth[msg.sender], "Not-self");
+        shield = shield ? false : true;
     }
 
     function enable(address user) public {
@@ -85,9 +92,17 @@ contract InstaAccount is Record {
     payable
     returns (bytes32[] memory responses) // TODO: does return has any use case?
     {
-        IndexInterface indexContract = IndexInterface(index);
-        require(ConnectorsInterface(indexContract.connectors(version)).isConnector(_targets), "not-connector");
         require(isAuth(msg.sender) || msg.sender == index, "permission-denied");
+
+        IndexInterface indexContract = IndexInterface(index);
+
+        bool isShield = shield;
+
+        if (!isShield) {
+            require(ConnectorsInterface(indexContract.connectors(version)).isConnector(_targets), "not-connector");
+        } else {
+            require(ConnectorsInterface(indexContract.connectors(version)).isStaticConnector(_targets), "not-connector");
+        }
 
         responses = new bytes32[](_targets.length);
         for (uint i = 0; i < _targets.length; i++) {
@@ -95,7 +110,7 @@ contract InstaAccount is Record {
         }
 
         address _check = indexContract.check(version);
-        if (_check != address(0)) require(CheckInterface(_check).isOk(), "not-ok");
+        if (_check != address(0) && !isShield) require(CheckInterface(_check).isOk(), "not-ok");
 
         emit LogCast(_origin, msg.sender, msg.value);
     }
