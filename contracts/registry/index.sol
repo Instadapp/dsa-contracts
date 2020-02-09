@@ -14,7 +14,7 @@ interface ListInterface {
 contract AddressIndex {
 
     event LogNewMaster(address master);
-    event LogNewCheck(address check);
+    event LogNewCheck(uint accountVersion, address check);
     event LogNewAccount(address _newAccount, address _connectors, address _check);
 
     address public master;
@@ -40,7 +40,7 @@ contract AddressIndex {
         require(_newCheck != check[accountVersion], "already-a-check");
         require(_newCheck != address(0), "not-valid-address");
         check[accountVersion] = _newCheck;
-        emit LogNewCheck(_newCheck);
+        emit LogNewCheck(accountVersion, _newCheck);
     }
 
     function addNewAccount(address _newAccount, address _connectors, address _check) external isMaster {
