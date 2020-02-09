@@ -22,7 +22,7 @@ contract AddressIndex {
     mapping (uint => address) public connectors;
     mapping (uint => address) public check;
     mapping (uint => address) public account;
-    uint versionCount;
+    uint public versionCount;
 
     modifier isMaster() {
         require(msg.sender == master, "not-master");
