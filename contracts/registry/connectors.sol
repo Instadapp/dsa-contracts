@@ -6,7 +6,19 @@ interface IndexInterface {
 }
 
 
-contract Controllers {
+contract DSMath {
+
+    function add(uint x, uint y) internal pure returns (uint z) {
+        require((z = x + y) >= x, "ds-math-add-overflow");
+    }
+
+    function sub(uint x, uint y) internal pure returns (uint z) {
+        require((z = x - y) <= x, "ds-math-sub-underflow");
+    }
+
+}
+
+contract Controllers is DSMath {
 
     event LogAddController(address addr);
     event LogRemoveController(address addr);
@@ -60,7 +72,7 @@ contract LinkedList is Controllers {
             first = _connector;
         }
         last = _connector;
-        count = count++;
+        count = add(count, 1);
 
         emit LogEnable(_connector);
     }
@@ -76,7 +88,7 @@ contract LinkedList is Controllers {
         } else {
             last = list[_connector].prev;
         }
-        count = count--; // TODO: - use sub()
+        count = sub(count, 1); // TODO: - use sub()
 
         emit LogDisable(_connector);
     }
