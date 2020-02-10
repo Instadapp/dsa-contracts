@@ -67,7 +67,7 @@ contract CloneFactory is AddressIndex {
         }
     }
 
-    function isClone(uint version, address query) internal view returns (bool result) {
+    function isClone(uint version, address query) external view returns (bool result) {
         bytes20 targetBytes = bytes20(account[version]);
         assembly {
             let clone := mload(0x40)
