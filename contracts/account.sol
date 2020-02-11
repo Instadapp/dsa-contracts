@@ -39,7 +39,7 @@ contract Record {
 
     function switchShield() public {
         require(auth[msg.sender], "Not-self");
-        shield = shield ? false : true;
+        shield = !shield;
         emit LogSwitchShield(shield);
     }
 
