@@ -40,7 +40,7 @@ contract Controllers is DSMath {
     }
 
     function disableChief(address _userAddress) external isChief {
-        chief[_userAddress] = false;
+        delete chief[_userAddress];
         emit LogRemoveController(_userAddress);
     }
 
@@ -111,7 +111,7 @@ contract InstaConnectors is LinkedList {
     /// @dev Disable logic proxy address
     function disable(address _connector) external isChief {
         require(connectors[_connector], "not-connector");
-        connectors[_connector] = false;
+        delete connectors[_connector];
         removeFromList(_connector);
     }
 
