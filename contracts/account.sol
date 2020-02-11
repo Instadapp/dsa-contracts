@@ -56,7 +56,7 @@ contract Record {
         require(msg.sender == address(this), "not-self");
         require(user != address(0), "not-valid");
         require(auth[user], "already-disabled");
-        auth[user] = false;
+        delete auth[user];
         ListInterface(IndexInterface(index).list()).removeAuth(user);
         emit LogDisable(user);
     }
