@@ -88,7 +88,7 @@ contract LinkedList is Controllers {
         } else {
             last = list[_connector].prev;
         }
-        count = sub(count, 1); // TODO: - use sub()
+        count = sub(count, 1);
 
         emit LogDisable(_connector);
     }
@@ -99,7 +99,7 @@ contract LinkedList is Controllers {
 contract InstaConnectors is LinkedList {
 
     uint public staticCount;
-    mapping (uint => address) public staticList; // SLA address => user address => List
+    mapping (uint => address) public staticList; // id => static connector.
 
     /// @dev Enable logic proxy address
     function enable(address _connector) external isChief {
@@ -115,7 +115,7 @@ contract InstaConnectors is LinkedList {
         removeFromList(_connector);
     }
 
-    /// @dev Enable logic proxy address
+    /// @dev Enable Static logic proxy address
     function enableStatic(address _connector) external isChief {
         require(!staticConnectors[_connector], "already-enabled");
         staticCount++;
