@@ -29,7 +29,7 @@ contract AddressIndex {
         _;
     }
 
-    function changeMaster(address _newMaster) public isMaster {
+    function changeMaster(address _newMaster) external isMaster {
         require(_newMaster != master, "already-a-master");
         require(_newMaster != address(0), "not-valid-address");
         master = _newMaster;

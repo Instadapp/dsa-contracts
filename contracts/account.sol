@@ -37,7 +37,7 @@ contract Record {
         return auth[user];
     }
 
-    function switchShield() public {
+    function switchShield() external {
         require(auth[msg.sender], "Not-self");
         shield = !shield;
         emit LogSwitchShield(shield);
