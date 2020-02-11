@@ -56,7 +56,7 @@ contract LinkedList is Controllers {
     uint public count;
     address public first;
     address public last;
-    mapping (address => List) public list; // SLA address => user address => List
+    mapping (address => List) public list; // Connector address => List
 
     struct List {
         address prev;
