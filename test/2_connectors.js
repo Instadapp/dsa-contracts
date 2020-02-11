@@ -59,6 +59,12 @@ contract("InstaConnectors", async (accounts) => {
         await enableConnector(cheifOne, basicConnector.address)
     })
 
+    it("No of connectors enabled are greater than 0.", async () =>
+    {   
+         // count of connectors enabled.
+        await count()
+    })
+
     // it("Removed Basic connector.(From: cheif).", async () =>
     // {    
     //     // disable a connector.
@@ -72,6 +78,11 @@ contract("InstaConnectors", async (accounts) => {
     })
   });
 
+  async function count() {
+    var connectorInstance = await connectorsContract.deployed(); //InstaAccount instance
+    let count = await connectorInstance.count();
+    assert.notEqual(count, 0, "count is equal to zero")
+  }
 
 async function getConnectorsIndexAddress() {
     var indexInstance = await indexContract.deployed(); //InstaIndex instance
