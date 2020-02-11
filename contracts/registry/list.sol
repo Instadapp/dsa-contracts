@@ -42,7 +42,7 @@ contract Variables is DSMath {
 
     // linked list of accounts
     mapping (uint64 => AccountLink) public accountLink; // SLA ID => SLA linked list connection
-    mapping (uint64 => mapping (address => AccountList)) public accountList; // SLA address => user address => List
+    mapping (uint64 => mapping (address => AccountList)) public accountList; // SLA ID => user address => List
     struct AccountLink {
         address first;
         address last;
