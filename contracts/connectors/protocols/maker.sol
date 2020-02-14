@@ -91,6 +91,14 @@ interface InstaMcdAddress {
     function jug() external returns (address);
     function proxyRegistry() external returns (address);
     function ethAJoin() external returns (address);
+    function pot() external returns (address);
+}
+
+interface PotLike {
+    function pie(address) external view returns (uint);
+    function drip() external returns (uint);
+    function join(uint) external;
+    function exit(uint) external;
 }
 
 interface MemoryInterface {
@@ -454,4 +462,66 @@ contract BasicExtraResolver is BasicResolver {
         setUint(setId, amt);
     }
 
+}
+
+contract DsrResolver is BasicExtraResolver {
+    function dsrDeposit(
+        uint tokenAmt,
+        uint getId,
+        uint setId
+    ) public {
+        uint amt = getUint(getId, tokenAmt);
+        address pot = InstaMcdAddress(getMcdAddresses()).pot();
+        address daiJoin = InstaMcdAddress(getMcdAddresses()).daiJoin();
+
+        VatLike vat = DaiJoinLike(daiJoin).vat();
+        // Executes drip to get the chi rate updated to rho == now, otherwise join will fail
+        uint chi = PotLike(pot).drip();
+        // Joins wad amount to the vat balance
+        // Approves adapter to take the DAI amount
+        DaiJoinLike(daiJoin).dai().approve(daiJoin, amt);
+        // Joins DAI into the vat
+        DaiJoinLike(daiJoin).join(address(this), amt);
+        // Approves the pot to take out DAI from the proxy's balance in the vat
+        if (vat.can(address(this), address(pot)) == 0) {
+            vat.hope(pot);
+        }
+        // Joins the pie value (equivalent to the DAI wad amount) in the pot
+        PotLike(pot).join(mul(amt, RAY) / chi);
+        setUint(setId, amt);
+    }
+
+      function dsrWithdraw(
+        uint tokenAmt,
+        uint getId,
+        uint setId
+    ) public {
+        address pot = InstaMcdAddress(getMcdAddresses()).pot();
+        address daiJoin = InstaMcdAddress(getMcdAddresses()).daiJoin();
+
+        uint amt = getUint(getId, tokenAmt);
+
+        VatLike vat = DaiJoinLike(daiJoin).vat();
+        // Executes drip to count the savings accumulated until this moment
+        uint chi = PotLike(pot).drip();
+        // Calculates the pie value in the pot equivalent to the DAI wad amount
+        uint pie = mul(amt, RAY) / chi;
+        // Exits DAI from the pot
+        PotLike(pot).exit(pie);
+        // Checks the actual balance of DAI in the vat after the pot exit
+        uint bal = DaiJoinLike(daiJoin).vat().dai(address(this));
+        // Allows adapter to access to proxy's DAI balance in the vat
+        if (vat.can(address(this), address(daiJoin)) == 0) {
+            vat.hope(daiJoin);
+        }
+        // It is necessary to check if due rounding the exact wad amount can be exited by the adapter.
+        // Otherwise it will do the maximum DAI balance in the vat
+        DaiJoinLike(daiJoin).exit(
+            msg.sender,
+            bal >= mul(amt, RAY) ? amt : bal / RAY
+        );
+
+        setUint(setId, amt);
+
+    }
 }
