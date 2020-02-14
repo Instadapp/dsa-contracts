@@ -517,7 +517,7 @@ contract DsrResolver is BasicExtraResolver {
         // It is necessary to check if due rounding the exact wad amount can be exited by the adapter.
         // Otherwise it will do the maximum DAI balance in the vat
         DaiJoinLike(daiJoin).exit(
-            msg.sender,
+            address(this),
             bal >= mul(amt, RAY) ? amt : bal / RAY
         );
 
