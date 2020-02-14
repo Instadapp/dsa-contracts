@@ -57,7 +57,7 @@ contract AddressIndex {
 contract CloneFactory is AddressIndex {
 
     function createClone(uint version) internal returns (address result) {
-        bytes20 targetBytes = bytes20(account[version]); // TODO: - keep address already in byte20
+        bytes20 targetBytes = bytes20(account[version]); // TODO: should we keep address directly instead of byte20
         assembly {
             let clone := mload(0x40)
             mstore(clone, 0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000)

@@ -75,7 +75,7 @@ contract InstaAccount is Record {
     function spell(address _target, bytes memory _data) internal returns (bytes32 response) {
         require(_target != address(0), "target-invalid");
         assembly {
-            // TODO: WTF?? - think on replacing 'sub(gas(), 5000)' with 'gas()'
+            // TODO: think on replacing 'sub(gas(), 5000)' with 'gas()'
             let succeeded := delegatecall(sub(gas(), 5000), _target, add(_data, 0x20), mload(_data), 0, 32)
             response := mload(0)
             switch iszero(succeeded)
@@ -103,7 +103,7 @@ contract InstaAccount is Record {
         if (!isShield) {
             require(ConnectorsInterface(indexContract.connectors(version)).isConnector(_targets), "not-connector");
         } else {
-            require(ConnectorsInterface(indexContract.connectors(version)).isStaticConnector(_targets), "not-connector");
+            require(ConnectorsInterface(indexContract.connectors(version)).isStaticConnector(_targets), "not-static-connector");
         }
 
         responses = new bytes32[](_targets.length);
