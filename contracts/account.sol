@@ -28,7 +28,7 @@ contract Record {
     event LogDisable(address indexed user);
     event LogSwitchShield(bool _shield);
 
-    address public constant index = 0x0000000000000000000000000000000000000000; // TODO: index contract address
+    address public constant index = 0x0000000000000000000000000000000000000000;
     uint public constant version = 1;
     mapping (address => bool) private auth;
     bool public shield;
@@ -38,7 +38,7 @@ contract Record {
     }
 
     function switchShield() external {
-        require(auth[msg.sender], "Not-self");
+        require(auth[msg.sender], "not-self");
         shield = !shield;
         emit LogSwitchShield(shield);
     }

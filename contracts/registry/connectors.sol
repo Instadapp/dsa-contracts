@@ -23,7 +23,7 @@ contract Controllers is DSMath {
     event LogAddController(address addr);
     event LogRemoveController(address addr);
 
-    address public constant index = 0x0000000000000000000000000000000000000000; // TODO: Index Contract Address
+    address public constant index = 0x0000000000000000000000000000000000000000;
 
     mapping(address => bool) public chief;
     mapping(address => bool) public connectors;

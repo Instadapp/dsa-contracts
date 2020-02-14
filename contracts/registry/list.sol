@@ -20,7 +20,7 @@ contract DSMath {
 
 contract Variables is DSMath {
 
-    address public constant index = 0x0000000000000000000000000000000000000000; // TODO: Index Contract Address
+    address public constant index = 0x0000000000000000000000000000000000000000;
 
     // account mapping
     uint64 public accounts;
