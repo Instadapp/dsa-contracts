@@ -41,8 +41,8 @@ contract Variables is DSMath {
     }
 
     // linked list of accounts
-    mapping (uint64 => AccountLink) public accountLink; // SLA ID => SLA linked list connection
-    mapping (uint64 => mapping (address => AccountList)) public accountList; // SLA ID => user address => List
+    mapping (uint64 => AccountLink) public accountLink; // account => account linked list connection
+    mapping (uint64 => mapping (address => AccountList)) public accountList; // account => user address => list
     struct AccountLink {
         address first;
         address last;
@@ -57,7 +57,7 @@ contract Variables is DSMath {
 
 contract Configure is Variables {
 
-    function addAccount(address _owner, uint64 _account) internal { // TODO: gotta test it out throughly
+    function addAccount(address _owner, uint64 _account) internal {
         if (userLink[_owner].last != 0) {
             userList[_owner][_account].prev = userLink[_owner].last;
             userList[_owner][userLink[_owner].last].next = _account;
@@ -67,7 +67,7 @@ contract Configure is Variables {
         userLink[_owner].count = add(userLink[_owner].count, 1);
     }
 
-    function removeAccount(address _owner, uint64 _account) internal { // TODO: - gotta test it out throughly
+    function removeAccount(address _owner, uint64 _account) internal {
         uint64 _prev = userList[_owner][_account].prev;
         uint64 _next = userList[_owner][_account].next;
         if (_prev != 0) userList[_owner][_prev].next = _next;
@@ -78,7 +78,7 @@ contract Configure is Variables {
         delete userList[_owner][_account];
     }
 
-    function addUser(address _owner, uint64 _account) internal { // TODO: - Gotta test it out throughly
+    function addUser(address _owner, uint64 _account) internal {
         if (accountLink[_account].last != address(0)) {
             accountList[_account][_owner].prev = accountLink[_account].last;
             accountList[_account][accountLink[_account].last].next = _owner;
@@ -88,7 +88,7 @@ contract Configure is Variables {
         accountLink[_account].count = add(accountLink[_account].count, 1);
     }
 
-    function removeUser(address _owner, uint64 _account) internal { // TODO: - Gotta test it out throughly
+    function removeUser(address _owner, uint64 _account) internal {
         address _prev = accountList[_account][_owner].prev;
         address _next = accountList[_account][_owner].next;
         if (_prev != address(0)) accountList[_account][_prev].next = _next;
