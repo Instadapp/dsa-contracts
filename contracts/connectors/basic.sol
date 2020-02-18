@@ -21,7 +21,7 @@ interface MemoryInterface {
 contract Memory {
 
     function getMemoryAddr() public pure returns (address) {
-        return 0x0000000000000000000000000000000000000000; //InstaMemory Address
+        return 0x0000000000000000000000000000000000000000; // InstaMemory Address
     }
 
     function getUint(uint getId, uint val) internal returns (uint returnVal) {
@@ -61,7 +61,7 @@ contract BasicResolver is Memory {
         uint getId,
         uint setId
     ) public payable {
-        require(AccountInterface(address(this)).isAuth(to), "invalid-address-to");
+        require(AccountInterface(address(this)).isAuth(to), "invalid-to-address");
         uint amt = getUint(getId, tokenAmt);
         if (erc20 == getEthAddr()) {
             amt = amt == uint(-1) ? address(this).balance : amt;
