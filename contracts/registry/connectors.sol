@@ -2,7 +2,7 @@ pragma solidity ^0.6.0;
 
 /**
  * @title InstaConnectors
- * @dev Index Contract which allows to maintain and manage Smart Account
+ * @dev Registry for Connectors.
  */
 
 
@@ -31,15 +31,16 @@ contract Controllers is DSMath {
      // The InstaIndex Address.
     address public constant index = 0x0000000000000000000000000000000000000000;
 
-    // Enabled Cheif (Address of Cheif => bool).
+    // Enabled Cheif(Address of Cheif => bool).
     mapping(address => bool) public chief;
-    // Connectors Module(Connector Module Address => bool).
+    // Enabled Connectors(Connector Address => bool).
     mapping(address => bool) public connectors;
-    // Static Connectors Module(Connector Module Address => bool).
+    // Enbled Static Connectors(Connector Address => bool).
     mapping(address => bool) public staticConnectors;
 
     /**
-    * @dev Throws if the sender not is Master Address from InstaIndex or Enabled Cheif.
+    * @dev Throws if the sender not is Master Address from InstaIndex
+    * or Enabled Cheif.
     */
     modifier isChief {
         require(chief[msg.sender] || msg.sender == IndexInterface(index).master(), "not-an-chief");
@@ -79,8 +80,8 @@ contract LinkedList is Controllers {
     address public first;
     // Last enabled Connector Address.
     address public last;
-    // Connectors List(Address of Connector => List).
-    mapping (address => List) public list; // Connector address => List
+    // Connectors List(Address of Connector => List(Previous and Next Enabled Connector)).
+    mapping (address => List) public list;
 
     struct List {
         address prev;
@@ -89,7 +90,7 @@ contract LinkedList is Controllers {
 
 
     /**
-     * @dev Add Connector to Connector's Link List.
+     * @dev Add Connector to Connector's Linked List.
      * @param _connector Connector Address.
     */
     function addToList(address _connector) internal {
@@ -107,7 +108,7 @@ contract LinkedList is Controllers {
     }
 
     /**
-     * @dev Remove Connector to Connector's Link List.
+     * @dev Remove Connector to Connector's Linked List.
      * @param _connector Connector Address.
     */
     function removeFromList(address _connector) internal {
@@ -156,7 +157,7 @@ contract InstaConnectors is LinkedList {
 
     /**
      * @dev Enable Static Connector.
-     * @param _connector Connector Address.
+     * @param _connector Static Connector Address.
     */
     function enableStatic(address _connector) external isChief {
         require(!staticConnectors[_connector], "already-enabled");
@@ -167,8 +168,8 @@ contract InstaConnectors is LinkedList {
     }
 
      /**
-     * @dev Check if Connectors address are enabled.
-     * @param _connectors Array of Connectors Address.
+     * @dev Check if Connector addresses are enabled.
+     * @param _connectors Array of Connector Addresses.
     */
     function isConnector(address[] calldata _connectors) external view returns (bool isOk) {
         isOk = true;
@@ -181,8 +182,8 @@ contract InstaConnectors is LinkedList {
     }
 
     /**
-     * @dev Check if Connectors address are static enabled.
-     * @param _connectors Array of Connectors Address.
+     * @dev Check if Connector addresses are static enabled.
+     * @param _connectors Array of Connector Addresses.
     */
     function isStaticConnector(address[] calldata _connectors) external view returns (bool isOk) {
         isOk = true;

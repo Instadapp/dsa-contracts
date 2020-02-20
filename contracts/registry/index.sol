@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 /**
  * @title InstaIndex
  * @dev Main Contract For Smart Account Layer. This is also a factory contract, Which deploys new Smart Accounts.
+ * Also Registry for Smart Account Layer.
  */
 
 interface AccountInterface {
