@@ -89,7 +89,7 @@ async function getRegistryDetails(accountVersion) {
 async function getAccountIndexAddress() {
     var indexInstance = await indexContract.deployed(); // InstaIndex instance
     var accountInstance = await accountContract.deployed(); // InstaAccount instance
-    var indexAddress = await accountInstance.index(); // index address variable from account.sol
+    var indexAddress = await accountInstance.instaIndex(); // index address variable from account.sol
     assert.equal(indexAddress, indexInstance.address)
 }
 

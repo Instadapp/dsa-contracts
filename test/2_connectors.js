@@ -87,7 +87,7 @@ contract("InstaConnectors", async (accounts) => {
 async function getConnectorsIndexAddress() {
     var indexInstance = await indexContract.deployed(); //InstaIndex instance
     var connectorInstance = await connectorsContract.deployed(); //InstaAccount instance
-    var indexAddress = await connectorInstance.index(); // get index address variable from index.sol
+    var indexAddress = await connectorInstance.instaIndex(); // get index address variable from index.sol
     assert.equal(indexAddress, indexInstance.address)
 }
 

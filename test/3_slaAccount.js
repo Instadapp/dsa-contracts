@@ -90,7 +90,7 @@ async function buildSla(owner, origin, accountVersion) {
     await indexInstance.build(owner, accountVersion, origin, {from: owner}); // Create a new SLA account for `owner` 
     var slaAddr = await getSlaAddress(owner) //Get SLA Account address by owner.
     var accountInstance = await accountContract.at(slaAddr); //InstaAccount(SLA account of owner) instance 
-    var indexAddress = await accountInstance.index(); // get index address variable from SLA account.
+    var indexAddress = await accountInstance.instaIndex(); // get index address variable from SLA account.
     assert.equal(indexAddress, indexInstance.address)
 }
 

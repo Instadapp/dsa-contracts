@@ -28,9 +28,9 @@ async function setBasicIndex(accounts) {
     console.log("list.sol Address:", listInsance.address)
     console.log("connectors.sol Address:", connectorsInsance.address)
     console.log("\nIndex Address:", indexInstance.address)
-    console.log("account.sol contract index variable Address:",await accountInstance.index())
-    console.log("list.sol contract index variable Address:",await listInsance.index())
-    console.log("connectors.sol contract index variable Address:",await connectorsInsance.index())
+    console.log("account.sol contract index variable Address:",await accountInstance.instaIndex())
+    console.log("list.sol contract index variable Address:",await listInsance.instaIndex())
+    console.log("connectors.sol contract index variable Address:",await connectorsInsance.instaIndex())
     
     //set master address, account.sol, connectors.sol, list.sol contract's addresses in index.sol deployed contract.
     return await indexInstance.setBasics(

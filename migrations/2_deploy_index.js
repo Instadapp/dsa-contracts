@@ -1,7 +1,6 @@
 const indexContract = artifacts.require("InstaIndex");
 const path = require('path');
 const replace = require('replace-in-file');
-const fs = require('fs');
 
 
 
@@ -18,8 +17,8 @@ module.exports = async function(deployer) {
         // fs.readFile(filePath, "utf8", async  (err, data) => {
         const options = {
             files: [filePath],
-            from: /constant index = (.*);/,
-            to: `constant index = ${indexInstance.address};`,
+            from: /constant instaIndex = (.*);/,
+            to: `constant instaIndex = ${indexInstance.address};`,
             countMatches: true
             };
         //replace the index address variable in the contract.
