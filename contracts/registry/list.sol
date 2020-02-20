@@ -26,7 +26,7 @@ contract DSMath {
 contract Variables is DSMath {
 
     // The InstaIndex Address.
-    address public constant index = 0x0000000000000000000000000000000000000000;
+    address public constant instaIndex = 0x0000000000000000000000000000000000000000;
 
     // Smart Account Count.
     uint64 public accounts;
@@ -162,7 +162,7 @@ contract InstaList is Configure {
      * @param _account Smart Account Address.
     */
     function init(address  _account) external {
-        require(msg.sender == index, "not-index");
+        require(msg.sender == instaIndex, "not-index");
         accounts++;
         accountID[_account] = accounts;
         accountAddr[accounts] = _account;

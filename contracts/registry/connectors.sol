@@ -29,7 +29,7 @@ contract Controllers is DSMath {
     event LogRemoveController(address addr);
 
      // The InstaIndex Address.
-    address public constant index = 0x0000000000000000000000000000000000000000;
+    address public constant instaIndex = 0x0000000000000000000000000000000000000000;
 
     // Enabled Cheif(Address of Cheif => bool).
     mapping(address => bool) public chief;
@@ -43,7 +43,7 @@ contract Controllers is DSMath {
     * or Enabled Cheif.
     */
     modifier isChief {
-        require(chief[msg.sender] || msg.sender == IndexInterface(index).master(), "not-an-chief");
+        require(chief[msg.sender] || msg.sender == IndexInterface(instaIndex).master(), "not-an-chief");
         _;
     }
 
