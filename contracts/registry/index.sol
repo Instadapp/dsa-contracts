@@ -1,6 +1,11 @@
 pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
+/**
+ * @title InstaIndex
+ * @dev Index Contract which allows to maintain and manage Smart Account
+ */
+
 interface AccountInterface {
     function enable(address authority) external;
     function cast(address[] calldata _targets, bytes[] calldata _datas, address _origin) external payable returns (bytes32[] memory responses);
@@ -17,18 +22,32 @@ contract AddressIndex {
     event LogNewCheck(uint accountVersion, address check);
     event LogNewAccount(address _newAccount, address _connectors, address _check);
 
+    // The Master Address.
     address public master;
+    // The List Address.
     address public list;
+
+    // Connectors Modules(Version => Connector Version).
     mapping (uint => address) public connectors;
+    // Check Modules(Version => Check Version).
     mapping (uint => address) public check;
+    // Account Modules(Version => Account Version).
     mapping (uint => address) public account;
+    // Version Count of Account Module.
     uint public versionCount;
 
+    /**
+    * @dev Throws if the sender not is Master Address.
+    */
     modifier isMaster() {
         require(msg.sender == master, "not-master");
         _;
     }
 
+    /**
+     * @dev Change the Master Address.
+     * @param _newMaster The New Master Address.
+     */
     function changeMaster(address _newMaster) external isMaster {
         require(_newMaster != master, "already-a-master");
         require(_newMaster != address(0), "not-valid-address");
@@ -36,6 +55,11 @@ contract AddressIndex {
         emit LogNewMaster(_newMaster);
     }
 
+    /**
+     * @dev Change the Check Address of a specfic version.
+     * @param accountVersion Account version to change Check address.
+     * @param _newCheck The New Check Address.
+     */
     function changeCheck(uint accountVersion, address _newCheck) external isMaster {
         require(_newCheck != check[accountVersion], "already-a-check");
         require(_newCheck != address(0), "not-valid-address");
@@ -43,6 +67,12 @@ contract AddressIndex {
         emit LogNewCheck(accountVersion, _newCheck);
     }
 
+    /**
+     * @dev Add New Account Module.
+     * @param _newAccount The New Account Module Address.
+     * @param _connectors Connectors Module Address of the Account Module.
+     * @param _check Check Address of the Account Module.
+     */
     function addNewAccount(address _newAccount, address _connectors, address _check) external isMaster {
         require(_newAccount != address(0), "not-valid-address");
         versionCount++;
@@ -55,9 +85,13 @@ contract AddressIndex {
 }
 
 contract CloneFactory is AddressIndex {
-
+    /**
+     * @dev Clone a new Account Module.
+     * @param version Account Module version to clone.
+     */
     function createClone(uint version) internal returns (address result) {
-        bytes20 targetBytes = bytes20(account[version]); // TODO: should we keep address directly instead of byte20
+        bytes20 targetBytes = bytes20(account[version]);
+        // solium-disable-next-line security/no-inline-assembly
         assembly {
             let clone := mload(0x40)
             mstore(clone, 0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000)
@@ -67,8 +101,14 @@ contract CloneFactory is AddressIndex {
         }
     }
 
+    /**
+     * @dev Check if account module is a clone.
+     * @param version Account Module version.
+     * @param query Account Module Address.
+     */
     function isClone(uint version, address query) external view returns (bool result) {
         bytes20 targetBytes = bytes20(account[version]);
+        // solium-disable-next-line security/no-inline-assembly
         assembly {
             let clone := mload(0x40)
             mstore(clone, 0x363d3d373d3d3d363d7300000000000000000000000000000000000000000000)
@@ -89,7 +129,14 @@ contract InstaIndex is CloneFactory {
 
     event AccountCreated(address sender, address indexed owner, address account, address indexed origin);
 
-    // build account with call data
+    /**
+     * @dev Create a new Smart Account for a user and run cast function in Smart Account.
+     * @param _owner Owner of the Smart Account.
+     * @param accountVersion Account Module version.
+     * @param _targets Targets to run cast function.
+     * @param _datas Datas(CallData(s)) to run cast function.
+     * @param _origin Origin Where Smart Account is created.
+     */
     function buildWithCast(
         address _owner,
         uint accountVersion,
@@ -101,7 +148,12 @@ contract InstaIndex is CloneFactory {
         if (_targets.length > 0) AccountInterface(_account).cast.value(msg.value)(_targets, _datas, _origin);
     }
 
-    // build account
+    /**
+     * @dev Create a new Smart Account for a user.
+     * @param _owner Owner of the Smart Account.
+     * @param accountVersion Account Module version.
+     * @param _origin Origin Where Smart Account is created.
+     */
     function build(
         address _owner,
         uint accountVersion,
@@ -114,6 +166,13 @@ contract InstaIndex is CloneFactory {
         emit AccountCreated(msg.sender, _owner, _account, _origin);
     }
 
+    /**
+     * @dev Setup Initial Addresses After InstaIndex is deployed and can be only run once.
+     * @param _master The Master Address.
+     * @param _list The List Address.
+     * @param _account The Account Module Address.
+     * @param _connectors The Connectors Module Address.
+     */
     function setBasics(
         address _master,
         address _list,

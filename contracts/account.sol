@@ -1,6 +1,11 @@
 pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
+/**
+ * @title InstaAccount.
+ * @dev Smart Account Wallet.
+ */
+
 interface IndexInterface {
     function connectors(uint version) external view returns (address);
     function check(uint version) external view returns (address);
@@ -28,21 +33,36 @@ contract Record {
     event LogDisable(address indexed user);
     event LogSwitchShield(bool _shield);
 
+    // The InstaIndex Address.
     address public constant index = 0x0000000000000000000000000000000000000000;
+    // The Account Module Version.
     uint public constant version = 1;
+    // Auth Module(Address of Auth => bool).
     mapping (address => bool) private auth;
+    // Is shield true/false.
     bool public shield;
 
+    /**
+     * @dev Check for Auth if enabled.
+     * @param user address/user/owner.
+     */
     function isAuth(address user) public view returns (bool) {
         return auth[user];
     }
 
+    /**
+     * @dev Change Shield State.
+    */
     function switchShield() external {
         require(auth[msg.sender], "not-self");
         shield = !shield;
         emit LogSwitchShield(shield);
     }
 
+    /**
+     * @dev Enable New User.
+     * @param user Owner of the Smart Account.
+    */
     function enable(address user) public {
         require(msg.sender == address(this) || msg.sender == index, "not-self-index");
         require(user != address(0), "not-valid");
@@ -52,6 +72,10 @@ contract Record {
         emit LogEnable(user);
     }
 
+    /**
+     * @dev Disable User.
+     * @param user Owner of the Smart Account.
+    */
     function disable(address user) public {
         require(msg.sender == address(this), "not-self");
         require(user != address(0), "not-valid");
@@ -68,14 +92,21 @@ contract InstaAccount is Record {
     event LogCast(address indexed origin, address indexed sender, uint value);
     event LogEthDeposit(address indexed _sender, uint _amt);
 
+    /**
+     * @dev Emit event if Eth is deposited.
+    */
     receive() external payable {
         emit LogEthDeposit(msg.sender, msg.value);
-    }
+    }  
 
+     /**
+     * @dev Delegate the calls to Connector And this function is runned by cast().
+     * @param _target Target to of Connector.
+     * @param _data CallData of function in Connector.
+    */
     function spell(address _target, bytes memory _data) internal returns (bytes32 response) {
         require(_target != address(0), "target-invalid");
         assembly {
-            // TODO: think on replacing 'sub(gas(), 5000)' with 'gas()'
             let succeeded := delegatecall(sub(gas(), 5000), _target, add(_data, 0x20), mload(_data), 0, 32)
             response := mload(0)
             switch iszero(succeeded)
@@ -85,6 +116,12 @@ contract InstaAccount is Record {
         }
     }
 
+    /**
+     * @dev This is the main function, Where all the different functions are called
+     * from Smart Account.
+     * @param _targets Array of Target(s) to of Connector.
+     * @param _datas Array of Calldata(S) of function.
+    */
     function cast(
         address[] calldata _targets,
         bytes[] calldata _datas,
@@ -92,7 +129,7 @@ contract InstaAccount is Record {
     )
     external
     payable
-    returns (bytes32[] memory responses) // TODO: does return has any use case?
+    returns (bytes32[] memory responses)
     {
         require(isAuth(msg.sender) || msg.sender == index, "permission-denied");
 

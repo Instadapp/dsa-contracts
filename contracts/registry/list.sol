@@ -1,5 +1,10 @@
 pragma solidity ^0.6.0;
 
+/**
+ * @title InstaList
+ * @dev Index Contract which allows to maintain and manage Smart Account
+ */
+
 interface AccountInterface {
     function isAuth(address _user) external view returns (bool);
 }
@@ -20,16 +25,21 @@ contract DSMath {
 
 contract Variables is DSMath {
 
+     // The InstaIndex Address.
     address public constant index = 0x0000000000000000000000000000000000000000;
 
-    // account mapping
+    // Account Counts.
     uint64 public accounts;
+    // Smart Account ID (Smart Account Address => Account ID).
     mapping (address => uint64) public accountID; // get account ID from address
+    // Smart Account Address (Smart Account ID => Smart Account Address).
     mapping (uint64 => address) public accountAddr; // get account address from ID
 
-    // linked list of users
+    // User Link (User Address => UserLink).
     mapping (address => UserLink) public userLink; // user address => user linked list connection
+    // Linked List of Users (User Address => Smart Account ID => UserList).
     mapping (address => mapping(uint64 => UserList)) public userList; // user address => SLA ID => List (previous and next SLA)
+    
     struct UserLink {
         uint64 first;
         uint64 last;
@@ -41,7 +51,9 @@ contract Variables is DSMath {
     }
 
     // linked list of accounts
+    // Account Link (Smart Account ID => AccountLink).
     mapping (uint64 => AccountLink) public accountLink; // account => account linked list connection
+    // Linked List of Accounts (Smart Account ID => Account Address=>AccountList).
     mapping (uint64 => mapping (address => AccountList)) public accountList; // account => user address => list
     struct AccountLink {
         address first;
@@ -57,6 +69,11 @@ contract Variables is DSMath {
 
 contract Configure is Variables {
 
+    /**
+     * @dev Add Account to User Linked List.
+     * @param _owner Acount Owner/User.
+     * @param _account Smart Account Address.
+    */
     function addAccount(address _owner, uint64 _account) internal {
         if (userLink[_owner].last != 0) {
             userList[_owner][_account].prev = userLink[_owner].last;
@@ -67,6 +84,11 @@ contract Configure is Variables {
         userLink[_owner].count = add(userLink[_owner].count, 1);
     }
 
+    /**
+     * @dev Remove Account to User Linked List.
+     * @param _owner Acount Owner/User.
+     * @param _account Smart Account Address.
+    */
     function removeAccount(address _owner, uint64 _account) internal {
         uint64 _prev = userList[_owner][_account].prev;
         uint64 _next = userList[_owner][_account].next;
@@ -78,6 +100,11 @@ contract Configure is Variables {
         delete userList[_owner][_account];
     }
 
+    /**
+     * @dev Add User/Owner to Account Linked List.
+     * @param _owner Acount Owner/User.
+     * @param _account Smart Account Address.
+    */
     function addUser(address _owner, uint64 _account) internal {
         if (accountLink[_account].last != address(0)) {
             accountList[_account][_owner].prev = accountLink[_account].last;
@@ -88,6 +115,11 @@ contract Configure is Variables {
         accountLink[_account].count = add(accountLink[_account].count, 1);
     }
 
+    /**
+     * @dev Remove User/Owner to Account Linked List.
+     * @param _owner Acount Owner/User.
+     * @param _account Smart Account Address.
+    */
     function removeUser(address _owner, uint64 _account) internal {
         address _prev = accountList[_account][_owner].prev;
         address _next = accountList[_account][_owner].next;
@@ -103,6 +135,10 @@ contract Configure is Variables {
 
 contract InstaList is Configure {
 
+    /**
+     * @dev Enable Auth.
+     * @param _owner Auth/Owner/User Address.
+    */
     function addAuth(address _owner) external {
         require(accountID[msg.sender] != 0, "not-account");
         require(AccountInterface(msg.sender).isAuth(_owner), "not-owner");
@@ -110,6 +146,10 @@ contract InstaList is Configure {
         addUser(_owner, accountID[msg.sender]);
     }
 
+    /**
+     * @dev Disable Auth.
+     * @param _owner Auth/Owner/User Address.
+    */
     function removeAuth(address _owner) external {
         require(accountID[msg.sender] != 0, "not-account");
         require(!AccountInterface(msg.sender).isAuth(_owner), "already-owner");
@@ -117,6 +157,10 @@ contract InstaList is Configure {
         removeUser(_owner, accountID[msg.sender]);
     }
 
+    /**
+     * @dev Setup Initial config of Smart Account.
+     * @param _account Smart Account Address.
+    */
     function init(address _account) external {
         require(msg.sender == index, "not-index");
         accounts++;

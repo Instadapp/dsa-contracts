@@ -1,5 +1,5 @@
-const mVar = artifacts.require("InstaMemory");
+const InstaMemory = artifacts.require("InstaMemory");
 
 module.exports = async function(deployer) {
-    await deployer.deploy(mVar); // deploy memoryVar.sol connector.
+    await deployer.deploy(InstaMemory); // deploy memoryVar.sol connector.
 };

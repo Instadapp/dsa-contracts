@@ -9,14 +9,16 @@ interface AccountInterface {
 contract Auth {
 
     /**
-     * @dev add new owner
+     * @dev Add New Owner
+     * @param user User Address.
      */
     function addModule(address user) public payable {
         AccountInterface(address(this)).enable(user);
     }
 
     /**
-     * @dev remove new owner
+     * @dev Remove New Owner
+     * @param user User Address.
      */
     function removeModule(address user) public payable {
         AccountInterface(address(this)).disable(user);
