@@ -104,11 +104,10 @@ contract InstaAccount is Record {
      * @param _target Target to of Connector.
      * @param _data CallData of function in Connector.
     */
-    function spell(address _target, bytes memory _data) internal returns (bytes32 response) {
+    function spell(address _target, bytes memory _data) internal {
         require(_target != address(0), "target-invalid");
         assembly {
             let succeeded := delegatecall(sub(gas(), 5000), _target, add(_data, 0x20), mload(_data), 0, 32)
-            response := mload(0)
             switch iszero(succeeded)
             case 1 {
                 revert(0, 0)
@@ -129,7 +128,6 @@ contract InstaAccount is Record {
     )
     external
     payable
-    returns (bytes32[] memory responses)
     {
         require(isAuth(msg.sender) || msg.sender == index, "permission-denied");
 
@@ -143,9 +141,8 @@ contract InstaAccount is Record {
             require(ConnectorsInterface(indexContract.connectors(version)).isStaticConnector(_targets), "not-static-connector");
         }
 
-        responses = new bytes32[](_targets.length);
         for (uint i = 0; i < _targets.length; i++) {
-            responses[i] = spell(_targets[i], _datas[i]);
+            spell(_targets[i], _datas[i]);
         }
 
         address _check = indexContract.check(version);
