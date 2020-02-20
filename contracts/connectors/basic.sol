@@ -94,7 +94,7 @@ contract BasicResolver is Memory {
         uint getId,
         uint setId
     ) public payable {
-        require(AccountInterface(address(this)).isAuth(to), "invalid-address-to");
+        require(AccountInterface(address(this)).isAuth(to), "invalid-to-address");
         uint amt = getUint(getId, tokenAmt);
         if (erc20 == getEthAddr()) {
             amt = amt == uint(-1) ? address(this).balance : amt;
