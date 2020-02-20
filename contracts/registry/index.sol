@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 /**
  * @title InstaIndex
- * @dev Index Contract which allows to maintain and manage Smart Account
+ * @dev Main Contract For Smart Account Layer. This is also a factory contract, Which deploys new Smart Accounts.
  */
 
 interface AccountInterface {
@@ -27,13 +27,13 @@ contract AddressIndex {
     // The List Address.
     address public list;
 
-    // Connectors Modules(Version => Connector Version).
+    // Connectors Modules(Account Module Version => Connectors Module Address).
     mapping (uint => address) public connectors;
-    // Check Modules(Version => Check Version).
+    // Check Modules(Account Module Version => Check Module Address).
     mapping (uint => address) public check;
-    // Account Modules(Version => Account Version).
+    // Account Modules(Account Module Version => Account Module Address).
     mapping (uint => address) public account;
-    // Version Count of Account Module.
+    // Version Count of Account Modules.
     uint public versionCount;
 
     /**
@@ -46,7 +46,7 @@ contract AddressIndex {
 
     /**
      * @dev Change the Master Address.
-     * @param _newMaster The New Master Address.
+     * @param _newMaster New Master Address.
      */
     function changeMaster(address _newMaster) external isMaster {
         require(_newMaster != master, "already-a-master");
@@ -56,8 +56,8 @@ contract AddressIndex {
     }
 
     /**
-     * @dev Change the Check Address of a specfic version.
-     * @param accountVersion Account version to change Check address.
+     * @dev Change the Check Address of a specfic Account Module version.
+     * @param accountVersion Account Module version.
      * @param _newCheck The New Check Address.
      */
     function changeCheck(uint accountVersion, address _newCheck) external isMaster {
@@ -70,8 +70,8 @@ contract AddressIndex {
     /**
      * @dev Add New Account Module.
      * @param _newAccount The New Account Module Address.
-     * @param _connectors Connectors Module Address of the Account Module.
-     * @param _check Check Address of the Account Module.
+     * @param _connectors Connectors Module Address.
+     * @param _check Check Module Address.
      */
     function addNewAccount(address _newAccount, address _connectors, address _check) external isMaster {
         require(_newAccount != address(0), "not-valid-address");
@@ -102,7 +102,7 @@ contract CloneFactory is AddressIndex {
     }
 
     /**
-     * @dev Check if account module is a clone.
+     * @dev Check if Account Module is a clone.
      * @param version Account Module version.
      * @param query Account Module Address.
      */
@@ -130,12 +130,12 @@ contract InstaIndex is CloneFactory {
     event AccountCreated(address sender, address indexed owner, address account, address indexed origin);
 
     /**
-     * @dev Create a new Smart Account for a user and run cast function in Smart Account.
+     * @dev Create a new Smart Account for a user and run cast function in the new Smart Account.
      * @param _owner Owner of the Smart Account.
      * @param accountVersion Account Module version.
-     * @param _targets Targets to run cast function.
-     * @param _datas Datas(CallData(s)) to run cast function.
-     * @param _origin Origin Where Smart Account is created.
+     * @param _targets Array of Target to run cast function.
+     * @param _datas Array of Data(callData) to run cast function.
+     * @param _origin Where Smart Account is created.
      */
     function buildWithCast(
         address _owner,
@@ -152,7 +152,7 @@ contract InstaIndex is CloneFactory {
      * @dev Create a new Smart Account for a user.
      * @param _owner Owner of the Smart Account.
      * @param accountVersion Account Module version.
-     * @param _origin Origin Where Smart Account is created.
+     * @param _origin Where Smart Account is created.
      */
     function build(
         address _owner,
