@@ -160,7 +160,7 @@ contract InstaIndex is CloneFactory {
         uint accountVersion,
         address _origin
     ) public returns (address _account) {
-        require(accountVersion != 0 && accountVersion <= versionCount, "Not-valid-account");
+        require(accountVersion != 0 && accountVersion <= versionCount, "not-valid-account");
         _account = createClone(accountVersion);
         ListInterface(list).init(_account);
         AccountInterface(_account).enable(_owner);

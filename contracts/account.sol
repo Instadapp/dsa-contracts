@@ -34,7 +34,7 @@ contract Record {
     event LogSwitchShield(bool _shield);
 
     // The InstaIndex Address.
-    address public constant index = 0x0000000000000000000000000000000000000000;
+    address public constant instaIndex = 0x0000000000000000000000000000000000000000;
     // The Account Module Version.
     uint public constant version = 1;
     // Auth Module(Address of Auth => bool).
@@ -64,11 +64,11 @@ contract Record {
      * @param user Owner of the Smart Account.
     */
     function enable(address user) public {
-        require(msg.sender == address(this) || msg.sender == index, "not-self-index");
+        require(msg.sender == address(this) || msg.sender == instaIndex, "not-self-index");
         require(user != address(0), "not-valid");
         require(!auth[user], "already-enabled");
         auth[user] = true;
-        ListInterface(IndexInterface(index).list()).addAuth(user);
+        ListInterface(IndexInterface(instaIndex).list()).addAuth(user);
         emit LogEnable(user);
     }
 
@@ -81,7 +81,7 @@ contract Record {
         require(user != address(0), "not-valid");
         require(auth[user], "already-disabled");
         delete auth[user];
-        ListInterface(IndexInterface(index).list()).removeAuth(user);
+        ListInterface(IndexInterface(instaIndex).list()).removeAuth(user);
         emit LogDisable(user);
     }
 
@@ -131,26 +131,20 @@ contract InstaAccount is Record {
     payable
     returns (bytes32[] memory responses)
     {
-        require(isAuth(msg.sender) || msg.sender == index, "permission-denied");
-
-        IndexInterface indexContract = IndexInterface(index);
-
+        require(isAuth(msg.sender) || msg.sender == instaIndex, "permission-denied");
+        IndexInterface indexContract = IndexInterface(instaIndex);
         bool isShield = shield;
-
         if (!isShield) {
             require(ConnectorsInterface(indexContract.connectors(version)).isConnector(_targets), "not-connector");
         } else {
             require(ConnectorsInterface(indexContract.connectors(version)).isStaticConnector(_targets), "not-static-connector");
         }
-
         responses = new bytes32[](_targets.length);
         for (uint i = 0; i < _targets.length; i++) {
             responses[i] = spell(_targets[i], _datas[i]);
         }
-
         address _check = indexContract.check(version);
         if (_check != address(0) && !isShield) require(CheckInterface(_check).isOk(), "not-ok");
-
         emit LogCast(_origin, msg.sender, msg.value);
     }
 
