@@ -25,10 +25,10 @@ contract AddressIndex {
 
     // The Master Address.
     address public master;
-    // The List Address.
+    // The List Registry Address.
     address public list;
 
-    // Connectors Modules(Account Module Version => Connectors Module Address).
+    // Connectors Modules(Account Module Version => Connectors Registry Module Address).
     mapping (uint => address) public connectors;
     // Check Modules(Account Module Version => Check Module Address).
     mapping (uint => address) public check;
@@ -71,7 +71,7 @@ contract AddressIndex {
     /**
      * @dev Add New Account Module.
      * @param _newAccount The New Account Module Address.
-     * @param _connectors Connectors Module Address.
+     * @param _connectors Connectors Registry Module Address.
      * @param _check Check Module Address.
      */
     function addNewAccount(address _newAccount, address _connectors, address _check) external isMaster {
@@ -168,11 +168,11 @@ contract InstaIndex is CloneFactory {
     }
 
     /**
-     * @dev Setup Initial Addresses After InstaIndex is deployed and can be only run once.
+     * @dev Setup Initial things for InstaIndex, after its been deployed and can be only run once.
      * @param _master The Master Address.
      * @param _list The List Address.
      * @param _account The Account Module Address.
-     * @param _connectors The Connectors Module Address.
+     * @param _connectors The Connectors Registry Module Address.
      */
     function setBasics(
         address _master,

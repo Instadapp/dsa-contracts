@@ -1,8 +1,8 @@
 pragma solidity ^0.6.0;
 
 /**
- * @title InstaMemory
- * @dev Index Contract which allows to maintain and manage Smart Account
+ * @title InstaMemory.
+ * @dev Store Data For Cast Function.
  */
 
 contract InstaMemory {
@@ -26,7 +26,6 @@ contract InstaMemory {
      /**
      * @dev Get Stored Bytes.
      * @param _id Storage ID.
-     * @return stored byte data.
     */
     function getBytes(uint _id) public returns (bytes32 _byte) {
         _byte = mbytes[msg.sender][_id];
@@ -36,7 +35,7 @@ contract InstaMemory {
      /**
      * @dev Store Uint.
      * @param _id Storage ID.
-     * @param _byte uint data to store.
+     * @param _num uint data to store.
     */
     function setUint(uint _id, uint _num) public {
         muint[msg.sender][_id] = _num;
@@ -45,7 +44,6 @@ contract InstaMemory {
     /**
      * @dev Get Stored Uint.
      * @param _id Storage ID.
-     * @return stored uint data.
     */
     function getUint(uint _id) public returns (uint _num) {
         _num = muint[msg.sender][_id];
@@ -55,7 +53,7 @@ contract InstaMemory {
      /**
      * @dev Store Address.
      * @param _id Storage ID.
-     * @param _byte Address data to store.
+     * @param _addr Address data to store.
     */
     function setAddr(uint _id, address _addr) public {
         maddr[msg.sender][_id] = _addr;
@@ -64,7 +62,6 @@ contract InstaMemory {
     /**
      * @dev Get Stored Address.
      * @param _id Storage ID.
-     * @return stored address data.
     */
     function getAddr(uint _id) public returns (address _addr) {
         _addr = maddr[msg.sender][_id];

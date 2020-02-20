@@ -1,5 +1,10 @@
 pragma solidity ^0.6.0;
 
+/**
+ * @title ConnectBasic.
+ * @dev Connector to deposit/withdraw assets.
+ */
+
 interface ERC20Interface {
     function allowance(address, address) external view returns (uint);
     function balanceOf(address) external view returns (uint);
@@ -22,7 +27,6 @@ contract Memory {
 
     /**
      * @dev Return InstaMemory Address.
-     * @return InstaMemoryAddress.
      */
     function getMemoryAddr() public pure returns (address) {
         return 0x0000000000000000000000000000000000000000; // InstaMemory Address
@@ -32,7 +36,6 @@ contract Memory {
      * @dev Get Stored Uint Value From InstaMemory.
      * @param getId Storage ID.
      * @param val if any value.
-     * @return Stored Uint or 'val'.
      */
     function getUint(uint getId, uint val) internal returns (uint returnVal) {
         returnVal = getId == 0 ? val : MemoryInterface(getMemoryAddr()).getUint(getId);

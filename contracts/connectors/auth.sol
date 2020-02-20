@@ -1,5 +1,10 @@
 pragma solidity ^0.6.0;
 
+/**
+ * @title ConnectAuth.
+ * @dev Connector For Adding Auth.
+ */
+
 interface AccountInterface {
     function enable(address user) external;
     function disable(address user) external;
