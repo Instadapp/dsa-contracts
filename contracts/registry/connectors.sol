@@ -123,6 +123,7 @@ contract LinkedList is Controllers {
             last = list[_connector].prev;
         }
         count = sub(count, 1);
+        delete list[_connector];
 
         emit LogDisable(_connector);
     }
