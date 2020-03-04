@@ -130,6 +130,7 @@ contract InstaAccount is Record {
     payable
     {
         require(isAuth(msg.sender) || msg.sender == instaIndex, "permission-denied");
+        require(_targets.length == _datas.length , "array-length-invalid");
         IndexInterface indexContract = IndexInterface(instaIndex);
         bool isShield = shield;
         if (!isShield) {
