@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
  */
 
 interface AccountInterface {
+    function version() external view returns (uint);
     function enable(address authority) external;
     function cast(address[] calldata _targets, bytes[] calldata _datas, address _origin) external payable returns (bytes32[] memory responses);
 }
@@ -15,7 +16,6 @@ interface AccountInterface {
 interface ListInterface {
     function init(address _account) external;
 }
-
 
 contract AddressIndex {
 
@@ -77,6 +77,7 @@ contract AddressIndex {
     function addNewAccount(address _newAccount, address _connectors, address _check) external isMaster {
         require(_newAccount != address(0), "not-valid-address");
         versionCount++;
+        require(AccountInterface(_newAccount).version() == versionCount, "not-valid-version");
         account[versionCount] = _newAccount;
         if (_connectors != address(0)) connectors[versionCount] = _connectors;
         if (_check != address(0)) check[versionCount] = _check;
