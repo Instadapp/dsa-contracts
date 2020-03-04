@@ -77,6 +77,8 @@ contract BasicResolver is Memory {
             ERC20Interface token = ERC20Interface(erc20);
             amt = amt == uint(-1) ? token.balanceOf(msg.sender) : amt;
             token.transferFrom(msg.sender, address(this), amt);
+        } else {
+            require(msg.value == amt, "invalid-ether-amount");
         }
         setUint(setId, amt);
         emit LogDeposit(erc20, amt, getId, setId);
