@@ -20,10 +20,12 @@ interface ListInterface {
 contract AddressIndex {
 
     event LogNewMaster(address master);
+    event LogUpdateMaster(address master);
     event LogNewCheck(uint accountVersion, address check);
     event LogNewAccount(address _newAccount, address _connectors, address _check);
 
     // The Master Address.
+    address private newMaster;
     address public master;
     // The List Registry Address.
     address public list;
@@ -52,8 +54,16 @@ contract AddressIndex {
     function changeMaster(address _newMaster) external isMaster {
         require(_newMaster != master, "already-a-master");
         require(_newMaster != address(0), "not-valid-address");
-        master = _newMaster;
+        newMaster = _newMaster;
         emit LogNewMaster(_newMaster);
+    }
+
+    function updateMaster() external {
+        require(newMaster != address(0), "not-valid-address");
+        require(msg.sender == newMaster, "not-master");
+        master = newMaster;
+        newMaster = address(0);
+        emit LogUpdateMaster(master);
     }
 
     /**
