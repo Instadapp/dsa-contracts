@@ -31,16 +31,16 @@ contract Controllers is DSMath {
      // The InstaIndex Address.
     address public constant instaIndex = 0x0000000000000000000000000000000000000000;
 
-    // Enabled Cheif(Address of Cheif => bool).
+    // Enabled Chief(Address of Chief => bool).
     mapping(address => bool) public chief;
     // Enabled Connectors(Connector Address => bool).
     mapping(address => bool) public connectors;
-    // Enbled Static Connectors(Connector Address => bool).
+    // Enabled Static Connectors(Connector Address => bool).
     mapping(address => bool) public staticConnectors;
 
     /**
     * @dev Throws if the sender not is Master Address from InstaIndex
-    * or Enabled Cheif.
+    * or Enabled Chief.
     */
     modifier isChief {
         require(chief[msg.sender] || msg.sender == IndexInterface(instaIndex).master(), "not-an-chief");
@@ -48,8 +48,8 @@ contract Controllers is DSMath {
     }
 
     /**
-     * @dev Enable a Cheif.
-     * @param _userAddress Cheif Address.
+     * @dev Enable a Chief.
+     * @param _userAddress Chief Address.
     */
     function enableChief(address _userAddress) external isChief {
         chief[_userAddress] = true;
@@ -57,8 +57,8 @@ contract Controllers is DSMath {
     }
 
     /**
-     * @dev Disables a Cheif.
-     * @param _userAddress Cheif Address.
+     * @dev Disables a Chief.
+     * @param _userAddress Chief Address.
     */
     function disableChief(address _userAddress) external isChief {
         delete chief[_userAddress];

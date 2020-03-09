@@ -67,7 +67,7 @@ contract AddressIndex {
     }
 
     /**
-     * @dev Change the Check Address of a specfic Account Module version.
+     * @dev Change the Check Address of a specific Account Module version.
      * @param accountVersion Account Module version.
      * @param _newCheck The New Check Address.
      */

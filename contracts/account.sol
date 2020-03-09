@@ -101,7 +101,7 @@ contract InstaAccount is Record {
     }  
 
      /**
-     * @dev Delegate the calls to Connector And this function is runned by cast().
+     * @dev Delegate the calls to Connector And this function is ran by cast().
      * @param _target Target to of Connector.
      * @param _data CallData of function in Connector.
     */

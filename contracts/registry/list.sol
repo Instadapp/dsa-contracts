@@ -71,7 +71,7 @@ contract Configure is Variables {
 
     /**
      * @dev Add Account to User Linked List.
-     * @param _owner Acount Owner.
+     * @param _owner Account Owner.
      * @param _account Smart Account Address.
     */
     function addAccount(address _owner, uint64 _account) internal {
@@ -86,7 +86,7 @@ contract Configure is Variables {
 
     /**
      * @dev Remove Account from User Linked List.
-     * @param _owner Acount Owner/User.
+     * @param _owner Account Owner/User.
      * @param _account Smart Account Address.
     */
     function removeAccount(address _owner, uint64 _account) internal {
@@ -102,7 +102,7 @@ contract Configure is Variables {
 
     /**
      * @dev Add Owner to Account Linked List.
-     * @param _owner Acount Owner.
+     * @param _owner Account Owner.
      * @param _account Smart Account Address.
     */
     function addUser(address _owner, uint64 _account) internal {
@@ -117,7 +117,7 @@ contract Configure is Variables {
 
     /**
      * @dev Remove Owner from Account Linked List.
-     * @param _owner Acount Owner.
+     * @param _owner Account Owner.
      * @param _account Smart Account Address.
     */
     function removeUser(address _owner, uint64 _account) internal {
