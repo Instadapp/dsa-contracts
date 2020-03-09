@@ -94,6 +94,7 @@ contract LinkedList is Controllers {
      * @param _connector Connector Address.
     */
     function addToList(address _connector) internal {
+        assert(_connector != address(0));
         if (last != address(0)) {
             list[_connector].prev = last;
             list[last].next = _connector;
