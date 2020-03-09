@@ -139,7 +139,7 @@ contract CloneFactory is AddressIndex {
 
 contract InstaIndex is CloneFactory {
 
-    event AccountCreated(address sender, address indexed owner, address account, address indexed origin);
+    event LogAccountCreated(address sender, address indexed owner, address account, address indexed origin);
 
     /**
      * @dev Create a new Smart Account for a user and run cast function in the new Smart Account.
@@ -175,7 +175,7 @@ contract InstaIndex is CloneFactory {
         _account = createClone(accountVersion);
         ListInterface(list).init(_account);
         AccountInterface(_account).enable(_owner);
-        emit AccountCreated(msg.sender, _owner, _account, _origin);
+        emit LogAccountCreated(msg.sender, _owner, _account, _origin);
     }
 
     /**
