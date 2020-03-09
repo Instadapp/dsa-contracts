@@ -53,9 +53,10 @@ contract Record {
     /**
      * @dev Change Shield State.
     */
-    function switchShield() external {
+    function switchShield(bool _shield) external {
         require(auth[msg.sender], "not-self");
-        shield = !shield;
+        require(shield != _shield, "shield is set");
+        shield = _shield;
         emit LogSwitchShield(shield);
     }
 
