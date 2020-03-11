@@ -73,7 +73,6 @@ contract AddressIndex {
      */
     function changeCheck(uint accountVersion, address _newCheck) external isMaster {
         require(_newCheck != check[accountVersion], "already-a-check");
-        require(_newCheck != address(0), "not-valid-address");
         check[accountVersion] = _newCheck;
         emit LogNewCheck(accountVersion, _newCheck);
     }
