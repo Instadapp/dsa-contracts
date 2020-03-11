@@ -73,6 +73,8 @@ contract LinkedList is Controllers {
     event LogEnable(address indexed connector);
     event LogDisable(address indexed connector);
     event LogEnableStatic(address indexed connector);
+    event LogDisableStatic(address indexed connector);
+    event LogSetDisableStatic(address indexed connector);
 
     // Connectors Count.
     uint public count;
@@ -136,6 +138,8 @@ contract InstaConnectors is LinkedList {
     uint public staticCount;
     // Static Connectors (ID => Static Connector).
     mapping (uint => address) public staticList;
+    // Static Connector Disable Timer (Static Connector => Timer).
+    mapping (address => uint64) public staticTimer;
 
     /**
      * @dev Enable Connector.
@@ -167,6 +171,53 @@ contract InstaConnectors is LinkedList {
         staticConnectors[_connector] = true;
         emit LogEnableStatic(_connector);
     }
+
+    /**
+     * @dev Disable Static Connector. Runs a 30 days timer for disabling the connector.
+     * @param _connector Static Connector Address.
+     * @param reset reset timer.
+    */
+    function disableStatic(address _connector, bool reset) external isChief {
+        require(staticConnectors[_connector], "already-disabled");
+        if (!reset) {
+            require(staticTimer[_connector] == 0, "timer-already-set");
+            staticTimer[_connector] = uint64(now + 30 days);
+            emit LogSetDisableStatic(_connector);
+        } else {
+            require(staticTimer[_connector] != 0, "timer-not-set");
+            delete staticTimer[_connector];
+        }
+    }
+
+     /**
+     * @dev Disable Static Connector, when 30 days timer has finished.
+     * @param _connector Static Connector Address.
+    */
+    function disableStatic(address _connector) external {
+        require(staticConnectors[_connector], "not-already-enabled");
+        require(staticTimer[_connector] != 0, "Timer-not-set");
+        require(staticTimer[_connector] <= now, "30-days-not-over");
+
+        if(staticList[staticCount] == _connector) {
+            delete staticList[staticCount];
+        } else {
+            uint connectorID = 0;
+            for (uint index = 1; index < staticCount; index++) {
+                if(staticList[index] == _connector) connectorID = index;
+                if(connectorID != 0) {
+                    address _next = staticList[index+1];
+                    if(index+1 == staticCount) delete staticList[index+1];
+                    staticList[index] = _next;
+                }
+            }
+        }
+
+        staticCount--;
+        delete staticConnectors[_connector];
+        delete staticTimer[_connector];
+        emit LogDisableStatic(_connector);
+    }
+
 
      /**
      * @dev Check if Connector addresses are enabled.
