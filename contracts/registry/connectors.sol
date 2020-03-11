@@ -173,7 +173,7 @@ contract InstaConnectors is LinkedList {
     }
 
     /**
-     * @dev Disable Static Connector. Runs a 30 days timer for disabling the connector.
+     * @dev Disable Static Connector.
      * @param _connector Static Connector Address.
      * @param reset reset timer.
     */
