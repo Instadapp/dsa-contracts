@@ -73,6 +73,7 @@ contract AddressIndex {
      */
     function changeCheck(uint accountVersion, address _newCheck) external isMaster {
         require(_newCheck != check[accountVersion], "already-a-check");
+        require(_newCheck != address(0), "not-valid-address");
         check[accountVersion] = _newCheck;
         emit LogNewCheck(accountVersion, _newCheck);
     }
@@ -156,7 +157,7 @@ contract InstaIndex is CloneFactory {
         address _origin
     ) external payable returns (address _account) {
         _account = build(_owner, accountVersion, _origin);
-        if (_targets.length > 0 && msg.sender == _owner) AccountInterface(_account).cast.value(msg.value)(_targets, _datas, _origin);
+        if (_targets.length > 0) AccountInterface(_account).cast.value(msg.value)(_targets, _datas, _origin);
     }
 
     /**
