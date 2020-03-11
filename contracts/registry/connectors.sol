@@ -180,9 +180,12 @@ contract InstaConnectors is LinkedList {
     function disableStatic(address _connector, bool reset) external isChief {
         require(staticConnectors[_connector], "already-disabled");
         if (!reset) {
-            require(staticTimer[_connector] == 0, "timer-already-set");
-            staticTimer[_connector] = uint64(now + 30 days);
-            emit LogSetDisableStatic(_connector);
+            if(staticTimer[_connector] == 0){
+                staticTimer[_connector] = uint64(now + 30 days);
+                emit LogSetDisableStatic(_connector);
+            } else {
+                _disableStatic(_connector);
+            }
         } else {
             require(staticTimer[_connector] != 0, "timer-not-set");
             delete staticTimer[_connector];
@@ -193,21 +196,21 @@ contract InstaConnectors is LinkedList {
      * @dev Disable Static Connector, when 30 days timer has finished.
      * @param _connector Static Connector Address.
     */
-    function disableStatic(address _connector) external {
-        require(staticConnectors[_connector], "not-already-enabled");
+    function _disableStatic(address _connector) internal {
         require(staticTimer[_connector] != 0, "Timer-not-set");
         require(staticTimer[_connector] <= now, "30-days-not-over");
+        uint _staticCount = staticCount;
 
-        if(staticList[staticCount] == _connector) {
-            delete staticList[staticCount];
+        if(staticList[_staticCount] == _connector) {
+            delete staticList[_staticCount];
         } else {
             uint connectorID = 0;
-            for (uint index = 1; index < staticCount; index++) {
-                if(staticList[index] == _connector) connectorID = index;
+            for (uint pos = 1; pos < _staticCount; pos++) {
+                if(staticList[pos] == _connector) connectorID = pos;
                 if(connectorID != 0) {
-                    address _next = staticList[index+1];
-                    if(index+1 == staticCount) delete staticList[index+1];
-                    staticList[index] = _next;
+                    address _next = staticList[pos+1];
+                    if ((pos + 1) == _staticCount) delete staticList[pos+1];
+                    staticList[pos] = _next;
                 }
             }
         }
