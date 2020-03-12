@@ -74,7 +74,7 @@ contract LinkedList is Controllers {
     event LogDisable(address indexed connector);
     event LogEnableStatic(address indexed connector);
     event LogDisableStatic(address indexed connector);
-    event LogSetDisableStatic(address indexed connector);
+    event LogDisableStaticTimer(address indexed connector);
 
     // Connectors Count.
     uint public count;
@@ -137,9 +137,9 @@ contract InstaConnectors is LinkedList {
     // Static Connectors Count.
     uint public staticCount;
     // Static Connectors (ID => Static Connector).
-    mapping (uint => address) public staticList;
+    address[] public staticList;
     // Static Connector Disable Timer (Static Connector => Timer).
-    mapping (address => uint64) public staticTimer;
+    mapping (address => uint) public staticTimer;
 
     /**
      * @dev Enable Connector.
@@ -167,7 +167,7 @@ contract InstaConnectors is LinkedList {
     function enableStatic(address _connector) external isChief {
         require(!staticConnectors[_connector], "already-enabled");
         staticCount++;
-        staticList[staticCount] = _connector;
+        staticList.push(_connector);
         staticConnectors[_connector] = true;
         emit LogEnableStatic(_connector);
     }
@@ -181,44 +181,20 @@ contract InstaConnectors is LinkedList {
         require(staticConnectors[_connector], "already-disabled");
         if (!reset) {
             if(staticTimer[_connector] == 0){
-                staticTimer[_connector] = uint64(now + 30 days);
-                emit LogSetDisableStatic(_connector);
+                staticTimer[_connector] = now + 30 days;
+                emit LogDisableStaticTimer(_connector);
             } else {
-                _disableStatic(_connector);
+                require(staticTimer[_connector] <= now, "30-days-not-over");
+                staticCount--;
+                delete staticConnectors[_connector];
+                delete staticTimer[_connector];
+                emit LogDisableStatic(_connector);
+                // _disableStatic(_connector);
             }
         } else {
             require(staticTimer[_connector] != 0, "timer-not-set");
             delete staticTimer[_connector];
         }
-    }
-
-     /**
-     * @dev Disable Static Connector, when 30 days timer has finished.
-     * @param _connector Static Connector Address.
-    */
-    function _disableStatic(address _connector) internal {
-        require(staticTimer[_connector] != 0, "Timer-not-set");
-        require(staticTimer[_connector] <= now, "30-days-not-over");
-        uint _staticCount = staticCount;
-
-        if(staticList[_staticCount] == _connector) {
-            delete staticList[_staticCount];
-        } else {
-            uint connectorID = 0;
-            for (uint pos = 1; pos < _staticCount; pos++) {
-                if(staticList[pos] == _connector) connectorID = pos;
-                if(connectorID != 0) {
-                    address _next = staticList[pos+1];
-                    if ((pos + 1) == _staticCount) delete staticList[pos+1];
-                    staticList[pos] = _next;
-                }
-            }
-        }
-
-        staticCount--;
-        delete staticConnectors[_connector];
-        delete staticTimer[_connector];
-        emit LogDisableStatic(_connector);
     }
 
 
