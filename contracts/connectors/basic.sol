@@ -117,5 +117,9 @@ contract BasicResolver is Memory {
 
 
 contract ConnectBasic is BasicResolver {
-    string public name = "Basic-v1";
+    string public constant name = "Basic-v1";
+
+    function connectorID() public pure returns(uint) {
+        return 2;
+    }
 }

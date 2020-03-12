@@ -33,5 +33,9 @@ contract Auth {
 
 
 contract ConnectAuth is Auth {
-    string public name = "Auth-v1";
+    string public constant name = "Auth-v1";
+
+    function connectorID() public pure returns(uint) {
+        return 1;
+    }
 }
