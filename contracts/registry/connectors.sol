@@ -92,9 +92,9 @@ contract LinkedList is Controllers {
     }
 
     // Static Connectors Array.
-    address[] public connectorStaticArray;
+    address[] public StaticConnectorArray;
     // Count of Static Connector's Enabled.
-    uint public connectorStaticCount;
+    uint public staticConnectorCount;
 
     /**
      * @dev Add Connector to Static Connector's array.
@@ -102,10 +102,10 @@ contract LinkedList is Controllers {
     **/
     function addToListStatic(address _connector) internal {
         require(_connector != address(0), "Not-vaild-connector");
-        require(ConnectorInterface(_connector).connectorID() == (connectorStaticArray.length+1),"Connector-name-doesnt-match");
+        require(ConnectorInterface(_connector).connectorID() == (StaticConnectorArray.length+1),"Connector-name-doesnt-match");
         ConnectorInterface(_connector).name();
-        connectorStaticArray.push(_connector);
-        connectorStaticCount++;
+        StaticConnectorArray.push(_connector);
+        staticConnectorCount++;
     }
 
 }
@@ -167,7 +167,7 @@ contract InstaConnectors is LinkedList {
                 emit LogDisableStaticTimer(_connector);
             } else {
                 require(staticTimer[_connector] <= now, "30-days-not-over");
-                connectorStaticCount--;
+                staticConnectorCount--;
                 delete staticConnectors[_connector];
                 delete staticTimer[_connector];
                 emit LogDisableStatic(_connector);
