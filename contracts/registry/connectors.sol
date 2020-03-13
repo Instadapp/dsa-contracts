@@ -73,7 +73,7 @@ contract Controllers is DSMath {
 }
 
 
-contract LinkedList is Controllers {
+contract Listings is Controllers {
     // Connectors Array.
     address[] public connectorArray;
     // Count of Connector's Enabled.
@@ -111,7 +111,7 @@ contract LinkedList is Controllers {
 }
 
 
-contract InstaConnectors is LinkedList {
+contract InstaConnectors is Listings {
 
     event LogEnable(address indexed connector);
     event LogDisable(address indexed connector);
