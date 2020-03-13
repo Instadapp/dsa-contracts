@@ -99,7 +99,7 @@ contract BasicResolver is Memory {
 
         emit LogDeposit(erc20, amt, getId, setId);
 
-        bytes4 _eventCode = bytes4(keccak256("LogDeposit(address, uint, uint, uint)"));
+        bytes4 _eventCode = bytes4(keccak256("LogDeposit(address,uint,uint,uint)"));
         bytes memory _eventParam = abi.encode(erc20, amt, getId, setId);
         (uint _type, uint _id) = connectorID();
         EventInterface(getEventAddr()).emitEvent(_type, _id, _eventCode, _eventParam);
@@ -134,7 +134,7 @@ contract BasicResolver is Memory {
 
         emit LogWithdraw(erc20, amt, to, getId, setId);
 
-        bytes4 _eventCode = bytes4(keccak256("LogWithdraw(address, uint, address, uint, uint)"));
+        bytes4 _eventCode = bytes4(keccak256("LogWithdraw(address,uint,address,uint,uint)"));
         bytes memory _eventParam = abi.encode(erc20, amt, to, getId, setId);
         (uint _type, uint _id) = connectorID();
         EventInterface(getEventAddr()).emitEvent(_type, _id, _eventCode, _eventParam);

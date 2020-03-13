@@ -45,7 +45,7 @@ contract Auth is Basics {
 
         emit LogAddAuth(msg.sender, user);
 
-        bytes4 _eventCode = bytes4(keccak256("LogAddAuth(address, address)"));
+        bytes4 _eventCode = bytes4(keccak256("LogAddAuth(address,address)"));
         bytes memory _eventParam = abi.encode(msg.sender, user);
         (uint _type, uint _id) = connectorID();
         EventInterface(getEventAddr()).emitEvent(_type, _id, _eventCode, _eventParam);
@@ -60,7 +60,7 @@ contract Auth is Basics {
 
         emit LogRemoveAuth(msg.sender, user);
 
-        bytes4 _eventCode = bytes4(keccak256("LogRemoveAuth(address, address)"));
+        bytes4 _eventCode = bytes4(keccak256("LogRemoveAuth(address,address)"));
         bytes memory _eventParam = abi.encode(msg.sender, user);
         (uint _type, uint _id) = connectorID();
         EventInterface(getEventAddr()).emitEvent(_type, _id, _eventCode, _eventParam);
