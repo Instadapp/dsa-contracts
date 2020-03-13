@@ -22,6 +22,9 @@ interface MemoryInterface {
     function setUint(uint _id, uint _val) external;
 }
 
+interface EventInterface {
+    function emitEvent(uint _connectorType, uint _connectorID, bytes4 _eventCode, bytes calldata _eventData) external;
+}
 
 contract Memory {
 
@@ -30,6 +33,13 @@ contract Memory {
      */
     function getMemoryAddr() public pure returns (address) {
         return 0x0000000000000000000000000000000000000000; // InstaMemory Address
+    }
+
+    /**
+     * @dev Return InstaEvent Address.
+     */
+    function getEventAddr() public pure returns (address) {
+        return 0x0000000000000000000000000000000000000000;
     }
 
     /**
@@ -48,6 +58,10 @@ contract Memory {
      */
     function setUint(uint setId, uint val) internal {
         if (setId != 0) MemoryInterface(getMemoryAddr()).setUint(setId, val);
+    }
+
+    function connectorID() public pure returns(uint _type, uint _id) {
+        (_type, _id) = (1, 2);
     }
 
 }
@@ -81,7 +95,13 @@ contract BasicResolver is Memory {
             require(msg.value == amt, "invalid-ether-amount");
         }
         setUint(setId, amt);
+
         emit LogDeposit(erc20, amt, getId, setId);
+
+        bytes4 _eventCode = bytes4(keccak256("LogDeposit(address, uint, uint, uint)"));
+        bytes memory _eventParam = abi.encode(erc20, amt, getId, setId);
+        (uint _type, uint _id) = connectorID();
+        EventInterface(getEventAddr()).emitEvent(_type, _id, _eventCode, _eventParam);
     }
 
    /**
@@ -110,7 +130,13 @@ contract BasicResolver is Memory {
             token.transfer(to, amt);
         }
         setUint(setId, amt);
+
         emit LogWithdraw(erc20, amt, to, getId, setId);
+
+        bytes4 _eventCode = bytes4(keccak256("LogWithdraw(address, uint, address, uint, uint)"));
+        bytes memory _eventParam = abi.encode(erc20, amt, to, getId, setId);
+        (uint _type, uint _id) = connectorID();
+        EventInterface(getEventAddr()).emitEvent(_type, _id, _eventCode, _eventParam);
     }
 
 }
@@ -118,8 +144,4 @@ contract BasicResolver is Memory {
 
 contract ConnectBasic is BasicResolver {
     string public constant name = "Basic-v1";
-
-    function connectorID() public pure returns(uint _type, uint _id) {
-        (_type, _id) = (1, 2);
-    }
 }
