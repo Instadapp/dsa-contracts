@@ -83,12 +83,11 @@ contract Listings is Controllers {
      * @dev Add Connector to Connector's array.
      * @param _connector Connector Address.
     **/
-    function addToList(address _connector) internal {
+    function addToArr(address _connector) internal {
         require(_connector != address(0), "Not-vaild-connector");
         require(ConnectorInterface(_connector).connectorID() == (connectorArray.length+1),"ConnectorID-doesnt-match");
         ConnectorInterface(_connector).name(); // Checking if connector has function name()
         connectorArray.push(_connector);
-        connectorCount++;
     }
 
     // Static Connectors Array.
@@ -100,12 +99,11 @@ contract Listings is Controllers {
      * @dev Add Connector to Static Connector's array.
      * @param _connector Static Connector Address.
     **/
-    function addToListStatic(address _connector) internal {
+    function addToArrStatic(address _connector) internal {
         require(_connector != address(0), "Not-vaild-connector");
         require(ConnectorInterface(_connector).connectorID() == (staticConnectorArray.length+1),"Connector-name-doesnt-match");
         ConnectorInterface(_connector).name(); // Checking if connector has function name()
         staticConnectorArray.push(_connector);
-        staticConnectorCount++;
     }
 
 }
@@ -128,8 +126,9 @@ contract InstaConnectors is Listings {
     */
     function enable(address _connector) external isChief {
         require(!connectors[_connector], "already-enabled");
-        addToList(_connector);
+        addToArr(_connector);
         connectors[_connector] = true;
+        connectorCount++;
         emit LogEnable(_connector);
     }
     /**
@@ -149,8 +148,9 @@ contract InstaConnectors is Listings {
     */
     function enableStatic(address _connector) external isChief {
         require(!staticConnectors[_connector], "already-enabled");
-        addToListStatic(_connector);
+        addToArrStatic(_connector);
         staticConnectors[_connector] = true;
+        staticConnectorCount++;
         emit LogEnableStatic(_connector);
     }
 
@@ -166,7 +166,7 @@ contract InstaConnectors is Listings {
                 staticTimer[_connector] = now + 30 days;
                 emit LogDisableStaticTimer(_connector);
             } else {
-                require(staticTimer[_connector] <= now, "30-days-not-over");
+                require(staticTimer[_connector] <= now, "less-than-30-days");
                 staticConnectorCount--;
                 delete staticConnectors[_connector];
                 delete staticTimer[_connector];
