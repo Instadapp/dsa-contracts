@@ -11,7 +11,7 @@ interface IndexInterface {
 }
 
 interface ConnectorInterface {
-    function connectorID() external view returns (uint);
+    function connectorID() external view returns(uint _type, uint _id);
     function name() external view returns (string memory);
 }
 
@@ -85,7 +85,8 @@ contract Listings is Controllers {
     **/
     function addToArr(address _connector) internal {
         require(_connector != address(0), "Not-vaild-connector");
-        require(ConnectorInterface(_connector).connectorID() == (connectorArray.length+1),"ConnectorID-doesnt-match");
+        (, uint _id) = ConnectorInterface(_connector).connectorID();
+        require(_id == (connectorArray.length+1),"ConnectorID-doesnt-match");
         ConnectorInterface(_connector).name(); // Checking if connector has function name()
         connectorArray.push(_connector);
     }
@@ -101,7 +102,8 @@ contract Listings is Controllers {
     **/
     function addToArrStatic(address _connector) internal {
         require(_connector != address(0), "Not-vaild-connector");
-        require(ConnectorInterface(_connector).connectorID() == (staticConnectorArray.length+1),"Connector-name-doesnt-match");
+        (, uint _id) = ConnectorInterface(_connector).connectorID();
+        require(_id == (staticConnectorArray.length+1),"Connector-name-doesnt-match");
         ConnectorInterface(_connector).name(); // Checking if connector has function name()
         staticConnectorArray.push(_connector);
     }
