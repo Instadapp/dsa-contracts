@@ -90,14 +90,11 @@ contract Record {
 contract InstaAccount is Record {
 
     event LogCast(address indexed origin, address indexed sender, uint value);
-    event LogEthDeposit(address indexed _sender, uint _amt);
 
     /**
      * @dev Emit event if Eth is deposited.
     */
-    receive() external payable {
-        emit LogEthDeposit(msg.sender, msg.value);
-    }  
+    receive() external payable {}
 
      /**
      * @dev Delegate the calls to Connector And this function is runned by cast().
