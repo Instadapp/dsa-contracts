@@ -86,13 +86,13 @@ contract LinkedList is Controllers {
     function addToList(address _connector) internal {
         require(_connector != address(0), "Not-vaild-connector");
         require(ConnectorInterface(_connector).connectorID() == (connectorArray.length+1),"ConnectorID-doesnt-match");
-        ConnectorInterface(_connector).name();
+        ConnectorInterface(_connector).name(); // Checking if connector has function name()
         connectorArray.push(_connector);
         connectorCount++;
     }
 
     // Static Connectors Array.
-    address[] public StaticConnectorArray;
+    address[] public staticConnectorArray;
     // Count of Static Connector's Enabled.
     uint public staticConnectorCount;
 
@@ -102,9 +102,9 @@ contract LinkedList is Controllers {
     **/
     function addToListStatic(address _connector) internal {
         require(_connector != address(0), "Not-vaild-connector");
-        require(ConnectorInterface(_connector).connectorID() == (StaticConnectorArray.length+1),"Connector-name-doesnt-match");
-        ConnectorInterface(_connector).name();
-        StaticConnectorArray.push(_connector);
+        require(ConnectorInterface(_connector).connectorID() == (staticConnectorArray.length+1),"Connector-name-doesnt-match");
+        ConnectorInterface(_connector).name(); // Checking if connector has function name()
+        staticConnectorArray.push(_connector);
         staticConnectorCount++;
     }
 
