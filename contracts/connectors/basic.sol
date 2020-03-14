@@ -23,7 +23,7 @@ interface MemoryInterface {
 }
 
 interface EventInterface {
-    function emitEvent(uint _connectorType, uint _connectorID, bytes4 _eventCode, bytes calldata _eventData) external;
+    function emitEvent(uint _connectorType, uint _connectorID, bytes32 _eventCode, bytes calldata _eventData) external;
 }
 
 contract Memory {
@@ -68,8 +68,8 @@ contract Memory {
 
 contract BasicResolver is Memory {
 
-    event LogDeposit(address erc20, uint tokenAmt, uint getId, uint setId);
-    event LogWithdraw(address erc20, uint tokenAmt, address to, uint getId, uint setId);
+    event LogDeposit(address erc20, uint256 tokenAmt, uint256 getId, uint256 setId);
+    event LogWithdraw(address erc20, uint256 tokenAmt, address to, uint256 getId, uint256 setId);
 
     /**
      * @dev ETH Address.
@@ -99,7 +99,7 @@ contract BasicResolver is Memory {
 
         emit LogDeposit(erc20, amt, getId, setId);
 
-        bytes4 _eventCode = bytes4(keccak256("LogDeposit(address,uint,uint,uint)"));
+        bytes32 _eventCode = keccak256("LogDeposit(address,uint256,uint256,uint256)");
         bytes memory _eventParam = abi.encode(erc20, amt, getId, setId);
         (uint _type, uint _id) = connectorID();
         EventInterface(getEventAddr()).emitEvent(_type, _id, _eventCode, _eventParam);
@@ -134,7 +134,7 @@ contract BasicResolver is Memory {
 
         emit LogWithdraw(erc20, amt, to, getId, setId);
 
-        bytes4 _eventCode = bytes4(keccak256("LogWithdraw(address,uint,address,uint,uint)"));
+        bytes32 _eventCode = keccak256("LogWithdraw(address,uint256,address,uint256,uint256)");
         bytes memory _eventParam = abi.encode(erc20, amt, to, getId, setId);
         (uint _type, uint _id) = connectorID();
         EventInterface(getEventAddr()).emitEvent(_type, _id, _eventCode, _eventParam);
