@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
  */
 
 interface AccountInterface {
+    function version() external view returns (uint);
     function enable(address authority) external;
     function cast(address[] calldata _targets, bytes[] calldata _datas, address _origin) external payable returns (bytes32[] memory responses);
 }
@@ -16,14 +17,15 @@ interface ListInterface {
     function init(address _account) external;
 }
 
-
 contract AddressIndex {
 
     event LogNewMaster(address master);
+    event LogUpdateMaster(address master);
     event LogNewCheck(uint accountVersion, address check);
     event LogNewAccount(address _newAccount, address _connectors, address _check);
 
     // The Master Address.
+    address private newMaster;
     address public master;
     // The List Registry Address.
     address public list;
@@ -52,18 +54,26 @@ contract AddressIndex {
     function changeMaster(address _newMaster) external isMaster {
         require(_newMaster != master, "already-a-master");
         require(_newMaster != address(0), "not-valid-address");
-        master = _newMaster;
+        require(newMaster != _newMaster, "already-a-new-master");
+        newMaster = _newMaster;
         emit LogNewMaster(_newMaster);
     }
 
+    function updateMaster() external {
+        require(newMaster != address(0), "not-valid-address");
+        require(msg.sender == newMaster, "not-master");
+        master = newMaster;
+        newMaster = address(0);
+        emit LogUpdateMaster(master);
+    }
+
     /**
-     * @dev Change the Check Address of a specfic Account Module version.
+     * @dev Change the Check Address of a specific Account Module version.
      * @param accountVersion Account Module version.
      * @param _newCheck The New Check Address.
      */
     function changeCheck(uint accountVersion, address _newCheck) external isMaster {
         require(_newCheck != check[accountVersion], "already-a-check");
-        require(_newCheck != address(0), "not-valid-address");
         check[accountVersion] = _newCheck;
         emit LogNewCheck(accountVersion, _newCheck);
     }
@@ -77,6 +87,7 @@ contract AddressIndex {
     function addNewAccount(address _newAccount, address _connectors, address _check) external isMaster {
         require(_newAccount != address(0), "not-valid-address");
         versionCount++;
+        require(AccountInterface(_newAccount).version() == versionCount, "not-valid-version");
         account[versionCount] = _newAccount;
         if (_connectors != address(0)) connectors[versionCount] = _connectors;
         if (_check != address(0)) check[versionCount] = _check;
@@ -128,7 +139,7 @@ contract CloneFactory is AddressIndex {
 
 contract InstaIndex is CloneFactory {
 
-    event AccountCreated(address sender, address indexed owner, address account, address indexed origin);
+    event LogAccountCreated(address sender, address indexed owner, address account, address indexed origin);
 
     /**
      * @dev Create a new Smart Account for a user and run cast function in the new Smart Account.
@@ -164,7 +175,7 @@ contract InstaIndex is CloneFactory {
         _account = createClone(accountVersion);
         ListInterface(list).init(_account);
         AccountInterface(_account).enable(_owner);
-        emit AccountCreated(msg.sender, _owner, _account, _origin);
+        emit LogAccountCreated(msg.sender, _owner, _account, _origin);
     }
 
     /**

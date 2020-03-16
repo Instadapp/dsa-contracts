@@ -22,6 +22,9 @@ interface MemoryInterface {
     function setUint(uint _id, uint _val) external;
 }
 
+interface EventInterface {
+    function emitEvent(uint _connectorType, uint _connectorID, bytes32 _eventCode, bytes calldata _eventData) external;
+}
 
 contract Memory {
 
@@ -30,6 +33,13 @@ contract Memory {
      */
     function getMemoryAddr() public pure returns (address) {
         return 0x0000000000000000000000000000000000000000; // InstaMemory Address
+    }
+
+    /**
+     * @dev Return InstaEvent Address.
+     */
+    function getEventAddr() public pure returns (address) {
+        return 0x0000000000000000000000000000000000000000;
     }
 
     /**
@@ -50,12 +60,16 @@ contract Memory {
         if (setId != 0) MemoryInterface(getMemoryAddr()).setUint(setId, val);
     }
 
+    function connectorID() public pure returns(uint _type, uint _id) {
+        (_type, _id) = (1, 2);
+    }
+
 }
 
 contract BasicResolver is Memory {
 
-    event LogDeposit(address erc20, uint tokenAmt, uint getId, uint setId);
-    event LogWithdraw(address erc20, uint tokenAmt, address to, uint getId, uint setId);
+    event LogDeposit(address erc20, uint256 tokenAmt, uint256 getId, uint256 setId);
+    event LogWithdraw(address erc20, uint256 tokenAmt, address to, uint256 getId, uint256 setId);
 
     /**
      * @dev ETH Address.
@@ -77,9 +91,18 @@ contract BasicResolver is Memory {
             ERC20Interface token = ERC20Interface(erc20);
             amt = amt == uint(-1) ? token.balanceOf(msg.sender) : amt;
             token.transferFrom(msg.sender, address(this), amt);
+        } else {
+            require(msg.value == amt || amt == uint(-1), "invalid-ether-amount");
+            amt = msg.value;
         }
         setUint(setId, amt);
+
         emit LogDeposit(erc20, amt, getId, setId);
+
+        bytes32 _eventCode = keccak256("LogDeposit(address,uint256,uint256,uint256)");
+        bytes memory _eventParam = abi.encode(erc20, amt, getId, setId);
+        (uint _type, uint _id) = connectorID();
+        EventInterface(getEventAddr()).emitEvent(_type, _id, _eventCode, _eventParam);
     }
 
    /**
@@ -108,12 +131,18 @@ contract BasicResolver is Memory {
             token.transfer(to, amt);
         }
         setUint(setId, amt);
+
         emit LogWithdraw(erc20, amt, to, getId, setId);
+
+        bytes32 _eventCode = keccak256("LogWithdraw(address,uint256,address,uint256,uint256)");
+        bytes memory _eventParam = abi.encode(erc20, amt, to, getId, setId);
+        (uint _type, uint _id) = connectorID();
+        EventInterface(getEventAddr()).emitEvent(_type, _id, _eventCode, _eventParam);
     }
 
 }
 
 
 contract ConnectBasic is BasicResolver {
-    string public name = "Basic-v1";
+    string public constant name = "Basic-v1";
 }

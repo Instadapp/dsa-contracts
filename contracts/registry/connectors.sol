@@ -10,6 +10,11 @@ interface IndexInterface {
     function master() external view returns (address);
 }
 
+interface ConnectorInterface {
+    function connectorID() external view returns(uint _type, uint _id);
+    function name() external view returns (string memory);
+}
+
 
 contract DSMath {
 
@@ -31,16 +36,16 @@ contract Controllers is DSMath {
      // The InstaIndex Address.
     address public constant instaIndex = 0x0000000000000000000000000000000000000000;
 
-    // Enabled Cheif(Address of Cheif => bool).
+    // Enabled Chief(Address of Chief => bool).
     mapping(address => bool) public chief;
     // Enabled Connectors(Connector Address => bool).
     mapping(address => bool) public connectors;
-    // Enbled Static Connectors(Connector Address => bool).
+    // Enabled Static Connectors(Connector Address => bool).
     mapping(address => bool) public staticConnectors;
 
     /**
     * @dev Throws if the sender not is Master Address from InstaIndex
-    * or Enabled Cheif.
+    * or Enabled Chief.
     */
     modifier isChief {
         require(chief[msg.sender] || msg.sender == IndexInterface(instaIndex).master(), "not-an-chief");
@@ -48,8 +53,8 @@ contract Controllers is DSMath {
     }
 
     /**
-     * @dev Enable a Cheif.
-     * @param _userAddress Cheif Address.
+     * @dev Enable a Chief.
+     * @param _userAddress Chief Address.
     */
     function enableChief(address _userAddress) external isChief {
         chief[_userAddress] = true;
@@ -57,8 +62,8 @@ contract Controllers is DSMath {
     }
 
     /**
-     * @dev Disables a Cheif.
-     * @param _userAddress Cheif Address.
+     * @dev Disables a Chief.
+     * @param _userAddress Chief Address.
     */
     function disableChief(address _userAddress) external isChief {
         delete chief[_userAddress];
@@ -68,73 +73,49 @@ contract Controllers is DSMath {
 }
 
 
-contract LinkedList is Controllers {
-
-    event LogEnable(address indexed connector);
-    event LogDisable(address indexed connector);
-    event LogEnableStatic(address indexed connector);
-
-    // Connectors Count.
-    uint public count;
-    // First enabled Connector Address.
-    address public first;
-    // Last enabled Connector Address.
-    address public last;
-    // Connectors List(Address of Connector => List(Previous and Next Enabled Connector)).
-    mapping (address => List) public list;
-
-    struct List {
-        address prev;
-        address next;
-    }
-
+contract Listings is Controllers {
+    // Connectors Array.
+    address[] public connectorArray;
+    // Count of Connector's Enabled.
+    uint public connectorCount;
 
     /**
-     * @dev Add Connector to Connector's Linked List.
+     * @dev Add Connector to Connector's array.
      * @param _connector Connector Address.
-    */
-    function addToList(address _connector) internal {
-        if (last != address(0)) {
-            list[_connector].prev = last;
-            list[last].next = _connector;
-        }
-        if (first == address(0)) {
-            first = _connector;
-        }
-        last = _connector;
-        count = add(count, 1);
-
-        emit LogEnable(_connector);
+    **/
+    function addToArr(address _connector) internal {
+        require(_connector != address(0), "Not-vaild-connector");
+        (, uint _id) = ConnectorInterface(_connector).connectorID();
+        require(_id == (connectorArray.length+1),"ConnectorID-doesnt-match");
+        ConnectorInterface(_connector).name(); // Checking if connector has function name()
+        connectorArray.push(_connector);
     }
 
-    /**
-     * @dev Remove Connector to Connector's Linked List.
-     * @param _connector Connector Address.
-    */
-    function removeFromList(address _connector) internal {
-        if (list[_connector].prev != address(0)) {
-            list[list[_connector].prev].next = list[_connector].next;
-        } else {
-            first = list[_connector].next;
-        }
-        if (list[_connector].next != address(0)) {
-            list[list[_connector].next].prev = list[_connector].prev;
-        } else {
-            last = list[_connector].prev;
-        }
-        count = sub(count, 1);
+    // Static Connectors Array.
+    address[] public staticConnectorArray;
 
-        emit LogDisable(_connector);
+    /**
+     * @dev Add Connector to Static Connector's array.
+     * @param _connector Static Connector Address.
+    **/
+    function addToArrStatic(address _connector) internal {
+        require(_connector != address(0), "Not-vaild-connector");
+        (, uint _id) = ConnectorInterface(_connector).connectorID();
+        require(_id == (staticConnectorArray.length+1),"Connector-name-doesnt-match");
+        ConnectorInterface(_connector).name(); // Checking if connector has function name()
+        staticConnectorArray.push(_connector);
     }
 
 }
 
 
-contract InstaConnectors is LinkedList {
-    // Static Connectors Count.
-    uint public staticCount;
-    // Static Connectors (ID => Static Connector).
-    mapping (uint => address) public staticList;
+contract InstaConnectors is Listings {
+
+    event LogEnable(address indexed connector);
+    event LogDisable(address indexed connector);
+    event LogEnableStatic(address indexed connector);
+    event LogDisableStatic(address indexed connector);
+    event LogDisableStaticTimer(address indexed connector);
 
     /**
      * @dev Enable Connector.
@@ -142,17 +123,20 @@ contract InstaConnectors is LinkedList {
     */
     function enable(address _connector) external isChief {
         require(!connectors[_connector], "already-enabled");
+        addToArr(_connector);
         connectors[_connector] = true;
-        addToList(_connector);
+        connectorCount++;
+        emit LogEnable(_connector);
     }
     /**
      * @dev Disable Connector.
      * @param _connector Connector Address.
     */
     function disable(address _connector) external isChief {
-        require(connectors[_connector], "not-connector");
+        require(connectors[_connector], "already-disabled");
         delete connectors[_connector];
-        removeFromList(_connector);
+        connectorCount--;
+        emit LogDisable(_connector);
     }
 
     /**
@@ -161,8 +145,7 @@ contract InstaConnectors is LinkedList {
     */
     function enableStatic(address _connector) external isChief {
         require(!staticConnectors[_connector], "already-enabled");
-        staticCount++;
-        staticList[staticCount] = _connector;
+        addToArrStatic(_connector);
         staticConnectors[_connector] = true;
         emit LogEnableStatic(_connector);
     }

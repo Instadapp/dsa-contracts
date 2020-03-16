@@ -53,9 +53,10 @@ contract Record {
     /**
      * @dev Change Shield State.
     */
-    function switchShield() external {
+    function switchShield(bool _shield) external {
         require(auth[msg.sender], "not-self");
-        shield = !shield;
+        require(shield != _shield, "shield is set");
+        shield = _shield;
         emit LogSwitchShield(shield);
     }
 
@@ -90,17 +91,14 @@ contract Record {
 contract InstaAccount is Record {
 
     event LogCast(address indexed origin, address indexed sender, uint value);
-    event LogEthDeposit(address indexed _sender, uint _amt);
 
     /**
      * @dev Emit event if Eth is deposited.
     */
-    receive() external payable {
-        emit LogEthDeposit(msg.sender, msg.value);
-    }  
+    receive() external payable {}
 
      /**
-     * @dev Delegate the calls to Connector And this function is runned by cast().
+     * @dev Delegate the calls to Connector And this function is ran by cast().
      * @param _target Target to of Connector.
      * @param _data CallData of function in Connector.
     */
@@ -130,6 +128,7 @@ contract InstaAccount is Record {
     payable
     {
         require(isAuth(msg.sender) || msg.sender == instaIndex, "permission-denied");
+        require(_targets.length == _datas.length , "array-length-invalid");
         IndexInterface indexContract = IndexInterface(instaIndex);
         bool isShield = shield;
         if (!isShield) {
