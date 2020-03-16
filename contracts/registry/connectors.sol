@@ -84,7 +84,7 @@ contract Listings is Controllers {
      * @param _connector Connector Address.
     **/
     function addToArr(address _connector) internal {
-        require(_connector != address(0), "Not-vaild-connector");
+        require(_connector != address(0), "Not-valid-connector");
         (, uint _id) = ConnectorInterface(_connector).connectorID();
         require(_id == (connectorArray.length+1),"ConnectorID-doesnt-match");
         ConnectorInterface(_connector).name(); // Checking if connector has function name()
@@ -99,7 +99,7 @@ contract Listings is Controllers {
      * @param _connector Static Connector Address.
     **/
     function addToArrStatic(address _connector) internal {
-        require(_connector != address(0), "Not-vaild-connector");
+        require(_connector != address(0), "Not-valid-connector");
         (, uint _id) = ConnectorInterface(_connector).connectorID();
         require(_id == (staticConnectorArray.length+1),"Connector-name-doesnt-match");
         ConnectorInterface(_connector).name(); // Checking if connector has function name()
