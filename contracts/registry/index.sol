@@ -54,6 +54,7 @@ contract AddressIndex {
     function changeMaster(address _newMaster) external isMaster {
         require(_newMaster != master, "already-a-master");
         require(_newMaster != address(0), "not-valid-address");
+        require(newMaster != _newMaster, "already-a-new-master");
         newMaster = _newMaster;
         emit LogNewMaster(_newMaster);
     }
