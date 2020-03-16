@@ -93,8 +93,6 @@ contract Listings is Controllers {
 
     // Static Connectors Array.
     address[] public staticConnectorArray;
-    // Count of Static Connector's Enabled.
-    uint public staticConnectorCount;
 
     /**
      * @dev Add Connector to Static Connector's array.
@@ -118,9 +116,6 @@ contract InstaConnectors is Listings {
     event LogEnableStatic(address indexed connector);
     event LogDisableStatic(address indexed connector);
     event LogDisableStaticTimer(address indexed connector);
-
-    // Static Connector Disable Timer (Static Connector => Timer).
-    mapping (address => uint) public staticTimer;
 
     /**
      * @dev Enable Connector.
@@ -152,34 +147,8 @@ contract InstaConnectors is Listings {
         require(!staticConnectors[_connector], "already-enabled");
         addToArrStatic(_connector);
         staticConnectors[_connector] = true;
-        staticConnectorCount++;
         emit LogEnableStatic(_connector);
     }
-
-    /**
-     * @dev Disable Static Connector.
-     * @param _connector Static Connector Address.
-     * @param reset reset timer.
-    */
-    function disableStatic(address _connector, bool reset) external isChief {
-        require(staticConnectors[_connector], "already-disabled");
-        if (!reset) {
-            if(staticTimer[_connector] == 0){
-                staticTimer[_connector] = now + 30 days;
-                emit LogDisableStaticTimer(_connector);
-            } else {
-                require(staticTimer[_connector] <= now, "less-than-30-days");
-                staticConnectorCount--;
-                delete staticConnectors[_connector];
-                delete staticTimer[_connector];
-                emit LogDisableStatic(_connector);
-            }
-        } else {
-            require(staticTimer[_connector] != 0, "timer-not-set");
-            delete staticTimer[_connector];
-        }
-    }
-
 
      /**
      * @dev Check if Connector addresses are enabled.
