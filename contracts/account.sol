@@ -102,14 +102,22 @@ contract InstaAccount is Record {
      * @param _target Target to of Connector.
      * @param _data CallData of function in Connector.
     */
-    function spell(address _target, bytes memory _data) internal {
+    function spell(address _target, bytes memory _data) internal returns (bytes memory response) {
         require(_target != address(0), "target-invalid");
         assembly {
-            let succeeded := delegatecall(sub(gas(), 5000), _target, add(_data, 0x20), mload(_data), 0, 32)
+            let succeeded := delegatecall(gas(), _target, add(_data, 0x20), mload(_data), 0, 0)
+            let size := returndatasize()
+
+            response := mload(0x40)
+            mstore(0x40, add(response, and(add(add(size, 0x20), 0x1f), not(0x1f))))
+            mstore(response, size)
+            returndatacopy(add(response, 0x20), 0, size)
+
             switch iszero(succeeded)
-            case 1 {
-                revert(0, 0)
-            }
+                case 1 {
+                    // throw if delegatecall failed
+                    revert(add(response, 0x20), size)
+                }
         }
     }
 
@@ -126,6 +134,7 @@ contract InstaAccount is Record {
     )
     external
     payable
+    returns (bytes[] memory responses)
     {
         require(isAuth(msg.sender) || msg.sender == instaIndex, "permission-denied");
         require(_targets.length == _datas.length , "array-length-invalid");
@@ -136,8 +145,9 @@ contract InstaAccount is Record {
         } else {
             require(ConnectorsInterface(indexContract.connectors(version)).isStaticConnector(_targets), "not-static-connector");
         }
+        responses = new bytes[](_targets.length);
         for (uint i = 0; i < _targets.length; i++) {
-            spell(_targets[i], _datas[i]);
+            responses[i] = spell(_targets[i], _datas[i]);
         }
         address _check = indexContract.check(version);
         if (_check != address(0) && !isShield) require(CheckInterface(_check).isOk(), "not-ok");
