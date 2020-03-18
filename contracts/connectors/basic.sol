@@ -68,8 +68,8 @@ contract Memory {
 
 contract BasicResolver is Memory {
 
-    event LogDeposit(address erc20, uint256 tokenAmt, uint256 getId, uint256 setId);
-    event LogWithdraw(address erc20, uint256 tokenAmt, address to, uint256 getId, uint256 setId);
+    event LogDeposit(address indexed erc20, uint256 tokenAmt, uint256 getId, uint256 setId);
+    event LogWithdraw(address indexed erc20, uint256 tokenAmt, address indexed to, uint256 getId, uint256 setId);
 
     /**
      * @dev ETH Address.
