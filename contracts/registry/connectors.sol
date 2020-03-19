@@ -30,8 +30,8 @@ contract DSMath {
 
 contract Controllers is DSMath {
 
-    event LogAddController(address addr);
-    event LogRemoveController(address addr);
+    event LogAddController(address indexed addr);
+    event LogRemoveController(address indexed addr);
 
      // The InstaIndex Address.
     address public constant instaIndex = 0x0000000000000000000000000000000000000000;

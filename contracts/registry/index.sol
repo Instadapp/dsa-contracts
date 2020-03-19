@@ -19,10 +19,10 @@ interface ListInterface {
 
 contract AddressIndex {
 
-    event LogNewMaster(address master);
-    event LogUpdateMaster(address master);
-    event LogNewCheck(uint accountVersion, address check);
-    event LogNewAccount(address _newAccount, address _connectors, address _check);
+    event LogNewMaster(address indexed master);
+    event LogUpdateMaster(address indexed master);
+    event LogNewCheck(uint indexed accountVersion, address indexed check);
+    event LogNewAccount(address indexed _newAccount, address indexed _connectors, address indexed _check);
 
     // The Master Address.
     address private newMaster;
@@ -139,7 +139,7 @@ contract CloneFactory is AddressIndex {
 
 contract InstaIndex is CloneFactory {
 
-    event LogAccountCreated(address sender, address indexed owner, address account, address indexed origin);
+    event LogAccountCreated(address sender, address indexed owner, address indexed account, address indexed origin);
 
     /**
      * @dev Create a new Smart Account for a user and run cast function in the new Smart Account.

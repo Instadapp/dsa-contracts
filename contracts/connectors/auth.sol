@@ -33,8 +33,8 @@ contract Basics {
 
 contract Auth is Basics {
 
-    event LogAddAuth(address _msgSender, address _auth);
-    event LogRemoveAuth(address _msgSender, address _auth);
+    event LogAddAuth(address indexed _msgSender, address indexed _auth);
+    event LogRemoveAuth(address indexed _msgSender, address indexed _auth);
 
     /**
      * @dev Add New Owner
