@@ -60,6 +60,9 @@ contract Memory {
         if (setId != 0) MemoryInterface(getMemoryAddr()).setUint(setId, val);
     }
 
+    /**
+     * @dev Connector ID and Type.
+     */
     function connectorID() public pure returns(uint _type, uint _id) {
         (_type, _id) = (1, 2);
     }

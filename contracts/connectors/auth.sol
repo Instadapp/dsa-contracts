@@ -24,6 +24,9 @@ contract Basics {
         return 0x0000000000000000000000000000000000000000;
     }
 
+     /**
+     * @dev Connector ID and Type.
+     */
     function connectorID() public pure returns(uint _type, uint _id) {
         (_type, _id) = (1, 1);
     }
@@ -70,5 +73,5 @@ contract Auth is Basics {
 
 
 contract ConnectAuth is Auth {
-    string public name = "Auth-v1";
+    string constant public name = "Auth-v1";
 }
