@@ -114,8 +114,6 @@ contract InstaConnectors is Listings {
     event LogEnable(address indexed connector);
     event LogDisable(address indexed connector);
     event LogEnableStatic(address indexed connector);
-    event LogDisableStatic(address indexed connector);
-    event LogDisableStaticTimer(address indexed connector);
 
     /**
      * @dev Enable Connector.
