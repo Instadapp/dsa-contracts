@@ -3,8 +3,8 @@ pragma experimental ABIEncoderV2;
 
 /**
  * @title InstaIndex
- * @dev Main Contract For Smart Account Layer. This is also a factory contract, Which deploys new Smart Accounts.
- * Also Registry for Smart Account Layer.
+ * @dev Main Contract For DeFi Smart Accounts. This is also a factory contract, Which deploys new Smart Account.
+ * Also Registry for DeFi Smart Accounts.
  */
 
 interface AccountInterface {
@@ -24,8 +24,9 @@ contract AddressIndex {
     event LogNewCheck(uint indexed accountVersion, address indexed check);
     event LogNewAccount(address indexed _newAccount, address indexed _connectors, address indexed _check);
 
-    // The Master Address.
+    // The New Master Address.
     address private newMaster;
+    // The Master Address.
     address public master;
     // The List Registry Address.
     address public list;
@@ -142,7 +143,7 @@ contract InstaIndex is CloneFactory {
     event LogAccountCreated(address sender, address indexed owner, address indexed account, address indexed origin);
 
     /**
-     * @dev Create a new Smart Account for a user and run cast function in the new Smart Account.
+     * @dev Create a new DeFi Smart Account for a user and run cast function in the new Smart Account.
      * @param _owner Owner of the Smart Account.
      * @param accountVersion Account Module version.
      * @param _targets Array of Target to run cast function.
@@ -161,7 +162,7 @@ contract InstaIndex is CloneFactory {
     }
 
     /**
-     * @dev Create a new Smart Account for a user.
+     * @dev Create a new DeFi Smart Account for a user.
      * @param _owner Owner of the Smart Account.
      * @param accountVersion Account Module version.
      * @param _origin Where Smart Account is created.

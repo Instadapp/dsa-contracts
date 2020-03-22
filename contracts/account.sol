@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 /**
  * @title InstaAccount.
- * @dev Smart Account Wallet.
+ * @dev DeFi Smart Account Wallet.
  */
 
 interface IndexInterface {
@@ -34,7 +34,7 @@ contract Record {
     event LogSwitchShield(bool _shield);
 
     // The InstaIndex Address.
-    address public constant instaIndex = 0x0000000000000000000000000000000000000000;
+    address public constant instaIndex = 0x01Fa7d08fd7ae2F3f7F59F422e9DeE641c5ed5c4;
     // The Account Module Version.
     uint public constant version = 1;
     // Auth Module(Address of Auth => bool).
@@ -92,9 +92,6 @@ contract InstaAccount is Record {
 
     event LogCast(address indexed origin, address indexed sender, uint value);
 
-    /**
-     * @dev Emit event if Eth is deposited.
-    */
     receive() external payable {}
 
      /**
