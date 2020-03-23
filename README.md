@@ -1,8 +1,10 @@
+# DeFi Smart Accounts
 
-# Smart Account
+This repository contains the core smart contracts for DeFi Smart Accounts. 
 
-This repository contains the improved version of InstaDApp smart contract wallet.
-  
+## Quick Links
+- [Technical Overview](docs/README.md)
+- [Announcement Post](https://blog.instadapp.io/instadapp-defi-accounts)
 
 ## Installation
 
