@@ -5,6 +5,7 @@ This repository contains the core smart contracts for DeFi Smart Accounts.
 ## Quick Links
 - [Technical Overview](docs/README.md)
 - [Announcement Post](https://blog.instadapp.io/instadapp-defi-accounts)
+- [Connector Contracts](https://github.com/InstaDApp/dsa-connectors)
 
 ## Installation
 
