@@ -33,7 +33,7 @@ contract Controllers is DSMath {
     event LogAddController(address indexed addr);
     event LogRemoveController(address indexed addr);
 
-     // The InstaIndex Address.
+    // InstaIndex Address.
     address public constant instaIndex = 0x0000000000000000000000000000000000000000;
 
     // Enabled Chief(Address of Chief => bool).
@@ -101,7 +101,7 @@ contract Listings is Controllers {
     function addToArrStatic(address _connector) internal {
         require(_connector != address(0), "Not-valid-connector");
         (, uint _id) = ConnectorInterface(_connector).connectorID();
-        require(_id == (staticConnectorArray.length+1),"Connector-name-doesnt-match");
+        require(_id == (staticConnectorArray.length+1),"ConnectorID-doesnt-match");
         ConnectorInterface(_connector).name(); // Checking if connector has function name()
         staticConnectorArray.push(_connector);
     }
@@ -176,4 +176,17 @@ contract InstaConnectors is Listings {
         }
     }
 
+    /**
+     * @dev get Connector's Array length.
+    */
+    function connectorLength() external view returns (uint) {
+        return connectorArray.length;
+    }
+
+    /**
+     * @dev get Static Connector's Array length.
+    */
+    function staticConnectorLength() external view returns (uint) {
+        return staticConnectorArray.length;
+    }
 }
