@@ -95,7 +95,7 @@ contract BasicResolver is Memory {
             amt = amt == uint(-1) ? token.balanceOf(msg.sender) : amt;
             token.transferFrom(msg.sender, address(this), amt);
         } else {
-            require(msg.value == amt || amt == uint(-1), "invalid-ether-amount");
+            require(msg.value == amt || amt != uint(-1), "invalid-ether-amount");
             amt = msg.value;
         }
         setUint(setId, amt);
