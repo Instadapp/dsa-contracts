@@ -2,7 +2,7 @@ pragma solidity ^0.6.0;
 
 /**
  * @title InstaList
- * @dev Registry For Smart Account Authorised user.
+ * @dev Registry For DeFi Smart Account Authorised user.
  */
 
 interface AccountInterface {
@@ -25,7 +25,7 @@ contract DSMath {
 
 contract Variables is DSMath {
 
-    // The InstaIndex Address.
+    // InstaIndex Address.
     address public constant instaIndex = 0x0000000000000000000000000000000000000000;
 
     // Smart Account Count.

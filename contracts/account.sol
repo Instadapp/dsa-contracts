@@ -33,7 +33,7 @@ contract Record {
     event LogDisable(address indexed user);
     event LogSwitchShield(bool _shield);
 
-    // The InstaIndex Address.
+    // InstaIndex Address.
     address public constant instaIndex = 0x0000000000000000000000000000000000000000;
     // The Account Module Version.
     uint public constant version = 1;

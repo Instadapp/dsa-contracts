@@ -24,11 +24,11 @@ contract AddressIndex {
     event LogNewCheck(uint indexed accountVersion, address indexed check);
     event LogNewAccount(address indexed _newAccount, address indexed _connectors, address indexed _check);
 
-    // The New Master Address.
+    // New Master Address.
     address private newMaster;
-    // The Master Address.
+    // Master Address.
     address public master;
-    // The List Registry Address.
+    // List Registry Address.
     address public list;
 
     // Connectors Modules(Account Module Version => Connectors Registry Module Address).

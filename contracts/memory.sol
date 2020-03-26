@@ -23,7 +23,7 @@ contract InstaMemory {
         mbytes[msg.sender][_id] = _byte;
     }
 
-     /**
+    /**
      * @dev Get Stored Bytes.
      * @param _id Storage ID.
     */
@@ -32,7 +32,7 @@ contract InstaMemory {
         delete mbytes[msg.sender][_id];
     }
 
-     /**
+    /**
      * @dev Store Uint.
      * @param _id Storage ID.
      * @param _num uint data to store.
@@ -50,7 +50,7 @@ contract InstaMemory {
         delete muint[msg.sender][_id];
     }
 
-     /**
+    /**
      * @dev Store Address.
      * @param _id Storage ID.
      * @param _addr Address data to store.
