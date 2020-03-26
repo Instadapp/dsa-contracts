@@ -39,7 +39,7 @@ contract Memory {
      * @dev Return InstaEvent Address.
      */
     function getEventAddr() public pure returns (address) {
-        return 0x0000000000000000000000000000000000000000;
+        return 0x0000000000000000000000000000000000000000; // InstaEvent Address
     }
 
     /**

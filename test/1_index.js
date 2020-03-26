@@ -47,16 +47,28 @@ contract("InstaIndex", async (accounts) => {
         await changeMaster(masterOne, masterTwo)
     })
 
+    it("Master Updated.(from: masterOne, to: masterTwo)", async () =>
+    {   
+        //change master address in index.sol to masterTwo
+        await updateMaster(masterTwo, masterOne)
+    })
+
     it("Check changed.(from: checkTwo, to: checkOne, by:masterTwo)", async () =>
     {
-        //change check address from index.sol from checkTwo to checkOne
+        //change check address in index.sol from checkTwo to checkOne
         await changeCheck(masterTwo, checkOne, accountVersion)
     })
 
     it("Master Changed.(From: masterTwo, to: masterTwo)", async () =>
     {   
-        //change master address from index.sol from masterTwo to masterTwo
+        //change master address in index.sol from masterTwo to masterOne
         await changeMaster(masterTwo, masterOne)
+    })
+
+    it("Master Updated.(from: masterOne, to: masterTwo)", async () =>
+    {   
+        //change Update address in index.sol to masterOne
+        await updateMaster(masterOne, masterTwo)
     })
 
     it("SLA created for slaAccountOne", async () =>
@@ -104,8 +116,16 @@ async function changeMaster(master, nextAdmin) {
     var indexInstance = await indexContract.deployed(); // InstaIndex instance
     await indexInstance.changeMaster(nextAdmin, {from: master}); // change master address in index.sol contract
     var smartMasteraddr = await indexInstance.master(); // master address from index.sol contract
-    assert.equal(smartMasteraddr, nextAdmin)
-    assert.notEqual(smartMasteraddr, master)
+    assert.notEqual(smartMasteraddr, nextAdmin)
+    assert.equal(smartMasteraddr, master)
+}
+
+async function updateMaster(master, prevMaster) {
+    var indexInstance = await indexContract.deployed(); // InstaIndex instance
+    await indexInstance.updateMaster({from: master}); // update master address in index.sol contract
+    var smartMasteraddr = await indexInstance.master(); // master address from index.sol contract
+    assert.equal(smartMasteraddr, master)
+    assert.notEqual(smartMasteraddr, prevMaster)
 }
 
 async function changeCheck(master, nextCheckAddr, accountVersion) {

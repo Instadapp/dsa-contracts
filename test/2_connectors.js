@@ -1,4 +1,5 @@
 const basicConnector = artifacts.require("ConnectBasic");
+const authConnector = artifacts.require("ConnectAuth");
 const connectorsContract = artifacts.require("InstaConnectors");
 const indexContract = artifacts.require("InstaIndex");
 const accountContract = artifacts.require("InstaAccount");
@@ -29,23 +30,23 @@ contract("InstaConnectors", async (accounts) => {
         await getConnectorsIndexAddress(accountVersion)
     })
 
-    it("Removed Basic connector.(From: master).", async () =>
-    {
-        // disable a connector.
-        await disableConnector(master, basicConnector.address)
-    })
+    // it("Removed Basic connector.(From: master).", async () =>
+    // {
+    //     // disable a connector.
+    //     await disableConnector(master, basicConnector.address)
+    // })
 
-    it("Added Basic connector.(From: master).", async () =>
-    {   
-        // enable a connector.
-        await enableConnector(master, basicConnector.address)
-    })
+    // it("Added Basic connector.(From: master).", async () =>
+    // {   
+    //     // enable a connector.
+    //     await enableConnector(master, basicConnector.address)
+    // })
 
-    it("Removed Basic connector.(From: master).", async () =>
-    {
-         // disable a connector.
-        await disableConnector(master, basicConnector.address)
-    })
+    // it("Removed Basic connector.(From: master).", async () =>
+    // {
+    //      // disable a connector.
+    //     await disableConnector(master, authConnector.address)
+    // })
 
     it("Added new cheif.", async () =>
     {   
@@ -53,11 +54,11 @@ contract("InstaConnectors", async (accounts) => {
         await addControllor(master, cheifOne)
     })
 
-    it("Added Basic connector.(From: cheif).", async () =>
-    {   
-         // enable a connector.
-        await enableConnector(cheifOne, basicConnector.address)
-    })
+    // it("Added Basic connector.(From: cheif).", async () =>
+    // {   
+    //      // enable a connector.
+    //     await enableConnector(cheifOne, basicConnector.address)
+    // })
 
     it("No of connectors enabled are greater than 0.", async () =>
     {   
@@ -80,7 +81,7 @@ contract("InstaConnectors", async (accounts) => {
 
   async function count() {
     var connectorInstance = await connectorsContract.deployed(); //InstaAccount instance
-    let count = await connectorInstance.count();
+    let count = await connectorInstance.connectorCount();
     assert.notEqual(count, 0, "count is equal to zero")
   }
 
