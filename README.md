@@ -1,7 +1,7 @@
 
-# Smart Account
+# DeFi Smart Accounts
 
-This repository contains the improved version of InstaDApp smart contract wallet.
+This repository contains the core contracts for Instadapp DeFi Smart Accounts (DSAs). For an overview of the key entities, refer [here](https://github.com/InstaDApp/dsa-developers/blob/master/Overview.md)
   
 
 ## Installation
