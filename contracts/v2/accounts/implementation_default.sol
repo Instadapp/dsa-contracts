@@ -1,6 +1,7 @@
-pragma solidity ^0.6.0;
+pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 import "hardhat/console.sol";
+import { Variables } from "./variables.sol";
 
 interface IndexInterface {
     function list() external view returns (address);
@@ -15,21 +16,18 @@ interface ListInterface {
     function removeAuth(address user) external;
 }
 
-contract Variables {
+contract Constants is Variables {
     uint public constant implementationVersion = 1;
     // InstaIndex Address.
     address public constant instaIndex = 0x2971AdFa57b20E5a416aE5a708A8655A9c74f723;
     // The Account Module Version.
     uint public constant version = 2;
-    // Auth Module(Address of Auth => bool).
-    mapping (address => bool) internal _auth;
 }
 
-contract Record is Variables {
+contract Record is Constants {
 
     event LogEnableUser(address indexed user);
     event LogDisableUser(address indexed user);
-    event LogSwitchShield(bool _shield);
 
     /**
      * @dev Check for Auth if enabled.

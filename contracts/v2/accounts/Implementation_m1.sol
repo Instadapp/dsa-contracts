@@ -1,6 +1,6 @@
-pragma solidity ^0.6.0;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.7.0;
 import "hardhat/console.sol";
+import { Variables } from "./variables.sol";
 
 
 /**
@@ -12,21 +12,14 @@ interface ConnectorsInterface {
     function isConnector(address[] calldata logicAddr) external view returns (bool);
 }
 
-contract Variables {
-    constructor(address _connectors) internal {
-        connectors = _connectors;
-    }
+contract Constants is Variables {
     // InstaIndex Address.
     address internal constant instaIndex = 0x2971AdFa57b20E5a416aE5a708A8655A9c74f723;
-    // InstaIndex Address.
-    address public immutable connectors;
-    // Auth Module(Address of Auth => bool).
-    mapping (address => bool) internal _auth;
+    // Connnectors Address.
+    address public constant connectorsM1 = address(0);
 }
 
-contract InstaAccountV2ImplementationM1 is Variables {
-    constructor(address _connectors) public Variables(_connectors) {
-    }
+contract InstaAccountV2ImplementationM1 is Constants {
 
     function decodeEvent(bytes memory response) internal pure returns (string memory _eventCode, bytes memory _eventParams) {
         (_eventCode, _eventParams) = abi.decode(response, (string, bytes));
@@ -90,7 +83,7 @@ contract InstaAccountV2ImplementationM1 is Variables {
         string[] memory eventNames = new string[](_length);
         bytes[] memory eventParams = new bytes[](_length);
         
-        require(ConnectorsInterface(connectors).isConnector(_targets), "1: not-connector");
+        require(ConnectorsInterface(connectorsM1).isConnector(_targets), "1: not-connector");
 
         for (uint i = 0; i < _targets.length; i++) {
             bytes memory response = spell(_targets[i], _datas[i]);
