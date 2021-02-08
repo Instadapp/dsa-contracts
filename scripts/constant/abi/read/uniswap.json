@@ -1,0 +1,281 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "buyAddr",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "sellAddr",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "sellAmt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "slippage",
+        "type": "uint256"
+      }
+    ],
+    "name": "getBuyAmount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "buyAmt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "unitAmt",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "tokenA",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "tokenB",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amtA",
+        "type": "uint256"
+      }
+    ],
+    "name": "getDepositAmount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amtB",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "unitAmt",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "tokenA",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "tokenB",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amtA",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amtB",
+        "type": "uint256"
+      }
+    ],
+    "name": "getDepositAmountNewPool",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "unitAmt",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getEthAddr",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "tokenA",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "tokenB",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct Resolver.TokenPair[]",
+        "name": "tokenPairs",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "getPosition",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "tokenAShareAmt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenBShareAmt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "uniAmt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalSupply",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct Resolver.PoolData[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "buyAddr",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "sellAddr",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "buyAmt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "slippage",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSellAmount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "sellAmt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "unitAmt",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "tokenA",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "tokenB",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "uniAmt",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "slippage",
+        "type": "uint256"
+      }
+    ],
+    "name": "getWithdrawAmounts",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amtA",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amtB",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "unitAmtA",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "unitAmtB",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "name",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
-
-pragma solidity >=0.6.8 <0.8.0;
+pragma solidity ^0.7.0;
 
 interface AccountImplementations {
     function getImplementation(bytes4 _sig) external view returns (address);

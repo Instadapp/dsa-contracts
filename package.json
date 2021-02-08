@@ -1,8 +1,7 @@
 {
-  "name": "smart-account",
+  "name": "dsa-contracts",
   "version": "1.0.0",
   "description": "",
-  "main": "truffle-config.js",
   "directories": {
     "test": "test"
   },
@@ -20,15 +19,40 @@
   },
   "homepage": "https://github.com/InstaDApp/smart-account#readme",
   "dependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.1",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
+    "@openzeppelin/contracts": "^3.3.0",
+    "@openzeppelin/contracts-upgradeable": "^3.3.0",
+    "@openzeppelin/upgrades": "^2.8.0",
+    "@openzeppelin/upgrades-core": "^1.5.0",
     "@truffle/artifactor": "^4.0.45",
+    "chai": "^4.2.0",
     "dotenv": "^7.0.0",
+    "ethereum-waffle": "^3.2.1",
     "ethereumjs-abi": "^0.6.8",
+    "ethers": "^5.0.26",
+    "hardhat": "^2.0.8",
+    "hardhat-deploy": "^0.7.0-beta.44",
+    "hardhat-deploy-ethers": "^0.3.0-beta.7",
     "replace-in-file": "^5.0.2",
-    "solc": "^0.6.2",
+    "solc": "^0.6.10",
     "truffle-assertions": "^0.9.2",
     "truffle-hdwallet-provider": "^1.0.17",
     "truffle-plugin-verify": "^0.3.8",
     "truffle-verify": "^1.0.8",
     "web3-abi-helper": "^4.1.0"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.1",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@openzeppelin/hardhat-upgrades": "^1.6.0",
+    "@openzeppelin/test-helpers": "^0.5.10",
+    "@tenderly/hardhat-tenderly": "^1.1.0-beta.4",
+    "chai": "^4.2.0",
+    "ethereum-waffle": "^3.2.1",
+    "ethers": "^5.0.26",
+    "hardhat": "^2.0.8",
+    "hardhat-gas-reporter": "^1.0.4"
   }
 }
