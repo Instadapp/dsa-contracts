@@ -93,8 +93,6 @@ contract InstaAccountV2ImplementationM2 {
         string[] memory eventNames = new string[](_length);
         bytes[] memory eventParams = new bytes[](_length);
         
-        require(ConnectorsInterface(instaIndex.connectors(defaultImplementation.version())).isConnector(_targets), "InstaAccountV2ImplementationM1: not-connector");
-
         for (uint i = 0; i < _targets.length; i++) {
             bytes memory response = spell(_targets[i], _datas[i]);
             (eventNames[i], eventParams[i]) = decodeEvent(response);

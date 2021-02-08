@@ -3,7 +3,6 @@ const hre = require("hardhat");
 const { ethers, web3, upgrades, tenderlyRPC } = hre;
 const { provider } = waffle
 
-const addAuthCast = require("../scripts/spells/addAuth.js")
 const deployConnector = require("../scripts/deployConnector")
 
 const encodeSpells = require("../scripts/encodeSpells.js")
@@ -83,27 +82,10 @@ describe("Set up V2 contracts", function() {
     "castWithFlashloan(address[],bytes[],address)"
   ].map((a) => web3.utils.keccak256(a).slice(0, 10))
 
-  let postDeployHead
-  // let provider
-  let greeter
-
   const wallets = provider.getWallets()
   let [wallet0, wallet1, wallet2] = wallets
 
   before(async () => {
-      // //Initialize the provider
-      // console.log(tenderlyRPC)
-      // // await tenderlyRPC.initializeFork()
-      // //Wrap the provider
-      // provider = new ethers.providers.Web3Provider(tenderlyRPC)
-      // //Set the ethers provider to the one we initialized so it targets the correct backend
-      // ethers.provider = provider
-
-      // const wallets = provider.getWallets()
-      // wallet0= wallets[0]
-      // wallet1= wallets[1]
-
-      // console.log(Object.keys(upgrades))
       await hre.network.provider.request({
         method: "hardhat_impersonateAccount",
         params: [ hre.network.config.masterAddress]
@@ -226,8 +208,6 @@ describe("Set up V2 contracts", function() {
       to: acountV2DsaWalletUser0.address,
       value: ethers.utils.parseEther("10")
     });
-    // console.log(await provider.getBalance(acountV2DsaWalletUser0.address))
-    // expect(await provider.getBalance(acountV2DsaWalletUser0.address)).to.be.bignumber.equal(new BN(10 ** 19))
     expect(Number(await provider.getBalance(acountV2DsaWalletUser0.address))).to.be.equal(Number(ethers.utils.parseEther("10")))
   });
 
