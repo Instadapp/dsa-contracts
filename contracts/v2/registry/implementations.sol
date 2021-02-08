@@ -68,4 +68,8 @@ contract InstaAccountImplementations is Implementations {
     function getImplementationSigs(address _impl) external view returns (bytes4[] memory) {
         return implementationSigs[_impl];
     }
+
+    function getSigImplementation(bytes4 _sig) external view returns (address) {
+        return sigImplementations[_sig];
+    }
 }

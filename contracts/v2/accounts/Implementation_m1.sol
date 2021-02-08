@@ -1,8 +1,7 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
-import "hardhat/console.sol";
-import { Variables } from "./variables.sol";
 
+import { Variables } from "./variables.sol";
 
 /**
  * @title InstaAccountV2.
@@ -17,13 +16,15 @@ contract Constants is Variables {
     // InstaIndex Address.
     address internal constant instaIndex = 0x2971AdFa57b20E5a416aE5a708A8655A9c74f723;
     // Connnectors Address.
-    address public constant connectorsM1 = address(0);
+    address public constant connectorsM1 = address(0x5FbDB2315678afecb367f032d93F642f64180aa3); // TODO: Test case hardcoded address.
 }
 
 contract InstaAccountV2ImplementationM1 is Constants {
 
     function decodeEvent(bytes memory response) internal pure returns (string memory _eventCode, bytes memory _eventParams) {
-        (_eventCode, _eventParams) = abi.decode(response, (string, bytes));
+        if (response.length > 0) {
+            (_eventCode, _eventParams) = abi.decode(response, (string, bytes));
+        }
     }
 
     event LogCast(
