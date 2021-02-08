@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.6.2 <0.8.0;
+pragma solidity ^0.7.0;
 
 interface IndexInterface {
     function master() external view returns (address);
