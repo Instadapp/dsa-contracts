@@ -1,8 +1,9 @@
 // const { expect } = require("chai");
 // const hre = require("hardhat");
-// const { ethers, web3, upgrades, tenderlyRPC } = hre;
+// const { ethers, web3, upgrades } = hre;
 // const { provider } = waffle
 
+// const addAuthCast = require("../scripts/spells/addAuth.js")
 // const deployConnector = require("../scripts/deployConnector")
 
 // const encodeSpells = require("../scripts/encodeSpells.js")
@@ -41,13 +42,8 @@
 //   const address_zero = "0x0000000000000000000000000000000000000000"
 
 //   const EmitEventConnectorPath = "../artifacts/contracts/v2-dev/connectors/emitEvent.sol/ConnectEmitEvent.json"
-//   const ConnectV2AuthConnectorPath = "../artifacts/contracts/v2/connectors/auth.sol/ConnectV2Auth.json"
-//   const instaAccountV2UserImplPath = "../artifacts/contracts/v2/accounts/Implementation_m1.sol/InstaAccountV2ImplementationM1.json"
-
 
 //   let instaIndex;
-//   let instaConnectors;
-  
 //   let instaAccountV2Proxy;
   
 //   let instaAccountV2UserImpl;
@@ -65,6 +61,9 @@
 //   let acountV2DsaWalletDefault0;
 //   let acountV2DsaWalletDev0;
 
+//   const wallets = provider.getWallets()
+//   const [wallet0, wallet1, wallet2] = wallets
+
 //   const instaAccountV2DefaultImplSigs = [
 //     "switchShield(address)",
 //     "enable(address)",
@@ -79,137 +78,134 @@
 //   const instaAccountV2DevImplSigs = [
 //     // "enableDev(address)",
 //     // "disableDev(address)",
-//     "castWithFlashloan(address[],bytes[],address)"
+//     "castDev(address[],bytes[],address)"
 //   ].map((a) => web3.utils.keccak256(a).slice(0, 10))
 
-//   const wallets = provider.getWallets()
-//   let [wallet0, wallet1, wallet2] = wallets
+//   before('', async () => {
+//     console.log(Object.keys(upgrades))
+//     await hre.network.provider.request({
+//       method: "hardhat_impersonateAccount",
+//       params: [ hre.network.config.masterAddress]
+//     })
 
-//   before(async () => {
-//       await hre.network.provider.request({
-//         method: "hardhat_impersonateAccount",
-//         params: [ hre.network.config.masterAddress]
-//       })
-      
-//       instaIndex = await ethers.getContractAt("InstaIndex", hre.network.config.instaIndexAddress)
-      
-//       const InstaConnectorsV2 = await ethers.getContractFactory("InstaConnectorsV2");
-//       instaConnectors = await InstaConnectorsV2.deploy();
-//       await instaConnectors.deployed();
+//     instaIndex = await ethers.getContractAt("InstaIndex", hre.network.config.instaIndexAddress)
 
 //     const InstaAccountImplementations = await ethers.getContractFactory("InstaAccountImplementations");
-//     implementationMapping = await InstaAccountImplementations.deploy();
-//     await implementationMapping.deployed();
+//     implementationMappingLogic = await InstaAccountImplementations.deploy();
+//     await implementationMappingLogic.deployed();
     
-//     // const InstaAccountImplementationProxy = await ethers.getContractFactory("InstaAccountImplementationProxy");
-//     // implementationMappingProxy = await InstaAccountImplementationProxy.deploy(implementationMappingLogic.address, "0x");
-//     // await implementationMappingProxy.deployed();
+//     const InstaAccountImplementationProxy = await ethers.getContractFactory("InstaAccountImplementationProxy");
+//     implementationMappingProxy = await InstaAccountImplementationProxy.deploy(implementationMappingLogic.address, "0x");
+//     await implementationMappingProxy.deployed();
 
-//     // implementationMapping = await ethers.getContractAt("InstaAccountImplementations", implementationMappingProxy.address);
+//     implementationMapping = await ethers.getContractAt("InstaAccountImplementations", implementationMappingProxy.address);
 
 //     const InstaAccountV2Proxy = await ethers.getContractFactory("InstaAccountV2Proxy");
 //     instaAccountV2Proxy = await InstaAccountV2Proxy.deploy(implementationMapping.address);
 //     await instaAccountV2Proxy.deployed();
 
+
+
+//     const InstaAccountV2DefaultImplementation = await ethers.getContractFactory("InstaAccountV2DefaultImplementation");
+//     // instaAccountV2DefaultImpl = await InstaAccountV2DefaultImplementation.deploy();
+//     // await instaAccountV2DefaultImpl.deployed();
+//     const instaAccountV2DefaultImpl = await upgrades.deployProxy(InstaAccountV2DefaultImplementation);
+//     await instaAccountV2DefaultImpl.deployed();
+//     console.log("Box deployed to:", instaAccountV2DefaultImpl.address);
+
+//     const InstaAccountV2DefaultImplementationV2 = await ethers.getContractFactory("InstaAccountV2DefaultImplementationV2");
+//     instaAccountV2DefaultImplV2 = await upgrades.upgradeProxy(instaAccountV2DefaultImpl.address, InstaAccountV2DefaultImplementationV2);
+//     console.log("Box upgraded", instaAccountV2DefaultImplV2.address);
+    
+//     // instaAccountV2DefaultImplV2 = await InstaAccountV2DefaultImplementationV2.deploy();
+//     // await instaAccountV2DefaultImplV2.deployed();
+
 //     const InstaAccountV2DevImplementation = await ethers.getContractFactory("InstaAccountV2ImplementationM2");
 //     instaAccountV2DevImpl = await InstaAccountV2DevImplementation.deploy();
 //     await instaAccountV2DevImpl.deployed();
 
-//     const InstaAccountV2DefaultImplementation = await ethers.getContractFactory("InstaAccountV2DefaultImplementation");
-//     instaAccountV2DefaultImpl = await InstaAccountV2DefaultImplementation.deploy();
-//     await instaAccountV2DefaultImpl.deployed();
-
-//     const InstaAccountV2DefaultImplementationV2 = await ethers.getContractFactory("InstaAccountV2DefaultImplementationV2");
-//     instaAccountV2DefaultImplV2 = await InstaAccountV2DefaultImplementationV2.deploy();
-//     await instaAccountV2DefaultImplV2.deployed();
 
 //     const InstaAccountV2UserImplementation = await ethers.getContractFactory("InstaAccountV2ImplementationM1");
 //     instaAccountV2UserImpl = await InstaAccountV2UserImplementation.deploy();
 //     await instaAccountV2UserImpl.deployed();
 
-
-//     console.log("connectors ", instaConnectors.address)
-    
 //     // ##########
 //     masterAddressSigner = await ethers.provider.getSigner(hre.network.config.masterAddress)
 
+//     // console.log(Object.keys(hre.tenderly))
 //   })
 
-//   // it("Check deployed proxy", async function() {
-//   //   console.log("Proxy Address: ", proxy.address)
-//   //   console.log("Implementations Contract: ", implementations.address)
-//   //   console.log("Account Implemention Contract: ", accountImplemention.address)
+//   it("Check deployed proxy", async function() {
+//     // console.log("Proxy Address: ", proxy.address)
+//     // console.log("Implementations Contract: ", instaAccountV2DefaultImplV2.address)
+//     // console.log(instaAccountV2DefaultImplV2)
+//   });
+
+// //   it("Should add default implementation to mapping.", async function() {
+// //     const tx = await implementationMapping.connect(masterAddressSigner).setDefaultImplementation(instaAccountV2DefaultImpl.address);
+// //     await tx.wait()
+// //     expect(await implementationMapping.defaultImplementation()).to.be.equal(instaAccountV2DefaultImpl.address);
+// //   });
+
+// //   it("Should add instaAccountV2UserImpl sigs to mapping.", async function() {
+// //     const tx = await implementationMapping.connect(masterAddressSigner).addImplementation(instaAccountV2UserImpl.address, instaAccountV2UserImplSigs);
+// //     await tx.wait()
+// //     expect(await implementationMapping.getImplementation(instaAccountV2UserImplSigs[0])).to.be.equal(instaAccountV2UserImpl.address);
+// //   });
+
+// //   it("Should add instaAccountV2DevImpl sigs to mapping.", async function() {
+// //     const tx = await implementationMapping.connect(masterAddressSigner).addImplementation(instaAccountV2DevImpl.address, instaAccountV2DevImplSigs);
+// //     await tx.wait()
+// //     expect(await implementationMapping.getImplementation(instaAccountV2DevImplSigs[0])).to.be.equal(instaAccountV2DevImpl.address);
+// //   });
+
+// //   it("Should add InstaAccountV2Proxy in Index.sol", async function() {
+// //     const tx = await instaIndex.connect(masterAddressSigner).addNewAccount(instaAccountV2Proxy.address, address_zero, address_zero)
+// //     await tx.wait()
+// //     expect(await instaIndex.account(2)).to.be.equal(instaAccountV2Proxy.address);
+// //   });
+
+// //   it("Should build DSA v2", async function() {
+// //     const tx = await instaIndex.connect(wallet0).build(wallet0.address, 2, wallet0.address)
+// //     const dsaWalletAddress = "0xc8F3572102748a9956c2dFF6b998bd6250E3264c"
+// //     expect((await tx.wait()).events[1].args.account).to.be.equal(dsaWalletAddress);
+// //     acountV2DsaWalletUser0 = await ethers.getContractAt("InstaAccountV2ImplementationM1", dsaWalletAddress);
+// //     acountV2DsaWalletDev0 = await ethers.getContractAt("InstaAccountV2ImplementationM2", dsaWalletAddress);
+// //     acountV2DsaWalletDefault0 = await ethers.getContractAt("InstaAccountV2DefaultImplementation", dsaWalletAddress);
+// //   });
+
+//   // it("Should add new auth from default Impl", async function() {
+//   //   const tx = await addAuthCast(acountV2DsaWalletUser0, wallet0, wallet1.address)
+//   //   await tx.wait();
+
+//   //   expect(await acountV2DsaWalletDefault0.isAuth(wallet1.address)).to.true;
 //   // });
 
-//   it("Should add default implementation to mapping.", async function() {
-//     const tx = await implementationMapping.connect(masterAddressSigner).setDefaultImplementation(instaAccountV2DefaultImpl.address);
-//     await tx.wait()
-//     expect(await implementationMapping.defaultImplementation()).to.be.equal(instaAccountV2DefaultImpl.address);
-//   });
+//   // it("Should new connector", async function() {
+//   //   await deployConnector({connectorName: "emitEvent", contract: "ConnectEmitEvent", abiPath: EmitEventConnectorPath})
+//   //   expect(!!addresses.connectors["emitEvent"]).to.be.true
+//   // });
 
-//   it("Should add instaAccountV2UserImpl sigs to mapping.", async function() {
-//     const tx = await implementationMapping.connect(masterAddressSigner).addImplementation(instaAccountV2UserImpl.address, instaAccountV2UserImplSigs);
-//     await tx.wait()
-//     expect(await implementationMapping.getImplementation(instaAccountV2UserImplSigs[0])).to.be.equal(instaAccountV2UserImpl.address);
-//   });
+//   // it("Should emit event from wallet1", async function() {
+//   //   const spells = {
+//   //     connector: "emitEvent",
+//   //     method: "emitEvent",
+//   //     args: []
+//   //   }
+//   //   const tx = await acountV2DsaWalletDev0.connect(wallet1).castDev(...encodeSpells([spells]), wallet1.address)
+//   //   const receipt = await tx.wait()
+//   //   expectEvent(receipt, require(EmitEventConnectorPath).abi, "LogEmitEvent")
+//   // });
 
-//   it("Should add instaAccountV2DevImpl sigs to mapping.", async function() {
-//     const tx = await implementationMapping.connect(masterAddressSigner).addImplementation(instaAccountV2DevImpl.address, instaAccountV2DevImplSigs);
-//     await tx.wait()
-//     expect(await implementationMapping.getImplementation(instaAccountV2DevImplSigs[0])).to.be.equal(instaAccountV2DevImpl.address);
-//   });
-
-//   it("Should add InstaAccountV2Proxy in Index.sol", async function() {
-//     const tx = await instaIndex.connect(masterAddressSigner).addNewAccount(instaAccountV2Proxy.address, instaConnectors.address, address_zero)
-//     await tx.wait()
-//     expect(await instaIndex.account(2)).to.be.equal(instaAccountV2Proxy.address);
-//   });
-
-//   it("Should build DSA v2", async function() {
-//     const tx = await instaIndex.connect(wallet0).build(wallet0.address, 2, wallet0.address)
-//     const dsaWalletAddress = "0xc8F3572102748a9956c2dFF6b998bd6250E3264c"
-//     expect((await tx.wait()).events[1].args.account).to.be.equal(dsaWalletAddress);
-//     acountV2DsaWalletUser0 = await ethers.getContractAt("InstaAccountV2ImplementationM1", dsaWalletAddress);
-//     acountV2DsaWalletDev0 = await ethers.getContractAt("InstaAccountV2ImplementationM2", dsaWalletAddress);
-//     acountV2DsaWalletDefault0 = await ethers.getContractAt("InstaAccountV2DefaultImplementation", dsaWalletAddress);
-//   });
-
-
-//   it("Should new connector", async function() {
-//     await deployConnector({connectorName: "authV1", contract: "ConnectV2Auth", abiPath: ConnectV2AuthConnectorPath})
-//     expect(!!addresses.connectors["authV1"]).to.be.true
-//     await instaConnectors.connect(masterAddressSigner).toggleConnectors([addresses.connectors["authV1"]])
-//   });
-  
-//   it("Should add wallet2 as auth", async function() {
-//       const spells = {
-//       connector: "authV1",
-//       method: "add",
-//       args: [wallet2.address]
-//       }
-//       const tx = await acountV2DsaWalletDev0.connect(wallet0).castWithFlashloan(...encodeSpells([spells]), wallet1.address)
-//       const receipt = await tx.wait()
-//       const z = expectEvent(receipt, require(instaAccountV2UserImplPath).abi, "LogCast")
-//   });
-
-//   it("Should add wallet1 as auth", async function() {
-//       const spells = {
-//       connector: "authV1",
-//       method: "add",
-//       args: [wallet1.address]
-//       }
-//       const tx = await acountV2DsaWalletUser0.connect(wallet0).cast(...encodeSpells([spells]), wallet1.address)
-//       const receipt = await tx.wait()
-//       const z = expectEvent(receipt, require(instaAccountV2UserImplPath).abi, "LogCast")
-//   });
-
-//   it("Should 10 send ETH to DSAWallet0", async function() {
-//     await wallet0.sendTransaction({
-//       to: acountV2DsaWalletUser0.address,
-//       value: ethers.utils.parseEther("10")
-//     });
-//     expect(Number(await provider.getBalance(acountV2DsaWalletUser0.address))).to.be.equal(Number(ethers.utils.parseEther("10")))
-//   });
+//   // it("Should 10 send ETH to DSAWallet0", async function() {
+//   //   await wallet0.sendTransaction({
+//   //     to: acountV2DsaWalletUser0.address,
+//   //     value: ethers.utils.parseEther("10")
+//   //   });
+//   //   // console.log(await provider.getBalance(acountV2DsaWalletUser0.address))
+//   //   // expect(await provider.getBalance(acountV2DsaWalletUser0.address)).to.be.bignumber.equal(new BN(10 ** 19))
+//   //   expect(Number(await provider.getBalance(acountV2DsaWalletUser0.address))).to.be.equal(Number(ethers.utils.parseEther("10")))
+//   // });
 
 //   // it("Should deposit ETH in Compound from User Imp", async function() {
 //   //   const initalEthBal = await provider.getBalance(acountV2DsaWalletUser0.address)
