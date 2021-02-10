@@ -17,6 +17,7 @@ tmp
 .npm
 
 #Build
+coverage.json
 coverage
 public/css/main.css
 .nyc_output/*

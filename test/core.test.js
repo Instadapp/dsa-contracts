@@ -1,14 +1,7 @@
-const {
-  expect
-} = require("chai");
+const { expect } = require("chai");
 const hre = require("hardhat");
-const {
-  web3,
-  deployments
-} = hre;
-const {
-  provider
-} = waffle
+const { web3, deployments, waffle } = hre;
+const { provider, deployContract } = waffle
 
 const deployContracts = require("../scripts/deployContracts")
 const deployConnector = require("../scripts/deployConnector")
@@ -20,6 +13,9 @@ const getMasterSigner = require("../scripts/getMasterSigner")
 
 const addresses = require("../scripts/constant/addresses");
 const abis = require("../scripts/constant/abis");
+
+const compoundArtifact = require("../artifacts/contracts/v2/connectors/test/compound.test.sol/ConnectCompound.json");
+const connectAuth = require("../artifacts/contracts/v2/connectors/test/auth.test.sol/ConnectV2Auth.json");
 
 describe("Core", function () {
   const address_zero = "0x0000000000000000000000000000000000000000"
@@ -77,6 +73,7 @@ describe("Core", function () {
   });
 
   describe("Implementations", function () {
+
     it("Should add default implementation to mapping.", async function () {
       const tx = await implementationsMapping.connect(masterSigner).setDefaultImplementation(instaAccountV2DefaultImpl.address);
       await tx.wait()
@@ -215,5 +212,98 @@ describe("Core", function () {
       expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
       expectEvent(receipt, (await deployments.getArtifact("ConnectV2Auth")).abi, "LogAddAuth")
     });
+
+  });
+
+  describe("Connectors", function() {
+
+    let authV3, authV4, compound, compound2
+
+    before(async function () {
+      compound = await deployContract(masterSigner, compoundArtifact, [])
+      authV3 = await deployContract(masterSigner, connectAuth, [])
+      authV4 = await deployContract(masterSigner, connectAuth, [])
+      compound2 = await deployContract(masterSigner, compoundArtifact, [])
+    })
+
+    it("Connector toggle should work", async function () {
+      const connectorsArray = [authV3.address]
+
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false;
+
+      await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
+      
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true;
+    });
+
+    it("Multiple connectors can be toggled", async function () {
+      const connectorsArray = [ authV4.address, compound.address ]
+
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
+      await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
+    });
+
+    it("Connector toggle should work 2", async function () {
+      const connectorsArray = [authV3.address]
+
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
+      await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
+    });
+
+    it("Multiple connectors can be toggled 2", async function () {
+      const connectorsArray = [ authV4.address, compound.address ]
+
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
+      await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
+    });
+
+    it("Connector toggle should work 3", async function () {
+      const connectorsArray = [authV3.address]
+
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
+      await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
+    });
+
+    it("Shouldn't work if one of them is not a connector", async function () {
+      const connectorsArray = [ authV3.address, compound2.address ]
+
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
+      await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
+    });
+
+    it("Should add chief", async function () {
+      expect(await instaConnectorsV2.chief(wallet0.address)).to.be.false
+      await instaConnectorsV2.connect(masterSigner).toggleChief(wallet0.address)
+      expect(await instaConnectorsV2.chief(wallet0.address)).to.be.true
+    })
+
+    it("New chief can toggle connector", async function() {
+      const connectorsArray = [compound2.address]
+
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
+      await instaConnectorsV2.connect(wallet0).toggleConnectors(connectorsArray)
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
+    })
+
+    it("Non-chief cannot toggle", async function() {
+      const connectorsArray = [compound2.address]
+
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
+      await expect(instaConnectorsV2.connect(wallet1).toggleConnectors(connectorsArray))
+        .to.be.revertedWith('not-an-chief');
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
+    })
+
+    it("New chief can add more chief", async function () {
+      expect(await instaConnectorsV2.chief(wallet1.address)).to.be.false
+      await instaConnectorsV2.connect(wallet0).toggleChief(wallet1.address)
+      expect(await instaConnectorsV2.chief(wallet1.address)).to.be.true
+    })
+
   });
 });
