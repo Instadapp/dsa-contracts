@@ -17,6 +17,7 @@ const abis = require("../scripts/constant/abis");
 
 const compoundArtifact = require("../artifacts/contracts/v2/connectors/test/compound.test.sol/ConnectCompound.json");
 const connectAuth = require("../artifacts/contracts/v2/connectors/test/auth.test.sol/ConnectV2Auth.json");
+const holderArtifact = require("../artifacts/contracts/v2/connectors/test/holder.sol/EthHolder.json");
 const defaultTest2 = require("../artifacts/contracts/v2/accounts/test/implementation_default.v2.test.sol/InstaAccountV2DefaultImplementationV2.json");
 const { ethers } = require("hardhat");
 
@@ -521,4 +522,48 @@ describe("Core", function () {
     // })
 
   })
+
+  // describe("Connector - Uniswap", function () {
+
+  //   before(async () => {
+  //     const connectorsArray = [ addresses.connectors["uniswap"] ]
+
+  //     expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
+  //     await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
+  //     expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
+  //   })
+
+  // })
+
+  describe("Testing withdraw", function() {
+
+    let holder
+
+    before(async () => {
+      holder = await deployContract(masterSigner, holderArtifact, [])
+
+      await wallet1.sendTransaction({
+        to: holder.address,
+        value: ethers.utils.parseEther("1.0"),
+      })
+
+      console.log("uwu", await provider.getBalance(holder.address))
+    })
+
+    it("Should receive eth", async function () {
+
+      console.log("uvu", acountV2DsaM1Wallet0.address)
+
+      const spells = {
+        connector: "emitEvent",
+        method: "claim",
+        args: [holder.address]
+      }
+      const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(...encodeSpells([spells]), wallet3.address, { gasLimit: 12000000, value: ethers.utils.parseEther("1.0") })
+      const receipt = await tx.wait()
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+    })
+
+  })
+
 });

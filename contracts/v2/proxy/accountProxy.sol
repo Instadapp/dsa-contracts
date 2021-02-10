@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.0;
 
+import "hardhat/console.sol";
+
 interface AccountImplementations {
     function getImplementation(bytes4 _sig) external view returns (address);
 }
@@ -75,8 +77,11 @@ contract InstaAccountV2Proxy {
      * is empty.
      */
     receive () external payable {
-        if (msg.sig != 0x00000000) {
-            _fallback(msg.sig);
-        }
+        // if (msg.sig != 0x00000000) {
+        //     _fallback(msg.sig);
+        // }
+        console.log(gasleft());
+        console.logBytes4(msg.sig);
+        _fallback(msg.sig);
     }
 }
