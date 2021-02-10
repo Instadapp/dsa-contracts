@@ -5,6 +5,7 @@ const { provider, deployContract } = waffle
 
 const deployContracts = require("../scripts/deployContracts")
 const deployConnector = require("../scripts/deployConnector")
+const enableConnector = require("../scripts/enableConnector")
 
 const encodeSpells = require("../scripts/encodeSpells.js")
 const expectEvent = require("../scripts/expectEvent")
@@ -16,9 +17,14 @@ const abis = require("../scripts/constant/abis");
 
 const compoundArtifact = require("../artifacts/contracts/v2/connectors/test/compound.test.sol/ConnectCompound.json");
 const connectAuth = require("../artifacts/contracts/v2/connectors/test/auth.test.sol/ConnectV2Auth.json");
+const defaultTest2 = require("../artifacts/contracts/v2/accounts/test/implementation_default.v2.test.sol/InstaAccountV2DefaultImplementationV2.json");
+const { ethers } = require("hardhat");
 
 describe("Core", function () {
   const address_zero = "0x0000000000000000000000000000000000000000"
+  const ethAddr = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+  const daiAddr = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+  const maxValue = "115792089237316195423570985008687907853269984665640564039457584007913129639935"
 
   let
     instaConnectorsV2,
@@ -27,12 +33,21 @@ describe("Core", function () {
     instaAccountV2ImplM1,
     instaAccountV2ImplM2,
     instaAccountV2DefaultImpl,
+    instaAccountV2DefaultImplV2,
     instaIndex
 
   const instaAccountV2DefaultImplSigs = [
     "enable(address)",
     "disable(address)",
     "isAuth(address)",
+  ].map((a) => web3.utils.keccak256(a).slice(0, 10))
+
+  const instaAccountV2DefaultImplSigsV2 = [
+    "enable(address)",
+    "disable(address)",
+    "isAuth(address)",
+    "switchShield(bool",
+    "shield()"
   ].map((a) => web3.utils.keccak256(a).slice(0, 10))
 
   const instaAccountV2ImplM1Sigs = [
@@ -48,6 +63,9 @@ describe("Core", function () {
   let acountV2DsaM1Wallet0;
   let acountV2DsaM2Wallet0;
   let acountV2DsaDefaultWallet0;
+  let acountV2DsaDefaultWalletM2;
+
+  let authV3, authV4, compound, compound2
 
   const wallets = provider.getWallets()
   let [wallet0, wallet1, wallet2, wallet3] = wallets
@@ -62,6 +80,8 @@ describe("Core", function () {
     instaAccountV2ImplM2 = result.instaAccountV2ImplM2
 
     masterSigner = await getMasterSigner()
+
+    instaAccountV2DefaultImplV2 = await deployContract(masterSigner, defaultTest2, [])
   })
 
   it("Should have contracts deployed.", async function () {
@@ -111,6 +131,22 @@ describe("Core", function () {
       expect((await implementationsMapping.getImplementationSigs(instaAccountV2ImplM2.address)).length).to.be.equal(0);
     });
 
+    it("Should add InstaAccountV2DefaultImplementationV2 sigs to mapping.", async function () {
+      const tx = await implementationsMapping.connect(masterSigner).addImplementation(instaAccountV2DefaultImplV2.address, instaAccountV2DefaultImplSigsV2);
+      await tx.wait()
+      expect(await implementationsMapping.getSigImplementation(instaAccountV2DefaultImplSigsV2[0])).to.be.equal(instaAccountV2DefaultImplV2.address);
+      (await implementationsMapping.getImplementationSigs(instaAccountV2DefaultImplV2.address)).forEach((a, i) => {
+        expect(a).to.be.eq(instaAccountV2DefaultImplSigsV2[i])
+      })
+    });
+
+    it("Should remove InstaAccountV2DefaultImplementationV2 sigs to mapping.", async function () {
+      const tx = await implementationsMapping.connect(masterSigner).removeImplementation(instaAccountV2DefaultImplV2.address);
+      await tx.wait()
+      expect(await implementationsMapping.getSigImplementation(instaAccountV2DefaultImplSigsV2[0])).to.be.equal(address_zero);
+      expect((await implementationsMapping.getImplementationSigs(instaAccountV2DefaultImplV2.address)).length).to.be.equal(0);
+    });
+
     it("Should return default imp.", async function () {
       expect(await implementationsMapping.getImplementation(instaAccountV2ImplM2Sigs[0])).to.be.equal(instaAccountV2DefaultImpl.address);
     });
@@ -131,6 +167,7 @@ describe("Core", function () {
       acountV2DsaM1Wallet0 = await ethers.getContractAt("InstaAccountV2ImplementationM1", dsaWalletAddress);
       acountV2DsaM2Wallet0 = await ethers.getContractAt("InstaAccountV2ImplementationM2", dsaWalletAddress);
       acountV2DsaDefaultWallet0 = await ethers.getContractAt("InstaAccountV2DefaultImplementation", dsaWalletAddress);
+      acountV2DsaDefaultWalletM2 = await ethers.getContractAt("InstaAccountV2DefaultImplementationV2", dsaWalletAddress);
     });
 
     it("Should deploy Auth connector", async function () {
@@ -177,6 +214,28 @@ describe("Core", function () {
       const LogAddAuthEvent = expectEvent(receipt, (await deployments.getArtifact("ConnectV2Auth")).abi, "LogAddAuth")
     });
 
+    it("Should remove wallet1 as auth", async function () {
+      const spells = {
+        connector: "authV2",
+        method: "remove",
+        args: [wallet1.address]
+      }
+      const tx = await acountV2DsaM1Wallet0.connect(wallet2).cast(...encodeSpells([spells]), wallet2.address)
+      const receipt = await tx.wait()
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM2")).abi, "LogCast")
+      expectEvent(receipt, (await deployments.getArtifact("ConnectV2Auth")).abi, "LogRemoveAuth")
+    });
+
+    // This one fails
+    // it("Should add wallet3 as auth using default implmentation", async function() {
+    //   console.log("uwu", "msg.sender=", wallet0.address, "address(this)=" ,acountV2DsaDefaultWallet0.address)
+    //   const tx = await acountV2DsaDefaultWallet0.connect(wallet0).enable(wallet3.address)
+    //   const receipt = await tx.wait()
+
+    //   expect(await acountV2DsaDefaultWallet0.isAuth(wallet3.address)).to.be.true
+    //   expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2DefaultImplementation")).abi, "LogEnableUser")
+    // });
+
   });
 
   describe("Events", function () {
@@ -213,11 +272,21 @@ describe("Core", function () {
       expectEvent(receipt, (await deployments.getArtifact("ConnectV2Auth")).abi, "LogAddAuth")
     });
 
+    it("Should emit emitEvent", async function () {
+      const spells = {
+        connector: "emitEvent",
+        method: "emitEvent",
+        args: []
+      }
+      const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(...encodeSpells([spells]), wallet3.address)
+      const receipt = await tx.wait()
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+      expectEvent(receipt, (await deployments.getArtifact("ConnectV2EmitEvent")).abi, "LogEmitEvent")
+    })
+
   });
 
   describe("Connectors", function() {
-
-    let authV3, authV4, compound, compound2
 
     before(async function () {
       compound = await deployContract(masterSigner, compoundArtifact, [])
@@ -268,7 +337,7 @@ describe("Core", function () {
       expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
     });
 
-    it("Shouldn't work if one of them is not a connector", async function () {
+    it("Returns false if one of them is not a connector", async function () {
       const connectorsArray = [ authV3.address, compound2.address ]
 
       expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
@@ -305,5 +374,151 @@ describe("Core", function () {
       expect(await instaConnectorsV2.chief(wallet1.address)).to.be.true
     })
 
+    after(async () => {
+      const connectorsArray = [ compound.address ]
+
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
+      await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
+    });
+
   });
+
+  describe("Connector - Compound", function () {
+
+    before(async () => {
+      const connectorsArray = [ addresses.connectors["basic"] ]
+
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
+      await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
+    })
+    
+    it("Should be a deployed connector", async function () {
+      enableConnector({
+        connectorName: "compoundV2",
+        address: compound.address,
+        abi: (await deployments.getArtifact("ConnectCompound")).abi
+      })
+      expect(!!addresses.connectors["compoundV2"]).to.be.true
+
+      connectorsArray = [addresses.connectors["compoundV2"]]
+
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
+    })
+
+    it("Should deposit ETH to wallet", async function () {
+      const spells = {
+        connector: "basic",
+        method: "deposit",
+        args: [ 
+          ethAddr,
+          ethers.utils.parseEther("1.0"),
+          0,
+          0
+        ]
+      }
+      const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(
+        ...encodeSpells([spells]),
+        wallet3.address,
+        { value: ethers.utils.parseEther("1.0") }
+      )
+      const receipt = await tx.wait()
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+    })
+
+    it("Should deposit ETH to Compound", async function () {
+      const spells = {
+        connector: "compoundV2",
+        method: "deposit",
+        args: [ 
+          ethAddr,
+          ethers.utils.parseEther("0.5"),
+          0,
+          0
+        ]
+      }
+
+      const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(
+        ...encodeSpells([spells]),
+        wallet3.address,
+      )
+      const receipt = await tx.wait()
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+    })
+
+    it("Should deposit ETH to Compound 2", async function () {
+      const spells = {
+        connector: "compoundV2",
+        method: "deposit",
+        args: [ 
+          ethAddr,
+          maxValue,
+          0,
+          0
+        ]
+      }
+
+      const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(
+        ...encodeSpells([spells]),
+        wallet3.address,
+      )
+      const receipt = await tx.wait()
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+    })
+
+    it("Should Borrow & Payback DAI", async function () {
+      const spells = [
+        {
+          connector: "compoundV2",
+          method: "borrow",
+          args: [ 
+            daiAddr,
+            ethers.utils.parseEther("10"),
+            0,
+            123
+          ]
+        },
+        {
+          connector: "compoundV2",
+          method: "payback",
+          args: [ 
+            daiAddr,
+            0,
+            123,
+            0
+          ]
+        }
+      ]
+
+      const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(
+        ...encodeSpells(spells),
+        wallet3.address,
+      )
+      const receipt = await tx.wait()
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+    })
+
+    // Fails in cToken Contract
+    // it("Should withdraw from Compound", async function () {
+    //   const spells = {
+    //     connector: "compoundV2",
+    //     method: "withdraw",
+    //     args: [ 
+    //       ethAddr,
+    //       ethers.utils.parseEther("0.5"),
+    //       0,
+    //       0
+    //     ]
+    //   }
+
+    //   const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(
+    //     ...encodeSpells([spells]),
+    //     wallet3.address,
+    //   )
+    //   const receipt = await tx.wait()
+    //   expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+    // })
+
+  })
 });
