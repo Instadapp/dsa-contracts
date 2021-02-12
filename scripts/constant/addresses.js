@@ -1,6 +1,6 @@
 module.exports = {
     connectors: {
-      basic: "0x6a31c5982C5Bc5533432913cf06a66b6D3333a95",
+      basic: "0xe5398f279175962E56fE4c5E0b62dc7208EF36c6",
       auth: "0xd1aff9f2acf800c876c409100d6f39aea93fc3d9",
       compound: "0x07F81230d73a78f63F0c2A3403AD281b067d28F8",
       maker: "0x6c4E4D4aB22cAB08b8498a3A232D92609e8b2d62",

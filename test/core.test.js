@@ -228,14 +228,23 @@ describe("Core", function () {
     });
 
     // This one fails
-    // it("Should add wallet3 as auth using default implmentation", async function() {
-    //   console.log("uwu", "msg.sender=", wallet0.address, "address(this)=" ,acountV2DsaDefaultWallet0.address)
-    //   const tx = await acountV2DsaDefaultWallet0.connect(wallet0).enable(wallet3.address)
-    //   const receipt = await tx.wait()
+    it("Should add wallet3 as auth using default implmentation", async function() {
+      console.log("uwu", "msg.sender=", wallet0.address, "address(this)=" ,acountV2DsaDefaultWallet0.address)
+      const tx = await acountV2DsaDefaultWallet0.connect(wallet0).enable(wallet3.address)
+      const receipt = await tx.wait()
 
-    //   expect(await acountV2DsaDefaultWallet0.isAuth(wallet3.address)).to.be.true
-    //   expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2DefaultImplementation")).abi, "LogEnableUser")
-    // });
+      expect(await acountV2DsaDefaultWallet0.isAuth(wallet3.address)).to.be.true
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2DefaultImplementation")).abi, "LogEnableUser")
+    });
+
+    it("Should remove wallet0 as auth using default implmentation", async function() {
+      console.log("uwu", "msg.sender=", wallet0.address, "address(this)=" ,acountV2DsaDefaultWallet0.address)
+      const tx = await acountV2DsaDefaultWallet0.connect(wallet3).disable(wallet0.address)
+      const receipt = await tx.wait()
+
+      expect(await acountV2DsaDefaultWallet0.isAuth(wallet3.address)).to.be.true
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2DefaultImplementation")).abi, "LogDisableUser")
+    });
 
   });
 
@@ -697,6 +706,102 @@ describe("Core", function () {
       expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
 
       expect(await usdcContract.balanceOf(wallet1.address)).to.equal(0)
+    })
+
+  })
+
+  describe("Connector - Compound", function () {
+
+    it("Should deposit USDC to Compound 2", async function () {
+      const spells = {
+        connector: "compoundV2",
+        method: "deposit",
+        args: [ 
+          usdcAddr,
+          maxValue,
+          0,
+          0
+        ]
+      }
+
+      const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(
+        ...encodeSpells([spells]),
+        wallet3.address,
+      )
+      const receipt = await tx.wait()
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+    })
+
+    it("Should Borrow & Payback ETH", async function () {
+      const spells = [
+        {
+          connector: "compoundV2",
+          method: "borrow",
+          args: [ 
+            ethAddr,
+            ethers.utils.parseEther("0.01"),
+            0,
+            1235
+          ]
+        },
+        {
+          connector: "compoundV2",
+          method: "payback",
+          args: [ 
+            ethAddr,
+            0,
+            1235,
+            0
+          ]
+        }
+      ]
+
+      const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(
+        ...encodeSpells(spells),
+        wallet3.address,
+      )
+      const receipt = await tx.wait()
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+    })
+
+    it("Should withdraw USDC from Compound", async function () {
+      const spells = {
+        connector: "compoundV2",
+        method: "withdraw",
+        args: [ 
+          usdcAddr,
+          maxValue,
+          0,
+          0
+        ]
+      }
+
+      const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(
+        ...encodeSpells([spells]),
+        wallet3.address,
+      )
+      const receipt = await tx.wait()
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+    })
+
+    it("Should withdraw ETH to any address", async function () {
+      const spells = {
+        connector: "basic",
+        method: "withdraw",
+        args: [ 
+          ethAddr,
+          maxValue,
+          "0xa6932AE12380fc2D5B2A118381EB1eA59aF40A5a",
+          0,
+          0
+        ]
+      }
+      const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(
+        ...encodeSpells([spells]),
+        wallet3.address,
+      )
+      const receipt = await tx.wait()
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
     })
 
   })
