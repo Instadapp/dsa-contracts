@@ -66,7 +66,7 @@ contract Record is CommonSetup {
      * @param user Owner of the Smart Account.
     */
     function enable(address user) public {
-        require(msg.sender == address(this) || msg.sender == instaIndex, "not-self-index");
+        require(msg.sender == address(this) || msg.sender == instaIndex || isAuth(msg.sender), "not-self-index");
         require(user != address(0), "not-valid");
         require(!auth[user], "already-enabled");
         auth[user] = true;
@@ -79,7 +79,7 @@ contract Record is CommonSetup {
      * @param user Owner of the Smart Account.
     */
     function disable(address user) public {
-        require(msg.sender == address(this), "not-self");
+        require(msg.sender == address(this) || isAuth(msg.sender), "not-self");
         require(user != address(0), "not-valid");
         require(auth[user], "already-disabled");
         delete auth[user];

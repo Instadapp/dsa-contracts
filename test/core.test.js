@@ -227,24 +227,35 @@ describe("Core", function () {
       expectEvent(receipt, (await deployments.getArtifact("ConnectV2Auth")).abi, "LogRemoveAuth")
     });
 
-    // This one fails
+    it("Should change default implementation", async function () {
+      const tx = await implementationsMapping.connect(masterSigner).setDefaultImplementation(instaAccountV2DefaultImplV2.address);
+      await tx.wait()
+      expect(await implementationsMapping.defaultImplementation()).to.be.equal(instaAccountV2DefaultImplV2.address);
+    })
+
     it("Should add wallet3 as auth using default implmentation", async function() {
-      console.log("uwu", "msg.sender=", wallet0.address, "address(this)=" ,acountV2DsaDefaultWallet0.address)
       const tx = await acountV2DsaDefaultWallet0.connect(wallet0).enable(wallet3.address)
       const receipt = await tx.wait()
 
       expect(await acountV2DsaDefaultWallet0.isAuth(wallet3.address)).to.be.true
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2DefaultImplementation")).abi, "LogEnableUser")
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2DefaultImplementationV2")).abi, "LogEnableUser")
     });
 
     it("Should remove wallet0 as auth using default implmentation", async function() {
-      console.log("uwu", "msg.sender=", wallet0.address, "address(this)=" ,acountV2DsaDefaultWallet0.address)
       const tx = await acountV2DsaDefaultWallet0.connect(wallet3).disable(wallet0.address)
       const receipt = await tx.wait()
 
-      expect(await acountV2DsaDefaultWallet0.isAuth(wallet3.address)).to.be.true
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2DefaultImplementation")).abi, "LogDisableUser")
+      expect(await acountV2DsaDefaultWallet0.isAuth(wallet0.address)).to.be.false
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2DefaultImplementationV2")).abi, "LogDisableUser")
     });
+
+    it("Should switch shield", async function () {
+      const tx = await acountV2DsaDefaultWalletM2.connect(wallet3).switchShield(true)
+      const receipt = await tx.wait()
+
+      expect(await acountV2DsaDefaultWalletM2.shield()).to.be.true
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2DefaultImplementationV2")).abi, "LogSwitchShield")
+    })
 
   });
 
