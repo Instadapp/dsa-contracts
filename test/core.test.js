@@ -17,7 +17,6 @@ const abis = require("../scripts/constant/abis");
 
 const compoundArtifact = require("../artifacts/contracts/v2/connectors/test/compound.test.sol/ConnectCompound.json");
 const connectAuth = require("../artifacts/contracts/v2/connectors/test/auth.test.sol/ConnectV2Auth.json");
-const holderArtifact = require("../artifacts/contracts/v2/connectors/test/holder.sol/EthHolder.json");
 const defaultTest2 = require("../artifacts/contracts/v2/accounts/test/implementation_default.v2.test.sol/InstaAccountV2DefaultImplementationV2.json");
 const { ethers } = require("hardhat");
 
@@ -25,6 +24,7 @@ describe("Core", function () {
   const address_zero = "0x0000000000000000000000000000000000000000"
   const ethAddr = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
   const daiAddr = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+  const usdcAddr = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
   const maxValue = "115792089237316195423570985008687907853269984665640564039457584007913129639935"
 
   let
@@ -500,68 +500,203 @@ describe("Core", function () {
       expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
     })
 
-    // Fails in cToken Contract
-    // it("Should withdraw from Compound", async function () {
-    //   const spells = {
-    //     connector: "compoundV2",
-    //     method: "withdraw",
-    //     args: [ 
-    //       ethAddr,
-    //       ethers.utils.parseEther("0.5"),
-    //       0,
-    //       0
-    //     ]
-    //   }
+    it("Should withdraw from Compound", async function () {
+      const spells = {
+        connector: "compoundV2",
+        method: "withdraw",
+        args: [ 
+          ethAddr,
+          ethers.utils.parseEther("0.5"),
+          0,
+          0
+        ]
+      }
 
-    //   const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(
-    //     ...encodeSpells([spells]),
-    //     wallet3.address,
-    //   )
-    //   const receipt = await tx.wait()
-    //   expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
-    // })
+      const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(
+        ...encodeSpells([spells]),
+        wallet3.address,
+      )
+      const receipt = await tx.wait()
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+    })
 
   })
 
-  // describe("Connector - Uniswap", function () {
-
-  //   before(async () => {
-  //     const connectorsArray = [ addresses.connectors["uniswap"] ]
-
-  //     expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
-  //     await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
-  //     expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
-  //   })
-
-  // })
-
-  describe("Testing withdraw", function() {
-
-    let holder
+  describe("Connector - Uniswap", function () {
 
     before(async () => {
-      holder = await deployContract(masterSigner, holderArtifact, [])
+      const connectorsArray = [ addresses.connectors["uniswap"] ]
 
-      await wallet1.sendTransaction({
-        to: holder.address,
-        value: ethers.utils.parseEther("1.0"),
-      })
-
-      console.log("uwu", await provider.getBalance(holder.address))
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
+      await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
+      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
     })
 
-    it("Should receive eth", async function () {
-
-      console.log("uvu", acountV2DsaM1Wallet0.address)
-
+    it("Should deposit ETH to wallet", async function () {
       const spells = {
-        connector: "emitEvent",
-        method: "claim",
-        args: [holder.address]
+        connector: "basic",
+        method: "deposit",
+        args: [ 
+          ethAddr,
+          ethers.utils.parseEther("5.0"),
+          0,
+          0
+        ]
       }
-      const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(...encodeSpells([spells]), wallet3.address, { gasLimit: 12000000, value: ethers.utils.parseEther("1.0") })
+      const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(
+        ...encodeSpells([spells]),
+        wallet3.address,
+        { value: ethers.utils.parseEther("5.0") }
+      )
       const receipt = await tx.wait()
       expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+    })
+
+    it("Should swap ETH to DAI", async function () {
+      const spells = {
+        connector: "uniswap",
+        method: "sell",
+        args: [ 
+          daiAddr,
+          ethAddr,
+          ethers.utils.parseEther("0.5"),
+          0,
+          0,
+          0
+        ]
+      }
+
+      const abi = (await deployments.getArtifact("TokenInterface")).abi
+      const daiContract = new ethers.Contract(daiAddr, abi, provider)
+
+      expect(await daiContract.balanceOf(acountV2DsaM1Wallet0.address)).to.equal(0)
+
+      const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(
+        ...encodeSpells([spells]),
+        wallet3.address,
+      )
+      const receipt = await tx.wait()
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+
+      expect(await daiContract.balanceOf(acountV2DsaM1Wallet0.address)).to.not.equal(0)
+    })
+
+    it("Should swap DAI to USDC", async function () {
+      const abi = (await deployments.getArtifact("TokenInterface")).abi
+      const daiContract = new ethers.Contract(daiAddr, abi, provider)
+      const usdcContract = new ethers.Contract(usdcAddr, abi, provider)
+
+      const spells = {
+        connector: "uniswap",
+        method: "sell",
+        args: [ 
+          usdcAddr,
+          daiAddr,
+          await daiContract.balanceOf(acountV2DsaM1Wallet0.address),
+          0,
+          0,
+          0
+        ]
+      }
+
+      expect(await daiContract.balanceOf(acountV2DsaM1Wallet0.address)).to.not.equal(0)
+      expect(await usdcContract.balanceOf(acountV2DsaM1Wallet0.address)).to.equal(0)
+
+      const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(
+        ...encodeSpells([spells]),
+        wallet3.address,
+      )
+      const receipt = await tx.wait()
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+
+      expect(await daiContract.balanceOf(acountV2DsaM1Wallet0.address)).to.equal(0)
+      expect(await usdcContract.balanceOf(acountV2DsaM1Wallet0.address)).to.not.equal(0)
+    })
+
+    it("Should swap ETH to DAI 2", async function () {
+      const spells = {
+        connector: "uniswap",
+        method: "sell",
+        args: [ 
+          daiAddr,
+          ethAddr,
+          ethers.utils.parseEther("0.5"),
+          0,
+          0,
+          0
+        ]
+      }
+
+      const abi = (await deployments.getArtifact("TokenInterface")).abi
+      const daiContract = new ethers.Contract(daiAddr, abi, provider)
+
+      expect(await daiContract.balanceOf(acountV2DsaM1Wallet0.address)).to.equal(0)
+
+      const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(
+        ...encodeSpells([spells]),
+        wallet3.address,
+      )
+      const receipt = await tx.wait()
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+
+      expect(await daiContract.balanceOf(acountV2DsaM1Wallet0.address)).to.not.equal(0)
+    })
+
+    it("Should withdraw USDC to Auth Wallet", async function () {
+      const abi = (await deployments.getArtifact("TokenInterface")).abi
+      const usdcContract = new ethers.Contract(usdcAddr, abi, provider)
+
+      const usdcBalance = await usdcContract.balanceOf(acountV2DsaM1Wallet0.address)
+      const withdrawAmt = usdcBalance.div(ethers.BigNumber.from(2))
+
+      expect(await usdcContract.balanceOf(wallet1.address)).to.equal(0)
+
+      const spells = {
+        connector: "basic",
+        method: "withdraw",
+        args: [ 
+          usdcAddr,
+          withdrawAmt,
+          wallet1.address,
+          0,
+          0
+        ]
+      }
+      const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(
+        ...encodeSpells([spells]),
+        wallet3.address,
+      )
+      const receipt = await tx.wait()
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+
+      expect(await usdcContract.balanceOf(wallet1.address)).to.equal(withdrawAmt)
+    })
+
+    it("Should deposit USDC back to wallet", async function () {
+      const abi = (await deployments.getArtifact("TokenInterface")).abi
+      const usdcContract = new ethers.Contract(usdcAddr, abi, provider)
+
+      let tx = await usdcContract.connect(wallet1).approve(acountV2DsaM1Wallet0.address, maxValue)
+      await tx.wait()
+
+      const spells = {
+        connector: "basic",
+        method: "deposit",
+        args: [ 
+          usdcAddr,
+          maxValue,
+          0,
+          0
+        ]
+      }
+      tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(
+        ...encodeSpells([spells]),
+        wallet3.address,
+      )
+      const receipt = await tx.wait()
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+
+      expect(await usdcContract.balanceOf(wallet1.address)).to.equal(0)
     })
 
   })
