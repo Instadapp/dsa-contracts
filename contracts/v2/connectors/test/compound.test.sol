@@ -89,13 +89,6 @@ contract Helpers is DSMath {
         return 0x8a5419CfC711B2343c17a6ABf4B2bAFaBb06957F; // InstaMemory Address
     }
 
-    // /**
-    //  * @dev Return InstaEvent Address.
-    //  */
-    // function getEventAddr() internal pure returns (address) {
-    //     return 0x2af7ea6Cb911035f3eb1ED895Cb6692C39ecbA97; // InstaEvent Address
-    // }
-
     /**
      * @dev Get Uint value from InstaMemory Contract.
     */
@@ -108,13 +101,6 @@ contract Helpers is DSMath {
     */
     function setUint(uint setId, uint val) internal {
         if (setId != 0) MemoryInterface(getMemoryAddr()).setUint(setId, val);
-    }
-
-    /**
-     * @dev Connector Details
-    */
-    function connectorID() public pure returns(uint _type, uint _id) {
-        (_type, _id) = (1, 57);
     }
 }
 
@@ -264,5 +250,5 @@ contract BasicResolver is CompoundHelpers {
 }
 
 contract ConnectCompound is BasicResolver {
-    string public name = "Compound-v1.3";
+    string public name = "Compound-v1";
 }
