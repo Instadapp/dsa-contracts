@@ -4,6 +4,7 @@ module.exports = {
       auth: require("./abi/connectors/auth.json"),
       compound: require("./abi/connectors/compound.json"),
       maker: require("./abi/connectors/maker.json"),
+      uniswap: require("./abi/connectors/uniswap.json"),
     },
     read: {
       core: require("./abi/read/core.json"),

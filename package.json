@@ -6,7 +6,9 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "hardhat test",
+    "coverage": "hardhat coverage --testfiles 'test/core.test.js'",
+    "compile": "hardhat compile"
   },
   "repository": {
     "type": "git",
@@ -53,6 +55,7 @@
     "ethereum-waffle": "^3.2.1",
     "ethers": "^5.0.26",
     "hardhat": "^2.0.8",
-    "hardhat-gas-reporter": "^1.0.4"
+    "hardhat-gas-reporter": "^1.0.4",
+    "solidity-coverage": "^0.7.14"
   }
 }

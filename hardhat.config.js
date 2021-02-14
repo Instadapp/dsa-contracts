@@ -9,6 +9,7 @@ require('@openzeppelin/hardhat-upgrades');
 require("@tenderly/hardhat-tenderly");
 
 require("hardhat-gas-reporter");
+require("solidity-coverage");
 
 require("dotenv").config();
 // const INFURA_ID = process.env.INFURA_ID;
