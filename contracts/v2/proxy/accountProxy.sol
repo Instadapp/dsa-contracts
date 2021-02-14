@@ -75,7 +75,7 @@ contract InstaAccountV2Proxy {
      * is empty.
      */
     receive () external payable {
-        if (msg.sig != 0x00000000 || gasleft() > 5000) {
+        if (msg.sig != 0x00000000) {
             _fallback(msg.sig);
         }
     }
