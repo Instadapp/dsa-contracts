@@ -6,34 +6,34 @@ This repository contains the core contracts for Instadapp DeFi Smart Accounts (D
 
 ## Installation
 
-1. Install Truffle and Ganache CLI globally.
+1. Install NPM Packages
 
 ```javascript
-npm  install -g  truffle@beta
-npm  install -g  ganache-cli
+npm i
 ```
 
 2. Create a `.env` file in the root directory and use the below format for .`env` file.
 
 ```javascript
-infura_key = [Infura key] //For deploying
-mnemonic_key = [Mnemonic Key] // Also called as seed key
-etherscan_key = [Etherscan API dev Key]
+ALCHEMY_ID="<Replace with your Alchemy ID>" //For deploying
 ```  
 
 ## Commands:
 
+Compile contracts
+
 ```
-Compile contracts: truffle compile
-Migrate contracts: truffle migrate
-Test contracts: truffle test --migrations_directory migrations_null
-Run eslint: npm run lint
-Run solium: npm run solium
-Run solidity-coverage: npm run coverage
-Run lint, solium, and truffle test: npm run test
+npm run compile
 ```
 
-**Note**: Before running any `truffle` command, Run the below command in another terminal.
+Run the testcases
+
 ```
-truffle watch
+npm test
+```
+
+Get the test coverage
+
+```
+npm run coverage
 ```
