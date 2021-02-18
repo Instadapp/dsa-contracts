@@ -25,6 +25,8 @@ describe("Core", function () {
   const ethAddr = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
   const daiAddr = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
   const usdcAddr = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+  const cEthAddr = "0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5"
+  const cDaiAddr = "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643"
   const maxValue = "115792089237316195423570985008687907853269984665640564039457584007913129639935"
 
   let
@@ -301,8 +303,18 @@ describe("Core", function () {
       }
       const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(...encodeSpells([spells]), wallet3.address)
       const receipt = await tx.wait()
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
-      expectEvent(receipt, (await deployments.getArtifact("ConnectV2EmitEvent")).abi, "LogEmitEvent")
+
+      const eventAbi = (await deployments.getArtifact("ConnectV2EmitEvent")).abi
+
+      const castEvent = [
+        {
+          abi: eventAbi,
+          eventName: "LogEmitEvent",
+        }
+      ]
+
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast", null, castEvent)
+      expectEvent(receipt, eventAbi, "LogEmitEvent")
     })
 
   });
@@ -465,7 +477,19 @@ describe("Core", function () {
         wallet3.address,
       )
       const receipt = await tx.wait()
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+      
+      const compoundAbi = (await deployments.getArtifact("ConnectCompound")).abi
+
+      const castEvent = [
+        {
+          abi: compoundAbi,
+          eventName: "LogDeposit",
+          eventParams: [ethAddr, cEthAddr, ethers.utils.parseEther("0.5"), 0, 0]
+        }
+      ]
+
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast", null, castEvent)
+      expectEvent(receipt, compoundAbi, "LogDeposit")
     })
 
     it("Should deposit ETH to Compound 2", async function () {
@@ -517,7 +541,25 @@ describe("Core", function () {
         wallet3.address,
       )
       const receipt = await tx.wait()
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+
+      const compoundAbi = (await deployments.getArtifact("ConnectCompound")).abi
+
+      const castEvent = [
+        {
+          abi: compoundAbi,
+          eventName: "LogBorrow",
+          eventParams: [daiAddr, cDaiAddr, ethers.utils.parseEther("10"), 0, 123]
+        },
+        {
+          abi: compoundAbi,
+          eventName: "LogPayback",
+          eventParams: [daiAddr, cDaiAddr, ethers.utils.parseEther("10"), 123, 0]
+        }
+      ]
+
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast", null, castEvent)
+      expectEvent(receipt, compoundAbi, "LogBorrow")
+      expectEvent(receipt, compoundAbi, "LogPayback")
     })
 
     it("Should withdraw from Compound", async function () {
@@ -537,7 +579,19 @@ describe("Core", function () {
         wallet3.address,
       )
       const receipt = await tx.wait()
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+      
+      const compoundAbi = (await deployments.getArtifact("ConnectCompound")).abi
+
+      const castEvent = [
+        {
+          abi: compoundAbi,
+          eventName: "LogWithdraw",
+          eventParams: [ethAddr, cEthAddr, ethers.utils.parseEther("0.5"), 0, 0]
+        }
+      ]
+
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast", null, castEvent)
+      expectEvent(receipt, compoundAbi, "LogWithdraw")
     })
 
   })
@@ -740,7 +794,18 @@ describe("Core", function () {
         wallet3.address,
       )
       const receipt = await tx.wait()
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+
+      const compoundAbi = (await deployments.getArtifact("ConnectCompound")).abi
+
+      const castEvent = [
+        {
+          abi: compoundAbi,
+          eventName: "LogDeposit",
+        }
+      ]
+
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast", null, castEvent)
+      expectEvent(receipt, compoundAbi, "LogDeposit")
     })
 
     it("Should Borrow & Payback ETH", async function () {
@@ -772,7 +837,25 @@ describe("Core", function () {
         wallet3.address,
       )
       const receipt = await tx.wait()
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+
+      const compoundAbi = (await deployments.getArtifact("ConnectCompound")).abi
+
+      const castEvent = [
+        {
+          abi: compoundAbi,
+          eventName: "LogBorrow",
+          eventParams: [ethAddr, cEthAddr, ethers.utils.parseEther("0.01"), 0, 1235]
+        },
+        {
+          abi: compoundAbi,
+          eventName: "LogPayback",
+          eventParams: [ethAddr, cEthAddr, ethers.utils.parseEther("0.01"), 1235, 0]
+        }
+      ]
+
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast", null, castEvent)
+      expectEvent(receipt, compoundAbi, "LogBorrow")
+      expectEvent(receipt, compoundAbi, "LogPayback")
     })
 
     it("Should withdraw USDC from Compound", async function () {
@@ -792,7 +875,17 @@ describe("Core", function () {
         wallet3.address,
       )
       const receipt = await tx.wait()
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+
+      const compoundAbi = (await deployments.getArtifact("ConnectCompound")).abi
+      const eventName = "LogWithdraw"
+
+      const castEvent = [{
+        abi: compoundAbi,
+        eventName
+      }]
+
+      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast", null, castEvent)
+      expectEvent(receipt, compoundAbi, eventName)
     })
 
     it("Should withdraw ETH to any address", async function () {

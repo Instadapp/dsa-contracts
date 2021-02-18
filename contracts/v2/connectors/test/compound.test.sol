@@ -161,7 +161,12 @@ contract BasicResolver is CompoundHelpers {
      * @param getId Get token amount at this ID from `InstaMemory` Contract.
      * @param setId Set token amount at this ID in `InstaMemory` Contract.
     */
-    function deposit(address token, uint amt, uint getId, uint setId) external payable{
+    function deposit(
+        address token,
+        uint amt,
+        uint getId,
+        uint setId
+    ) external payable returns (string memory _eventName, bytes memory _eventParam) {
         uint _amt = getUint(getId, amt);
         address cToken = InstaMapping(getMappingAddr()).cTokenMapping(token);
         enterMarket(cToken);
@@ -177,6 +182,9 @@ contract BasicResolver is CompoundHelpers {
         setUint(setId, _amt);
 
         emit LogDeposit(token, cToken, _amt, getId, setId);
+
+        _eventName = "LogDeposit(address,address,uint256,uint256,uint256)";
+        _eventParam = abi.encode(token, cToken, _amt, getId, setId);
     }
 
     /**
@@ -186,7 +194,12 @@ contract BasicResolver is CompoundHelpers {
      * @param getId Get token amount at this ID from `InstaMemory` Contract.
      * @param setId Set token amount at this ID in `InstaMemory` Contract.
     */
-    function withdraw(address token, uint amt, uint getId, uint setId) external payable{
+    function withdraw(
+        address token,
+        uint amt,
+        uint getId,
+        uint setId
+    ) external payable returns (string memory _eventName, bytes memory _eventParam) {
         uint _amt = getUint(getId, amt);
         address cToken = InstaMapping(getMappingAddr()).cTokenMapping(token);
         CTokenInterface cTokenContract = CTokenInterface(cToken);
@@ -202,6 +215,9 @@ contract BasicResolver is CompoundHelpers {
         setUint(setId, _amt);
 
         emit LogWithdraw(token, cToken, _amt, getId, setId);
+
+        _eventName = "LogWithdraw(address,address,uint256,uint256,uint256)";
+        _eventParam = abi.encode(token, cToken, _amt, getId, setId);
     }
 
     /**
@@ -211,7 +227,12 @@ contract BasicResolver is CompoundHelpers {
      * @param getId Get token amount at this ID from `InstaMemory` Contract.
      * @param setId Set token amount at this ID in `InstaMemory` Contract.
     */
-    function borrow(address token, uint amt, uint getId, uint setId) external payable {
+    function borrow(
+        address token,
+        uint amt,
+        uint getId,
+        uint setId
+    ) external payable returns (string memory _eventName, bytes memory _eventParam) {
         uint _amt = getUint(getId, amt);
         address cToken = InstaMapping(getMappingAddr()).cTokenMapping(token);
         enterMarket(cToken);
@@ -219,6 +240,9 @@ contract BasicResolver is CompoundHelpers {
         setUint(setId, _amt);
 
         emit LogBorrow(token, cToken, _amt, getId, setId);
+
+        _eventName = "LogBorrow(address,address,uint256,uint256,uint256)";
+        _eventParam = abi.encode(token, cToken, _amt, getId, setId);
     }
 
     /**
@@ -228,7 +252,12 @@ contract BasicResolver is CompoundHelpers {
      * @param getId Get token amount at this ID from `InstaMemory` Contract.
      * @param setId Set token amount at this ID in `InstaMemory` Contract.
     */
-    function payback(address token, uint amt, uint getId, uint setId) external payable {
+    function payback(
+        address token,
+        uint amt,
+        uint getId,
+        uint setId
+    ) external payable returns (string memory _eventName, bytes memory _eventParam) {
         uint _amt = getUint(getId, amt);
         address cToken = InstaMapping(getMappingAddr()).cTokenMapping(token);
         CTokenInterface cTokenContract = CTokenInterface(cToken);
@@ -246,6 +275,9 @@ contract BasicResolver is CompoundHelpers {
         setUint(setId, _amt);
 
         emit LogPayback(token, cToken, _amt, getId, setId);
+
+        _eventName = "LogPayback(address,address,uint256,uint256,uint256)";
+        _eventParam = abi.encode(token, cToken, _amt, getId, setId);
     }
 }
 
