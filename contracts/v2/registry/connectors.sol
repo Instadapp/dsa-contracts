@@ -25,7 +25,7 @@ contract Controllers {
     // Enabled Chief(Address of Chief => bool).
     mapping(address => bool) public chief;
     // Enabled Connectors(Connector Address => bool).
-    mapping(bytes32 => address) public connectors;
+    mapping(string => address) public connectors;
 
     /**
     * @dev Throws if the sender not is Master Address from InstaIndex
@@ -57,9 +57,9 @@ contract Controllers {
 
 
 contract InstaConnectorsV2 is Controllers {
-    event LogConnectorAdded(bytes32 indexed connectorName, address indexed connector);
-    event LogConnectorUpdated(bytes32 indexed connectorName, address indexed oldConnector, address indexed newConnector);
-    event LogConnectorRemoved(bytes32 indexed connectorName, address indexed connector);
+    event LogConnectorAdded(string indexed connectorName, address indexed connector);
+    event LogConnectorUpdated(string indexed connectorName, address indexed oldConnector, address indexed newConnector);
+    event LogConnectorRemoved(string indexed connectorName, address indexed connector);
 
     /**
      * @dev Toggle Connectors - enable if disable & vice versa
@@ -68,30 +68,26 @@ contract InstaConnectorsV2 is Controllers {
     function addConnectors(string[] calldata _connectorNames, address[] calldata _connectors) external isChief {
         require(_connectors.length == _connectors.length, "addConnectors: not same length");
         for (uint i = 0; i < _connectors.length; i++) {
-            bytes32 connectorType = stringToBytes32(_connectorNames[i]);
-            require(connectors[connectorType] == address(0), "addConnectors: _connectorName added already");
-            connectors[connectorType] = _connectors[i];
-            emit LogConnectorAdded(connectorType, _connectors[i]);
+            require(connectors[_connectorNames[i]] == address(0), "addConnectors: _connectorName added already");
+            connectors[_connectorNames[i]] = _connectors[i];
+            emit LogConnectorAdded(_connectorNames[i], _connectors[i]);
         }
     }
 
-
     function updateConnectors(string[] calldata _connectorNames, address[] calldata _connectors) external isChief {
         for (uint i = 0; i < _connectors.length; i++) {
-            bytes32 connectorType = stringToBytes32(_connectorNames[i]);
-            require(connectors[connectorType] != address(0), "addConnectors: _connectorName not added to update");
+            require(connectors[_connectorNames[i]] != address(0), "addConnectors: _connectorName not added to update");
             require(_connectors[i] != address(0), "addConnectors: _connector address is not vaild");
-            emit LogConnectorUpdated(connectorType, connectors[connectorType], _connectors[i]);
-            connectors[connectorType] = _connectors[i];
+            connectors[_connectorNames[i]] = _connectors[i];
+            emit LogConnectorUpdated(_connectorNames[i], connectors[_connectorNames[i]], _connectors[i]);
         }
     }
 
     function removeConnectors(string[] calldata _connectorNames) external isChief {
         for (uint i = 0; i < _connectorNames.length; i++) {
-            bytes32 connectorType = stringToBytes32(_connectorNames[i]);
-            require(connectors[connectorType] != address(0), "addConnectors: _connectorName not added to update");
-            emit LogConnectorRemoved(connectorType, connectors[connectorType]);
-            delete connectors[connectorType];
+            require(connectors[_connectorNames[i]] != address(0), "addConnectors: _connectorName not added to update");
+            delete connectors[_connectorNames[i]];
+            emit LogConnectorRemoved(_connectorNames[i], connectors[_connectorNames[i]]);
         }
     }
 
@@ -104,7 +100,7 @@ contract InstaConnectorsV2 is Controllers {
         uint len = _connectorNames.length;
         _connectors = new address[](len);
         for (uint i = 0; i < _connectors.length; i++) {
-            _connectors[i] = connectors[stringToBytes32(_connectorNames[i])];
+            _connectors[i] = connectors[_connectorNames[i]];
             if (_connectors[i] == address(0)) {
                 isOk = false;
                 break;
