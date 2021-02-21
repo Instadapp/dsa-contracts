@@ -87,7 +87,7 @@ contract InstaAccountV2ImplementationM1 is Constants {
         string[] memory eventNames = new string[](_length);
         bytes[] memory eventParams = new bytes[](_length);
 
-        (bool isOk, address[] memory _targets) = ConnectorsInterface(connectorsM1).isConnector(_targetNames);
+        (bool isOk, address[] memory _targets) = ConnectorsInterface(connectorsM1).isConnectors(_targetNames);
 
         require(isOk, "1: not-connector");
 
