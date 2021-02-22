@@ -9,7 +9,7 @@ import { Variables } from "./variables.sol";
  */
 
 interface ConnectorsInterface {
-    function isConnector(address[] calldata logicAddr) external view returns (bool);
+    function isConnectors(string[] calldata connectorNames) external view returns (bool, address[] memory);
 }
 
 contract Constants is Variables {
@@ -31,6 +31,7 @@ contract InstaAccountV2ImplementationM1 is Constants {
         address indexed origin,
         address indexed sender,
         uint value,
+        string[] targetsNames,
         address[] targets,
         string[] eventNames,
         bytes[] eventParams
@@ -66,11 +67,11 @@ contract InstaAccountV2ImplementationM1 is Constants {
     /**
      * @dev This is the main function, Where all the different functions are called
      * from Smart Account.
-     * @param _targets Array of Target(s) to of Connector.
-     * @param _datas Array of Calldata(S) of function.
+     * @param _targetNames Array of Target(s) to of Connector.
+     * @param _datas Array of Calldata(s) of function.
     */
     function cast(
-        address[] calldata _targets,
+        string[] calldata _targetNames,
         bytes[] calldata _datas,
         address _origin
     )
@@ -78,20 +79,31 @@ contract InstaAccountV2ImplementationM1 is Constants {
     payable 
     returns (bytes32) // Dummy return to fix instaIndex buildWithCast function
     {   
-        uint256 _length = _targets.length;
+        uint256 _length = _targetNames.length;
         require(_auth[msg.sender] || msg.sender == instaIndex, "1: permission-denied");
+        require(_length != 0, "1: length-invalid");
         require(_length == _datas.length , "1: array-length-invalid");
 
         string[] memory eventNames = new string[](_length);
         bytes[] memory eventParams = new bytes[](_length);
-        
-        require(ConnectorsInterface(connectorsM1).isConnector(_targets), "1: not-connector");
 
-        for (uint i = 0; i < _targets.length; i++) {
+        (bool isOk, address[] memory _targets) = ConnectorsInterface(connectorsM1).isConnectors(_targetNames);
+
+        require(isOk, "1: not-connector");
+
+        for (uint i = 0; i < _length; i++) {
             bytes memory response = spell(_targets[i], _datas[i]);
             (eventNames[i], eventParams[i]) = decodeEvent(response);
         }
 
-        emit LogCast(_origin, msg.sender, msg.value, _targets, eventNames, eventParams);
+        emit LogCast(
+            _origin,
+            msg.sender,
+            msg.value,
+            _targetNames,
+            _targets,
+            eventNames,
+            eventParams
+        );
     }
 }
