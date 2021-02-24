@@ -3,7 +3,7 @@ const addresses = require("./constant/addresses");
 const { web3 } = hre;
 
 module.exports = function (spells) {
- const targets = spells.map(a => addresses.connectors[a.connector])
+ const targets = spells.map(a => a.connector)
  const calldatas = spells.map(a => {
     const functionName = a.method;
     // console.log(functionName)
