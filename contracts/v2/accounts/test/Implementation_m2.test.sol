@@ -19,7 +19,7 @@ interface IndexInterface {
 }
 
 interface ConnectorsInterface {
-    function isConnector(address[] calldata logicAddr) external view returns (bool);
+    function isConnectors(string[] calldata connectorNames) external view returns (bool, address[] memory);
 }
 
 interface CheckInterface {
@@ -28,6 +28,9 @@ interface CheckInterface {
 
 contract InstaAccountV2ImplementationM2 {
     IndexInterface internal constant instaIndex = IndexInterface(0x2971AdFa57b20E5a416aE5a708A8655A9c74f723);
+
+    address public constant connectorsM1 = address(0x5FbDB2315678afecb367f032d93F642f64180aa3);
+
     function decodeEvent(bytes memory response) internal pure returns (string memory _eventCode, bytes memory _eventParams) {
         (_eventCode, _eventParams) = abi.decode(response, (string, bytes));
     }
@@ -36,6 +39,7 @@ contract InstaAccountV2ImplementationM2 {
         address indexed origin,
         address indexed sender,
         uint value,
+        string[] targetsNames,
         address[] targets,
         string[] eventNames,
         bytes[] eventParams
@@ -71,11 +75,11 @@ contract InstaAccountV2ImplementationM2 {
     /**
      * @dev This is the main function, Where all the different functions are called
      * from Smart Account.
-     * @param _targets Array of Target(s) to of Connector.
+     * @param _targetNames Array of Target(s) to of Connector.
      * @param _datas Array of Calldata(S) of function.
     */
     function castWithFlashloan(
-        address[] calldata _targets,
+        string[] calldata _targetNames,
         bytes[] calldata _datas,
         address _origin
     )
@@ -85,23 +89,31 @@ contract InstaAccountV2ImplementationM2 {
     {   
 
         DefaultImplementation defaultImplementation = DefaultImplementation(address(this));
-        uint256 _length = _targets.length;
+        uint256 _length = _targetNames.length;
 
         require(defaultImplementation.isAuth(msg.sender) || msg.sender == address(instaIndex), "InstaAccountV2ImplementationM1: permission-denied");
         require(_length == _datas.length , "InstaAccountV2ImplementationM1: array-length-invalid");
 
         string[] memory eventNames = new string[](_length);
         bytes[] memory eventParams = new bytes[](_length);
+
+        (bool isOk, address[] memory _targets) = ConnectorsInterface(connectorsM1).isConnectors(_targetNames);
+        require(isOk, "1: not-connector");
         
         for (uint i = 0; i < _targets.length; i++) {
             bytes memory response = spell(_targets[i], _datas[i]);
             (eventNames[i], eventParams[i]) = decodeEvent(response);
         }
-
-        address _check = instaIndex.check(defaultImplementation.version());
-        if (_check != address(0)) require(CheckInterface(_check).isOk(), "not-ok");
         
-        emit LogCast(_origin, msg.sender, msg.value, _targets, eventNames, eventParams);
+        emit LogCast(
+            _origin,
+            msg.sender,
+            msg.value,
+            _targetNames,
+            _targets,
+            eventNames,
+            eventParams
+        );
     }
 
 }

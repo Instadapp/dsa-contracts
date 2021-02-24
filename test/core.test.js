@@ -54,11 +54,11 @@ describe("Core", function () {
   ].map((a) => web3.utils.keccak256(a).slice(0, 10))
 
   const instaAccountV2ImplM1Sigs = [
-    "cast(address[],bytes[],address)"
+    "cast(string[],bytes[],address)"
   ].map((a) => web3.utils.keccak256(a).slice(0, 10))
 
   const instaAccountV2ImplM2Sigs = [
-    "castWithFlashloan(address[],bytes[],address)"
+    "castWithFlashloan(string[],bytes[],address)"
   ].map((a) => web3.utils.keccak256(a).slice(0, 10))
 
   let masterSigner;
@@ -180,7 +180,7 @@ describe("Core", function () {
         abi: (await deployments.getArtifact("ConnectV2Auth")).abi
       })
       expect(!!addresses.connectors["authV2"]).to.be.true
-      await instaConnectorsV2.connect(masterSigner).toggleConnectors([addresses.connectors["authV2"]])
+      await instaConnectorsV2.connect(masterSigner).addConnectors(["authV2"], [addresses.connectors["authV2"]])
     });
 
     it("Should deploy EmitEvent connector", async function () {
@@ -190,7 +190,7 @@ describe("Core", function () {
         abi: (await deployments.getArtifact("ConnectV2EmitEvent")).abi
       })
       expect(!!addresses.connectors["emitEvent"]).to.be.true
-      await instaConnectorsV2.connect(masterSigner).toggleConnectors([addresses.connectors["emitEvent"]])
+      await instaConnectorsV2.connect(masterSigner).addConnectors(["emitEvent"], [addresses.connectors["emitEvent"]])
     });
 
     it("Should add wallet1 as auth", async function () {
@@ -280,7 +280,7 @@ describe("Core", function () {
         abi: (await deployments.getArtifact("ConnectV2Auth")).abi
       })
       expect(!!addresses.connectors["authV1"]).to.be.true
-      await instaConnectorsV2.connect(masterSigner).toggleConnectors([addresses.connectors["authV1"]])
+      await instaConnectorsV2.connect(masterSigner).addConnectors(["authV1"], [addresses.connectors["authV1"]])
     });
 
     it("Should emit event from wallet1", async function () {
@@ -328,54 +328,82 @@ describe("Core", function () {
       compound2 = await deployContract(masterSigner, compoundArtifact, [])
     })
 
-    it("Connector toggle should work", async function () {
-      const connectorsArray = [authV3.address]
+    it("Connector adding should work", async function () {
+      const connectorsArray = ["authV3"]
+      const addressesArray = [authV3.address]
 
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false;
+      let [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray)
+      expect(isOk).to.be.false;
 
-      await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
+      await instaConnectorsV2.connect(masterSigner).addConnectors(connectorsArray, addressesArray);
+      [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(isOk).to.be.true;
+    });
+
+    it("Cannot add same connector name twice", async function () {
+      const connectorsArray = ["authV3"]
+      const addressesArray = [authV3.address]
+
+      let [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray)
+      expect(isOk).to.be.true;
+
+      await expect (instaConnectorsV2.connect(masterSigner).addConnectors(connectorsArray, addressesArray))
+        .to.be.revertedWith('addConnectors: _connectorName added already');;
+      [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(isOk).to.be.true;
+    });
+
+    it("Multiple connectors can be added", async function () {
+      const connectorsArray = ["authV4", "compound"]
+      const addressesArray = [ authV4.address, compound.address ]
+
+      let [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray)
+      expect(isOk).to.be.false;
+
+      await instaConnectorsV2.connect(masterSigner).addConnectors(connectorsArray, addressesArray);
+      [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(isOk).to.be.true;
+    });
+
+    it("Connector can be removed", async function () {
+      const connectorsArray = ["authV3"]
+
+      let [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray)
+      expect(isOk).to.be.true;
+
+      await instaConnectorsV2.connect(masterSigner).removeConnectors(connectorsArray);
+      [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(isOk).to.be.false;
+    });
+
+    it("Multiple connectors can be removed", async function () {
+      const connectorsArray = ["authV4", "compound"]
+
+      let [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray)
+      expect(isOk).to.be.true;
       
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true;
+      await instaConnectorsV2.connect(masterSigner).removeConnectors(connectorsArray);
+      [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(isOk).to.be.false;
     });
 
-    it("Multiple connectors can be toggled", async function () {
-      const connectorsArray = [ authV4.address, compound.address ]
+    it("Connector can be added 2", async function () {
+      const connectorsArray = ["authV3"]
+      const addressesArray = [authV3.address]
 
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
-      await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
-    });
+      let [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray)
+      expect(isOk).to.be.false;
 
-    it("Connector toggle should work 2", async function () {
-      const connectorsArray = [authV3.address]
-
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
-      await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
-    });
-
-    it("Multiple connectors can be toggled 2", async function () {
-      const connectorsArray = [ authV4.address, compound.address ]
-
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
-      await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
-    });
-
-    it("Connector toggle should work 3", async function () {
-      const connectorsArray = [authV3.address]
-
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
-      await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
+      await instaConnectorsV2.connect(masterSigner).addConnectors(connectorsArray, addressesArray);
+      [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(isOk).to.be.true;
     });
 
     it("Returns false if one of them is not a connector", async function () {
-      const connectorsArray = [ authV3.address, compound2.address ]
+      const connectorsArray = ["authV4", "compound"]
 
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
-      await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
+      let [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray)
+      expect(isOk).to.be.false;
     });
 
     it("Should add chief", async function () {
@@ -384,21 +412,43 @@ describe("Core", function () {
       expect(await instaConnectorsV2.chief(wallet0.address)).to.be.true
     })
 
-    it("New chief can toggle connector", async function() {
-      const connectorsArray = [compound2.address]
+    it("New chief can add connectors", async function() {
+      const connectorsArray = ["compound"]
+      const addressesArray = [compound.address]
 
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
-      await instaConnectorsV2.connect(wallet0).toggleConnectors(connectorsArray)
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
+      let [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray)
+      expect(isOk).to.be.false;
+
+      await instaConnectorsV2.connect(wallet0).addConnectors(connectorsArray, addressesArray);
+      [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(isOk).to.be.true;
     })
 
-    it("Non-chief cannot toggle", async function() {
-      const connectorsArray = [compound2.address]
+    it("Can update connector addresses", async function() {
+      const connectorsArray = ["compound"]
+      const addressesArray = [compound2.address]
 
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
-      await expect(instaConnectorsV2.connect(wallet1).toggleConnectors(connectorsArray))
+      let [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray)
+      expect(isOk).to.be.true;
+      expect(addresses).to.not.eql(addressesArray);
+
+      await instaConnectorsV2.connect(wallet0).updateConnectors(connectorsArray, addressesArray);
+      [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(addresses).to.be.eql(addressesArray);
+      expect(isOk).to.be.true;
+    })
+
+    it("Non-chief cannot add connectors", async function() {
+      const connectorsArray = ["compoundV2"]
+      const addressesArray = [compound.address]
+
+      let [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray)
+      expect(isOk).to.be.false;
+
+      await expect(instaConnectorsV2.connect(wallet1).addConnectors(connectorsArray, addressesArray))
         .to.be.revertedWith('not-an-chief');
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
+      [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(isOk).to.be.false;
     })
 
     it("New chief can add more chief", async function () {
@@ -407,37 +457,60 @@ describe("Core", function () {
       expect(await instaConnectorsV2.chief(wallet1.address)).to.be.true
     })
 
-    after(async () => {
-      const connectorsArray = [ compound.address ]
+    it("Can update multiple connector addresses", async function() {
+      const connectorsArray = ["compound", "authV3"]
+      const addressesArray = [compound.address, authV4.address]
 
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
-      await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
-    });
+      let [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray)
+      expect(isOk).to.be.true;
+      expect(addresses).to.not.eql(addressesArray);
+
+      await instaConnectorsV2.connect(masterSigner).updateConnectors(connectorsArray, addressesArray);
+      [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(addresses).to.be.eql(addressesArray);
+      expect(isOk).to.be.true;
+    })
+
+    it("Cannot update non existing connector name", async function() {
+      const connectorsArray = ["authV4"]
+      const addressesArray = [authV4.address]
+
+      let [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray)
+      expect(isOk).to.be.false;
+      expect(addresses).to.not.eql(addressesArray);
+
+      await expect (instaConnectorsV2.connect(wallet0).updateConnectors(connectorsArray, addressesArray))
+        .to.be.revertedWith('addConnectors: _connectorName not added to update');
+    })
+
+    // after(async () => {
+    //   const connectorsArray = [ compound.address ]
+
+    //   expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
+    //   await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
+    //   expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
+    // });
 
   });
 
   describe("Connector - Compound", function () {
 
     before(async () => {
-      const connectorsArray = [ addresses.connectors["basic"] ]
+      const connectorsArray = ["basic"]
+      const addressesArray = [addresses.connectors["basic"]]
 
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
-      await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
+      let [isOk, addresses_] = await instaConnectorsV2.isConnectors(connectorsArray)
+      expect(isOk).to.be.false;
+
+      await instaConnectorsV2.connect(masterSigner).addConnectors(connectorsArray, addressesArray);
+      [isOk, addresses_] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(isOk).to.be.true;
     })
     
     it("Should be a deployed connector", async function () {
-      enableConnector({
-        connectorName: "compoundV2",
-        address: compound.address,
-        abi: (await deployments.getArtifact("ConnectCompound")).abi
-      })
-      expect(!!addresses.connectors["compoundV2"]).to.be.true
-
-      connectorsArray = [addresses.connectors["compoundV2"]]
-
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
+      const connectorsArray = ["compound"];
+      [isOk, addresses_] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(isOk).to.be.true;
     })
 
     it("Should deposit ETH to wallet", async function () {
@@ -462,7 +535,7 @@ describe("Core", function () {
 
     it("Should deposit ETH to Compound", async function () {
       const spells = {
-        connector: "compoundV2",
+        connector: "compound",
         method: "deposit",
         args: [ 
           ethAddr,
@@ -494,7 +567,7 @@ describe("Core", function () {
 
     it("Should deposit ETH to Compound 2", async function () {
       const spells = {
-        connector: "compoundV2",
+        connector: "compound",
         method: "deposit",
         args: [ 
           ethAddr,
@@ -515,7 +588,7 @@ describe("Core", function () {
     it("Should Borrow & Payback DAI", async function () {
       const spells = [
         {
-          connector: "compoundV2",
+          connector: "compound",
           method: "borrow",
           args: [ 
             daiAddr,
@@ -525,7 +598,7 @@ describe("Core", function () {
           ]
         },
         {
-          connector: "compoundV2",
+          connector: "compound",
           method: "payback",
           args: [ 
             daiAddr,
@@ -564,7 +637,7 @@ describe("Core", function () {
 
     it("Should withdraw from Compound", async function () {
       const spells = {
-        connector: "compoundV2",
+        connector: "compound",
         method: "withdraw",
         args: [ 
           ethAddr,
@@ -599,11 +672,15 @@ describe("Core", function () {
   describe("Connector - Uniswap", function () {
 
     before(async () => {
-      const connectorsArray = [ addresses.connectors["uniswap"] ]
+      const connectorsArray = ["uniswap"]
+      const addressesArray = [addresses.connectors["uniswap"]]
 
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.false
-      await instaConnectorsV2.connect(masterSigner).toggleConnectors(connectorsArray)
-      expect(await instaConnectorsV2.isConnector(connectorsArray)).to.be.true
+      let [isOk, addresses_] = await instaConnectorsV2.isConnectors(connectorsArray)
+      expect(isOk).to.be.false;
+
+      await instaConnectorsV2.connect(masterSigner).addConnectors(connectorsArray, addressesArray);
+      [isOk, addresses_] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(isOk).to.be.true;
     })
 
     it("Should deposit ETH to wallet", async function () {
@@ -779,7 +856,7 @@ describe("Core", function () {
 
     it("Should deposit USDC to Compound 2", async function () {
       const spells = {
-        connector: "compoundV2",
+        connector: "compound",
         method: "deposit",
         args: [ 
           usdcAddr,
@@ -811,7 +888,7 @@ describe("Core", function () {
     it("Should Borrow & Payback ETH", async function () {
       const spells = [
         {
-          connector: "compoundV2",
+          connector: "compound",
           method: "borrow",
           args: [ 
             ethAddr,
@@ -821,7 +898,7 @@ describe("Core", function () {
           ]
         },
         {
-          connector: "compoundV2",
+          connector: "compound",
           method: "payback",
           args: [ 
             ethAddr,
@@ -860,7 +937,7 @@ describe("Core", function () {
 
     it("Should withdraw USDC from Compound", async function () {
       const spells = {
-        connector: "compoundV2",
+        connector: "compound",
         method: "withdraw",
         args: [ 
           usdcAddr,
