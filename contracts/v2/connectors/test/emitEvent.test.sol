@@ -10,4 +10,6 @@ contract ConnectV2EmitEvent {
         _eventName = "LogEmitEvent(address,address)";
         _eventParam = abi.encode(address(this), msg.sender);
     }
+
+    string constant public name = "EmitEvent-v1";
 }
