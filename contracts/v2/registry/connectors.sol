@@ -6,7 +6,6 @@ pragma experimental ABIEncoderV2;
  * @dev Registry for Connectors.
  */
 
-
 interface IndexInterface {
     function master() external view returns (address);
 }
