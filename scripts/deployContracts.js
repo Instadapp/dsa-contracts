@@ -21,7 +21,7 @@ module.exports = async function () {
     await instaAccountV2DefaultImpl.deployed();
 
     const InstaAccountV2ImplementationM1 = await ethers.getContractFactory("InstaAccountV2ImplementationM1");
-    const instaAccountV2ImplM1 = await InstaAccountV2ImplementationM1.deploy();
+    const instaAccountV2ImplM1 = await InstaAccountV2ImplementationM1.deploy(instaConnectorsV2.address);
     await instaAccountV2ImplM1.deployed();
 
     const InstaAccountV2ImplementationM2 = await ethers.getContractFactory("InstaAccountV2ImplementationM2");

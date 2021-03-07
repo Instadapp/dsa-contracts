@@ -13,7 +13,7 @@ contract InstaAccountV2Proxy {
 
     AccountImplementations immutable public implementations;
 
-    constructor(address _implementations) public {
+    constructor(address _implementations) {
         implementations = AccountImplementations(_implementations);
     }
 
