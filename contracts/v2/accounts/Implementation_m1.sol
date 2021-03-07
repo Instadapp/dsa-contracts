@@ -12,7 +12,7 @@ interface ConnectorsInterface {
     function isConnectors(string[] calldata connectorNames) external view returns (bool, address[] memory);
 }
 
-abstract contract Constants is Variables {
+contract Constants is Variables {
     // InstaIndex Address.
     address internal constant instaIndex = 0x2971AdFa57b20E5a416aE5a708A8655A9c74f723;
     // Connnectors Address.

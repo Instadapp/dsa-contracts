@@ -11,6 +11,8 @@ require("@tenderly/hardhat-tenderly");
 require("hardhat-gas-reporter");
 require("solidity-coverage");
 
+require("@nomiclabs/hardhat-etherscan");
+
 require("dotenv").config();
 // const INFURA_ID = process.env.INFURA_ID;
 // assert.ok(INFURA_ID, "no Infura ID in process.env");
@@ -63,6 +65,9 @@ module.exports = {
       }
     ]
   },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN
+  }
 
 };
 
