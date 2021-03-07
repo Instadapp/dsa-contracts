@@ -9,7 +9,7 @@ interface AccountImplementations {
  * @dev This abstract contract provides a fallback function that delegates all calls to another contract using the EVM
  * instruction `delegatecall`.
  */
-contract InstaAccountV2Proxy {
+contract InstaAccountV2 {
 
     AccountImplementations immutable public implementations;
 

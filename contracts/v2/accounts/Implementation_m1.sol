@@ -19,7 +19,7 @@ contract Constants is Variables {
     address public constant connectorsM1 = address(0x5FbDB2315678afecb367f032d93F642f64180aa3); // TODO: Test case hardcoded address.
 }
 
-contract InstaAccountV2ImplementationM1 is Constants {
+contract InstaImplementationM1 is Constants {
 
     function decodeEvent(bytes memory response) internal pure returns (string memory _eventCode, bytes memory _eventParams) {
         if (response.length > 0) {

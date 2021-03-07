@@ -59,7 +59,7 @@ contract Implementations is Setup {
     }
 }
 
-contract InstaAccountImplementations is Implementations {
+contract InstaImplementations is Implementations {
     function getImplementation(bytes4 _sig) external view returns (address) {
         address _implementation = sigImplementations[_sig];
         return _implementation == address(0) ? defaultImplementation : _implementation;

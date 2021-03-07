@@ -61,7 +61,7 @@ contract Record is Constants {
 
 }
 
-contract InstaAccountV2DefaultImplementation is Record {
+contract InstaDefaultImplementation is Record {
 
     receive() external payable {}
 }
