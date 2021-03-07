@@ -45,12 +45,6 @@ async function main() {
     )
 
     await hre.run("verify:verify", {
-        address: instaAccountV2Proxy.address,
-        constructorArguments: [implementationsMapping.address]
-      }
-    )
-
-    await hre.run("verify:verify", {
         address: instaAccountV2DefaultImpl.address,
         constructorArguments: []
       }
@@ -59,6 +53,12 @@ async function main() {
     await hre.run("verify:verify", {
         address: instaAccountV2ImplM1.address,
         constructorArguments: [instaConnectorsV2.address]
+      }
+    )
+
+    await hre.run("verify:verify", {
+        address: instaAccountV2Proxy.address,
+        constructorArguments: [implementationsMapping.address]
       }
     )
 }
