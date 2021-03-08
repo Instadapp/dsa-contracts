@@ -51,7 +51,7 @@ contract InstaAccountV2 {
      */
     function _fallback(bytes4 _sig) internal {
         address _implementation = implementations.getImplementation(_sig);
-        require(_implementation != address(0), "InstaAccountV2Proxy: Not able to find _implementation");
+        require(_implementation != address(0), "InstaAccountV2: Not able to find _implementation");
         _delegate(_implementation);
     }
 

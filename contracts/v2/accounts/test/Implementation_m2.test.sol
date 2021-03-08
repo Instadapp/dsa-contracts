@@ -26,7 +26,7 @@ interface CheckInterface {
     function isOk() external view returns (bool);
 }
 
-contract InstaAccountV2ImplementationM2 {
+contract InstaImplementationM2 {
     IndexInterface internal constant instaIndex = IndexInterface(0x2971AdFa57b20E5a416aE5a708A8655A9c74f723);
 
     address public constant connectorsM1 = address(0x5FbDB2315678afecb367f032d93F642f64180aa3);
@@ -91,8 +91,8 @@ contract InstaAccountV2ImplementationM2 {
         DefaultImplementation defaultImplementation = DefaultImplementation(address(this));
         uint256 _length = _targetNames.length;
 
-        require(defaultImplementation.isAuth(msg.sender) || msg.sender == address(instaIndex), "InstaAccountV2ImplementationM1: permission-denied");
-        require(_length == _datas.length , "InstaAccountV2ImplementationM1: array-length-invalid");
+        require(defaultImplementation.isAuth(msg.sender) || msg.sender == address(instaIndex), "InstaImplementationM1: permission-denied");
+        require(_length == _datas.length , "InstaImplementationM1: array-length-invalid");
 
         string[] memory eventNames = new string[](_length);
         bytes[] memory eventParams = new bytes[](_length);
