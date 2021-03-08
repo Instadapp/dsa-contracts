@@ -11,10 +11,13 @@ require("@tenderly/hardhat-tenderly");
 require("hardhat-gas-reporter");
 require("solidity-coverage");
 
+require("@nomiclabs/hardhat-etherscan");
+
 require("dotenv").config();
 // const INFURA_ID = process.env.INFURA_ID;
 // assert.ok(INFURA_ID, "no Infura ID in process.env");
 const ALCHEMY_ID = process.env.ALCHEMY_ID;
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
 // assert.ok(ALCHEMY_ID, "no Alchemy ID in process.env");
 
 const INSTA_MASTER = "0xb1DC62EC38E6E3857a887210C38418E4A17Da5B2";
@@ -40,6 +43,10 @@ module.exports = {
       masterAddress: INSTA_MASTER,
       instaIndexAddress: INSTA_INDEX
     },
+    kovan: {
+      url: `https://eth-kovan.alchemyapi.io/v2/${ALCHEMY_ID}`,
+      accounts: [`0x${PRIVATE_KEY}`]
+    }
   },
   solidity: {
     compilers: [
@@ -63,6 +70,9 @@ module.exports = {
       }
     ]
   },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN
+  }
 
 };
 
