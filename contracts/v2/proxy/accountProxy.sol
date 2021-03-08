@@ -11,9 +11,9 @@ interface AccountImplementations {
  */
 contract InstaAccountV2 {
 
-    AccountImplementations immutable public implementations;
+    AccountImplementations public immutable implementations;
 
-    constructor(address _implementations) public {
+    constructor(address _implementations) {
         implementations = AccountImplementations(_implementations);
     }
 

@@ -16,10 +16,16 @@ contract Constants is Variables {
     // InstaIndex Address.
     address internal constant instaIndex = 0x2971AdFa57b20E5a416aE5a708A8655A9c74f723;
     // Connnectors Address.
-    address public constant connectorsM1 = address(0x5FbDB2315678afecb367f032d93F642f64180aa3); // TODO: Test case hardcoded address.
+    address public immutable connectorsM1;
+
+    constructor(address _connectors) {
+        connectorsM1 = _connectors;
+    }
 }
 
 contract InstaImplementationM1 is Constants {
+
+    constructor(address _connectors) Constants(_connectors) {}
 
     function decodeEvent(bytes memory response) internal pure returns (string memory _eventCode, bytes memory _eventParams) {
         if (response.length > 0) {
