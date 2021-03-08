@@ -17,7 +17,7 @@ const abis = require("../scripts/constant/abis");
 
 const compoundArtifact = require("../artifacts/contracts/v2/connectors/test/compound.test.sol/ConnectCompound.json");
 const connectAuth = require("../artifacts/contracts/v2/connectors/test/auth.test.sol/ConnectV2Auth.json");
-const defaultTest2 = require("../artifacts/contracts/v2/accounts/test/implementation_default.v2.test.sol/InstaAccountV2DefaultImplementationV2.json");
+const defaultTest2 = require("../artifacts/contracts/v2/accounts/test/implementation_default.v2.test.sol/InstaDefaultImplementationV2.json");
 const { ethers } = require("hardhat");
 
 describe("Core", function () {
@@ -121,7 +121,7 @@ describe("Core", function () {
       })
     });
 
-    it("Should add InstaAccountV2Proxy in Index.sol", async function () {
+    it("Should add InstaAccountV2 in Index.sol", async function () {
       const tx = await instaIndex.connect(masterSigner).addNewAccount(instaAccountV2Proxy.address, address_zero, address_zero)
       await tx.wait()
       expect(await instaIndex.account(2)).to.be.equal(instaAccountV2Proxy.address);
@@ -134,7 +134,7 @@ describe("Core", function () {
       expect((await implementationsMapping.getImplementationSigs(instaAccountV2ImplM2.address)).length).to.be.equal(0);
     });
 
-    it("Should add InstaAccountV2DefaultImplementationV2 sigs to mapping.", async function () {
+    it("Should add InstaDefaultImplementationV2 sigs to mapping.", async function () {
       const tx = await implementationsMapping.connect(masterSigner).addImplementation(instaAccountV2DefaultImplV2.address, instaAccountV2DefaultImplSigsV2);
       await tx.wait()
       expect(await implementationsMapping.getSigImplementation(instaAccountV2DefaultImplSigsV2[0])).to.be.equal(instaAccountV2DefaultImplV2.address);
@@ -143,7 +143,7 @@ describe("Core", function () {
       })
     });
 
-    it("Should remove InstaAccountV2DefaultImplementationV2 sigs to mapping.", async function () {
+    it("Should remove InstaDefaultImplementationV2 sigs to mapping.", async function () {
       const tx = await implementationsMapping.connect(masterSigner).removeImplementation(instaAccountV2DefaultImplV2.address);
       await tx.wait()
       expect(await implementationsMapping.getSigImplementation(instaAccountV2DefaultImplSigsV2[0])).to.be.equal(address_zero);
@@ -167,10 +167,10 @@ describe("Core", function () {
       const tx = await instaIndex.connect(wallet0).build(wallet0.address, 2, wallet0.address)
       const dsaWalletAddress = "0xc8F3572102748a9956c2dFF6b998bd6250E3264c"
       expect((await tx.wait()).events[1].args.account).to.be.equal(dsaWalletAddress);
-      acountV2DsaM1Wallet0 = await ethers.getContractAt("InstaAccountV2ImplementationM1", dsaWalletAddress);
-      acountV2DsaM2Wallet0 = await ethers.getContractAt("InstaAccountV2ImplementationM2", dsaWalletAddress);
-      acountV2DsaDefaultWallet0 = await ethers.getContractAt("InstaAccountV2DefaultImplementation", dsaWalletAddress);
-      acountV2DsaDefaultWalletM2 = await ethers.getContractAt("InstaAccountV2DefaultImplementationV2", dsaWalletAddress);
+      acountV2DsaM1Wallet0 = await ethers.getContractAt("InstaImplementationM1", dsaWalletAddress);
+      acountV2DsaM2Wallet0 = await ethers.getContractAt("InstaImplementationM2", dsaWalletAddress);
+      acountV2DsaDefaultWallet0 = await ethers.getContractAt("InstaDefaultImplementation", dsaWalletAddress);
+      acountV2DsaDefaultWalletM2 = await ethers.getContractAt("InstaDefaultImplementationV2", dsaWalletAddress);
     });
 
     it("Should deploy Auth connector", async function () {
@@ -201,7 +201,7 @@ describe("Core", function () {
       }
       const tx = await acountV2DsaM1Wallet0.connect(wallet0).cast(...encodeSpells([spells]), wallet1.address)
       const receipt = await tx.wait()
-      const logCastEvent = expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+      const logCastEvent = expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM1")).abi, "LogCast")
       const LogAddAuthEvent = expectEvent(receipt, (await deployments.getArtifact("ConnectV2Auth")).abi, "LogAddAuth")
     });
 
@@ -213,7 +213,7 @@ describe("Core", function () {
       }
       const tx = await acountV2DsaM2Wallet0.connect(wallet1).castWithFlashloan(...encodeSpells([spells]), wallet1.address)
       const receipt = await tx.wait()
-      const logCastEvent = expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM2")).abi, "LogCast")
+      const logCastEvent = expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM2")).abi, "LogCast")
       const LogAddAuthEvent = expectEvent(receipt, (await deployments.getArtifact("ConnectV2Auth")).abi, "LogAddAuth")
     });
 
@@ -225,7 +225,7 @@ describe("Core", function () {
       }
       const tx = await acountV2DsaM1Wallet0.connect(wallet2).cast(...encodeSpells([spells]), wallet2.address)
       const receipt = await tx.wait()
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM2")).abi, "LogCast")
+      expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM2")).abi, "LogCast")
       expectEvent(receipt, (await deployments.getArtifact("ConnectV2Auth")).abi, "LogRemoveAuth")
     });
 
@@ -240,7 +240,7 @@ describe("Core", function () {
       const receipt = await tx.wait()
 
       expect(await acountV2DsaDefaultWallet0.isAuth(wallet3.address)).to.be.true
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2DefaultImplementationV2")).abi, "LogEnableUser")
+      expectEvent(receipt, (await deployments.getArtifact("InstaDefaultImplementationV2")).abi, "LogEnableUser")
     });
 
     it("Should remove wallet0 as auth using default implmentation", async function() {
@@ -248,7 +248,7 @@ describe("Core", function () {
       const receipt = await tx.wait()
 
       expect(await acountV2DsaDefaultWallet0.isAuth(wallet0.address)).to.be.false
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2DefaultImplementationV2")).abi, "LogDisableUser")
+      expectEvent(receipt, (await deployments.getArtifact("InstaDefaultImplementationV2")).abi, "LogDisableUser")
     });
 
     it("Should switch shield", async function () {
@@ -256,7 +256,7 @@ describe("Core", function () {
       const receipt = await tx.wait()
 
       expect(await acountV2DsaDefaultWalletM2.shield()).to.be.true
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2DefaultImplementationV2")).abi, "LogSwitchShield")
+      expectEvent(receipt, (await deployments.getArtifact("InstaDefaultImplementationV2")).abi, "LogSwitchShield")
     })
 
   });
@@ -268,9 +268,9 @@ describe("Core", function () {
       const dsaWalletAddress = "0x15701ad369a488EA2b89Fa5525e3FD5d96cE40cf"
       expect((await tx.wait()).events[1].args.account).to.be.equal(dsaWalletAddress);
 
-      acountV2DsaM1Wallet0 = await ethers.getContractAt("InstaAccountV2ImplementationM1", dsaWalletAddress);
-      acountV2DsaM2Wallet0 = await ethers.getContractAt("InstaAccountV2ImplementationM2", dsaWalletAddress);
-      acountV2DsaDefaultWallet0 = await ethers.getContractAt("InstaAccountV2DefaultImplementation", dsaWalletAddress);
+      acountV2DsaM1Wallet0 = await ethers.getContractAt("InstaImplementationM1", dsaWalletAddress);
+      acountV2DsaM2Wallet0 = await ethers.getContractAt("InstaImplementationM2", dsaWalletAddress);
+      acountV2DsaDefaultWallet0 = await ethers.getContractAt("InstaDefaultImplementation", dsaWalletAddress);
     });
 
     it("Should new connector", async function () {
@@ -291,7 +291,7 @@ describe("Core", function () {
       }
       const tx = await acountV2DsaM1Wallet0.connect(wallet1).cast(...encodeSpells([spells]), wallet3.address)
       const receipt = await tx.wait()
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+      expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM1")).abi, "LogCast")
       expectEvent(receipt, (await deployments.getArtifact("ConnectV2Auth")).abi, "LogAddAuth")
     });
 
@@ -313,7 +313,7 @@ describe("Core", function () {
         }
       ]
 
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast", null, castEvent)
+      expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM1")).abi, "LogCast", null, castEvent)
       expectEvent(receipt, eventAbi, "LogEmitEvent")
     })
 
@@ -530,7 +530,7 @@ describe("Core", function () {
         { value: ethers.utils.parseEther("1.0") }
       )
       const receipt = await tx.wait()
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+      expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM1")).abi, "LogCast")
     })
 
     it("Should deposit ETH to Compound", async function () {
@@ -561,7 +561,7 @@ describe("Core", function () {
         }
       ]
 
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast", null, castEvent)
+      expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM1")).abi, "LogCast", null, castEvent)
       expectEvent(receipt, compoundAbi, "LogDeposit")
     })
 
@@ -582,7 +582,7 @@ describe("Core", function () {
         wallet3.address,
       )
       const receipt = await tx.wait()
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+      expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM1")).abi, "LogCast")
     })
 
     it("Should Borrow & Payback DAI", async function () {
@@ -630,7 +630,7 @@ describe("Core", function () {
         }
       ]
 
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast", null, castEvent)
+      expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM1")).abi, "LogCast", null, castEvent)
       expectEvent(receipt, compoundAbi, "LogBorrow")
       expectEvent(receipt, compoundAbi, "LogPayback")
     })
@@ -663,7 +663,7 @@ describe("Core", function () {
         }
       ]
 
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast", null, castEvent)
+      expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM1")).abi, "LogCast", null, castEvent)
       expectEvent(receipt, compoundAbi, "LogWithdraw")
     })
 
@@ -700,7 +700,7 @@ describe("Core", function () {
         { value: ethers.utils.parseEther("5.0") }
       )
       const receipt = await tx.wait()
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+      expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM1")).abi, "LogCast")
     })
 
     it("Should swap ETH to DAI", async function () {
@@ -727,7 +727,7 @@ describe("Core", function () {
         wallet3.address,
       )
       const receipt = await tx.wait()
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+      expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM1")).abi, "LogCast")
 
       expect(await daiContract.balanceOf(acountV2DsaM1Wallet0.address)).to.not.equal(0)
     })
@@ -758,7 +758,7 @@ describe("Core", function () {
         wallet3.address,
       )
       const receipt = await tx.wait()
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+      expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM1")).abi, "LogCast")
 
       expect(await daiContract.balanceOf(acountV2DsaM1Wallet0.address)).to.equal(0)
       expect(await usdcContract.balanceOf(acountV2DsaM1Wallet0.address)).to.not.equal(0)
@@ -788,7 +788,7 @@ describe("Core", function () {
         wallet3.address,
       )
       const receipt = await tx.wait()
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+      expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM1")).abi, "LogCast")
 
       expect(await daiContract.balanceOf(acountV2DsaM1Wallet0.address)).to.not.equal(0)
     })
@@ -818,7 +818,7 @@ describe("Core", function () {
         wallet3.address,
       )
       const receipt = await tx.wait()
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+      expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM1")).abi, "LogCast")
 
       expect(await usdcContract.balanceOf(wallet1.address)).to.equal(withdrawAmt)
     })
@@ -845,7 +845,7 @@ describe("Core", function () {
         wallet3.address,
       )
       const receipt = await tx.wait()
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+      expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM1")).abi, "LogCast")
 
       expect(await usdcContract.balanceOf(wallet1.address)).to.equal(0)
     })
@@ -881,7 +881,7 @@ describe("Core", function () {
         }
       ]
 
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast", null, castEvent)
+      expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM1")).abi, "LogCast", null, castEvent)
       expectEvent(receipt, compoundAbi, "LogDeposit")
     })
 
@@ -930,7 +930,7 @@ describe("Core", function () {
         }
       ]
 
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast", null, castEvent)
+      expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM1")).abi, "LogCast", null, castEvent)
       expectEvent(receipt, compoundAbi, "LogBorrow")
       expectEvent(receipt, compoundAbi, "LogPayback")
     })
@@ -961,7 +961,7 @@ describe("Core", function () {
         eventName
       }]
 
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast", null, castEvent)
+      expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM1")).abi, "LogCast", null, castEvent)
       expectEvent(receipt, compoundAbi, eventName)
     })
 
@@ -982,7 +982,7 @@ describe("Core", function () {
         wallet3.address,
       )
       const receipt = await tx.wait()
-      expectEvent(receipt, (await deployments.getArtifact("InstaAccountV2ImplementationM1")).abi, "LogCast")
+      expectEvent(receipt, (await deployments.getArtifact("InstaImplementationM1")).abi, "LogCast")
     })
 
   })

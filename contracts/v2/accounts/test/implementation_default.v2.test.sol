@@ -89,7 +89,7 @@ contract Record is CommonSetup {
 
 }
 
-contract InstaAccountV2DefaultImplementationV2 is Record {
+contract InstaDefaultImplementationV2 is Record {
 
     receive() external payable {}
 }
