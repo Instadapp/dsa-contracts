@@ -80,7 +80,7 @@ contract InstaImplementationM1 is Constants {
     returns (bytes32) // Dummy return to fix instaIndex buildWithCast function
     {   
         uint256 _length = _targetNames.length;
-        require(_auth[msg.sender] || msg.sender == instaIndex, "1: permission-denied");
+        require(getAuth(msg.sender) || msg.sender == instaIndex, "1: permission-denied");
         require(_length != 0, "1: length-invalid");
         require(_length == _datas.length , "1: array-length-invalid");
 

@@ -30,7 +30,7 @@ contract Record is Constants {
      * @param user address/user/owner.
      */
     function isAuth(address user) public view returns (bool) {
-        return _auth[user];
+        return getAuth(user);
     }
 
     /**
@@ -40,8 +40,8 @@ contract Record is Constants {
     function enable(address user) public {
         require(msg.sender == address(this) || msg.sender == instaIndex, "not-self-index");
         require(user != address(0), "not-valid");
-        require(!_auth[user], "already-enabled");
-        _auth[user] = true;
+        require(!getAuth(user), "already-enabled");
+        updateAuth(user);
         ListInterface(IndexInterface(instaIndex).list()).addAuth(user);
         emit LogEnableUser(user);
     }
@@ -53,8 +53,8 @@ contract Record is Constants {
     function disable(address user) public {
         require(msg.sender == address(this), "not-self");
         require(user != address(0), "not-valid");
-        require(_auth[user], "already-disabled");
-        delete _auth[user];
+        require(getAuth(user), "already-disabled");
+        updateAuth(user);
         ListInterface(IndexInterface(instaIndex).list()).removeAuth(user);
         emit LogDisableUser(user);
     }
