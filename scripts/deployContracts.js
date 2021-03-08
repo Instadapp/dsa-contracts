@@ -8,24 +8,24 @@ module.exports = async function () {
     const instaConnectorsV2 = await InstaConnectorsV2.deploy();
     await instaConnectorsV2.deployed();
 
-    const InstaAccountImplementations = await ethers.getContractFactory("InstaAccountImplementations");
-    const implementationsMapping = await InstaAccountImplementations.deploy();
+    const InstaImplementations = await ethers.getContractFactory("InstaImplementations");
+    const implementationsMapping = await InstaImplementations.deploy();
     await implementationsMapping.deployed();
     
-    const InstaAccountV2Proxy = await ethers.getContractFactory("InstaAccountV2Proxy");
-    const instaAccountV2Proxy = await InstaAccountV2Proxy.deploy(implementationsMapping.address);
+    const InstaAccountV2 = await ethers.getContractFactory("InstaAccountV2");
+    const instaAccountV2Proxy = await InstaAccountV2.deploy(implementationsMapping.address);
     await instaAccountV2Proxy.deployed();
 
-    const InstaAccountV2DefaultImplementation = await ethers.getContractFactory("InstaAccountV2DefaultImplementation");
-    const instaAccountV2DefaultImpl = await InstaAccountV2DefaultImplementation.deploy();
+    const InstaDefaultImplementation = await ethers.getContractFactory("InstaDefaultImplementation");
+    const instaAccountV2DefaultImpl = await InstaDefaultImplementation.deploy();
     await instaAccountV2DefaultImpl.deployed();
 
     const InstaAccountV2ImplementationM1 = await ethers.getContractFactory("InstaAccountV2ImplementationM1");
     const instaAccountV2ImplM1 = await InstaAccountV2ImplementationM1.deploy(instaConnectorsV2.address);
     await instaAccountV2ImplM1.deployed();
 
-    const InstaAccountV2ImplementationM2 = await ethers.getContractFactory("InstaAccountV2ImplementationM2");
-    const instaAccountV2ImplM2 = await InstaAccountV2ImplementationM2.deploy();
+    const InstaImplementationM2 = await ethers.getContractFactory("InstaImplementationM2");
+    const instaAccountV2ImplM2 = await InstaImplementationM2.deploy();
     await instaAccountV2ImplM2.deployed();
 
 

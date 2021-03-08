@@ -9,7 +9,7 @@ interface AccountImplementations {
  * @dev This abstract contract provides a fallback function that delegates all calls to another contract using the EVM
  * instruction `delegatecall`.
  */
-contract InstaAccountV2Proxy {
+contract InstaAccountV2 {
 
     AccountImplementations public immutable implementations;
 
@@ -51,7 +51,7 @@ contract InstaAccountV2Proxy {
      */
     function _fallback(bytes4 _sig) internal {
         address _implementation = implementations.getImplementation(_sig);
-        require(_implementation != address(0), "InstaAccountV2Proxy: Not able to find _implementation");
+        require(_implementation != address(0), "InstaAccountV2: Not able to find _implementation");
         _delegate(_implementation);
     }
 

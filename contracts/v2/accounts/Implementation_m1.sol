@@ -23,7 +23,7 @@ contract Constants is Variables {
     }
 }
 
-contract InstaAccountV2ImplementationM1 is Constants {
+contract InstaImplementationM1 is Constants {
 
     constructor(address _connectors) Constants(_connectors) {}
 
