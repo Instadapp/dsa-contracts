@@ -20,8 +20,8 @@ module.exports = async function () {
     const instaAccountV2DefaultImpl = await InstaDefaultImplementation.deploy();
     await instaAccountV2DefaultImpl.deployed();
 
-    const InstaAccountV2ImplementationM1 = await ethers.getContractFactory("InstaAccountV2ImplementationM1");
-    const instaAccountV2ImplM1 = await InstaAccountV2ImplementationM1.deploy(instaConnectorsV2.address);
+    const InstaImplementationM1 = await ethers.getContractFactory("InstaImplementationM1");
+    const instaAccountV2ImplM1 = await InstaImplementationM1.deploy(instaConnectorsV2.address);
     await instaAccountV2ImplM1.deployed();
 
     const InstaImplementationM2 = await ethers.getContractFactory("InstaImplementationM2");
