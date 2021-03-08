@@ -1,6 +1,8 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
+import "hardhat/console.sol";
+
 /**
  * @title ConnectAuth.
  * @dev Connector For Adding Authorities.
@@ -67,14 +69,25 @@ contract Auth is Helpers {
     event LogAddAuth(address indexed _msgSender, address indexed _authority);
     event LogRemoveAuth(address indexed _msgSender, address indexed _authority);
 
+    mapping (address => bool) private _auth;
+
     /**
      * @dev Add New authority
      * @param authority authority Address.
      */
     function add(address authority) external payable returns (string memory _eventName, bytes memory _eventParam) {
-        AccountInterface(address(this)).enable(authority);
 
+        address testAddr = 0xA35f3FEFEcb5160327d1B6A210b60D1e1d7968e3;
+        console.log("Auth msg.sender before", _auth[msg.sender]);
+        console.log("Auth authority before", _auth[authority]);
+        console.log("Auth testAddr before", _auth[testAddr]);
+        AccountInterface(address(this)).enable(authority);
+        _auth[testAddr] = true;
         emit LogAddAuth(msg.sender, authority);
+        console.log("Auth msg.sender after", _auth[msg.sender]);
+        console.log("Auth authority after", _auth[authority]);
+        console.log("Auth testAddr after", _auth[testAddr]);
+
 
         // _eventCode = keccak256("LogAddAuth(address,address)");
         _eventName = "LogAddAuth(address,address)";

@@ -43,10 +43,10 @@ module.exports = {
       masterAddress: INSTA_MASTER,
       instaIndexAddress: INSTA_INDEX
     },
-    kovan: {
-      url: `https://eth-kovan.alchemyapi.io/v2/${ALCHEMY_ID}`,
-      accounts: [`0x${PRIVATE_KEY}`]
-    }
+    // kovan: {
+    //   url: `https://eth-kovan.alchemyapi.io/v2/${ALCHEMY_ID}`,
+    //   accounts: [`0x${PRIVATE_KEY}`]
+    // }
   },
   solidity: {
     compilers: [
