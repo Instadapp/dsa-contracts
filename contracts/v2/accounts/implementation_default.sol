@@ -35,7 +35,7 @@ contract Record is Constants {
 
     /**
      * @dev Enable New User.
-     * @param user Owner of the Smart Account.
+     * @param user Owner address
     */
     function enable(address user) public {
         require(msg.sender == address(this) || msg.sender == instaIndex, "not-self-index");
@@ -48,7 +48,7 @@ contract Record is Constants {
 
     /**
      * @dev Disable User.
-     * @param user Owner of the Smart Account.
+     * @param user Owner address
     */
     function disable(address user) public {
         require(msg.sender == address(this), "not-self");

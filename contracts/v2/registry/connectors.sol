@@ -23,7 +23,7 @@ contract Controllers {
 
     // Enabled Chief(Address of Chief => bool).
     mapping(address => bool) public chief;
-    // Enabled Connectors(Connector Address => bool).
+    // Enabled Connectors(Connector name => address).
     mapping(string => address) public connectors;
 
     /**
@@ -37,11 +37,11 @@ contract Controllers {
 
     /**
      * @dev Toggle a Chief. Enable if disable & vice versa
-     * @param _userAddress Chief Address.
+     * @param _chiefAddress Chief Address.
     */
-    function toggleChief(address _userAddress) external isChief {
-        chief[_userAddress] = !chief[_userAddress];
-        emit LogController(_userAddress, chief[_userAddress]);
+    function toggleChief(address _chiefAddress) external isChief {
+        chief[_chiefAddress] = !chief[_chiefAddress];
+        emit LogController(_chiefAddress, chief[_chiefAddress]);
     }
 }
 
@@ -60,6 +60,7 @@ contract InstaConnectorsV2 is Controllers {
         require(_connectors.length == _connectors.length, "addConnectors: not same length");
         for (uint i = 0; i < _connectors.length; i++) {
             require(connectors[_connectorNames[i]] == address(0), "addConnectors: _connectorName added already");
+            require(_connectors[i] != address(0), "addConnectors: _connectors address not vaild");
             ConnectorInterface(_connectors[i]).name(); // Checking if connector has function name()
             connectors[_connectorNames[i]] = _connectors[i];
             emit LogConnectorAdded(_connectorNames[i], _connectors[i]);
@@ -76,8 +77,8 @@ contract InstaConnectorsV2 is Controllers {
             require(connectors[_connectorNames[i]] != address(0), "addConnectors: _connectorName not added to update");
             require(_connectors[i] != address(0), "addConnectors: _connector address is not vaild");
             ConnectorInterface(_connectors[i]).name(); // Checking if connector has function name()
-            connectors[_connectorNames[i]] = _connectors[i];
             emit LogConnectorUpdated(_connectorNames[i], connectors[_connectorNames[i]], _connectors[i]);
+            connectors[_connectorNames[i]] = _connectors[i];
         }
     }
 
@@ -88,8 +89,8 @@ contract InstaConnectorsV2 is Controllers {
     function removeConnectors(string[] calldata _connectorNames) external isChief {
         for (uint i = 0; i < _connectorNames.length; i++) {
             require(connectors[_connectorNames[i]] != address(0), "addConnectors: _connectorName not added to update");
-            delete connectors[_connectorNames[i]];
             emit LogConnectorRemoved(_connectorNames[i], connectors[_connectorNames[i]]);
+            delete connectors[_connectorNames[i]];
         }
     }
 
