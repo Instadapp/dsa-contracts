@@ -14,7 +14,7 @@ contract Setup {
 }
 
 contract Implementations is Setup {
-    event LogSetDefaultImplementation(address indexed implementation);
+    event LogSetDefaultImplementation(address indexed oldImplementation, address indexed newImplementation);
     event LogAddImplementation(address indexed implementation, bytes4[] sigs);
     event LogRemoveImplementation(address indexed implementation, bytes4[] sigs);
 
@@ -26,23 +26,22 @@ contract Implementations is Setup {
     }
 
     function setDefaultImplementation(address _defaultImplementation) external isMaster {
-        require(_defaultImplementation != address(0), "Implementations: _defaultImplementation not valid");
+        require(_defaultImplementation != address(0), "Implementations: _defaultImplementation address not valid");
+        require(_defaultImplementation != defaultImplementation, "Implementations: _defaultImplementation cannot be same");
+        emit LogSetDefaultImplementation(defaultImplementation, _defaultImplementation);
         defaultImplementation = _defaultImplementation;
-
     }
 
-    function addImplementation(address _implementation, bytes4[] calldata sigs) external isMaster {
+    function addImplementation(address _implementation, bytes4[] calldata _sigs) external isMaster {
         require(_implementation != address(0), "Implementations: _implementation not valid.");
         require(implementationSigs[_implementation].length == 0, "Implementations: _implementation already added.");
-        for (uint i = 0; i < sigs.length; i++) {
-            bytes4 sig = sigs[i];
-            require(sigImplementations[sig] == address(0), string(
-                abi.encodePacked("Implementations: ", sig, " is-already-added-in", sigImplementations[sig])
-            ));
-            sigImplementations[sig] = _implementation;
+        for (uint i = 0; i < _sigs.length; i++) {
+            bytes4 _sig = _sigs[i];
+            require(sigImplementations[_sig] == address(0), "Implementations: _sig already added");
+            sigImplementations[_sig] = _implementation;
         }
-        implementationSigs[_implementation] = sigs;
-        emit LogAddImplementation(_implementation, sigs);
+        implementationSigs[_implementation] = _sigs;
+        emit LogAddImplementation(_implementation, _sigs);
     }
 
     function removeImplementation(address _implementation) external isMaster {

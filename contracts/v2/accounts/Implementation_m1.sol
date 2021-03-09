@@ -36,7 +36,7 @@ contract InstaImplementationM1 is Constants {
     event LogCast(
         address indexed origin,
         address indexed sender,
-        uint value,
+        uint256 value,
         string[] targetsNames,
         address[] targets,
         string[] eventNames,
@@ -46,9 +46,9 @@ contract InstaImplementationM1 is Constants {
     receive() external payable {}
 
      /**
-     * @dev Delegate the calls to Connector And this function is ran by cast().
-     * @param _target Target to of Connector.
-     * @param _data CallData of function in Connector.
+     * @dev Delegate the calls to Connector.
+     * @param _target Connector address
+     * @param _data CallData of function.
     */
     function spell(address _target, bytes memory _data) internal returns (bytes memory response) {
         require(_target != address(0), "target-invalid");
@@ -73,8 +73,8 @@ contract InstaImplementationM1 is Constants {
     /**
      * @dev This is the main function, Where all the different functions are called
      * from Smart Account.
-     * @param _targetNames Array of Target(s) to of Connector.
-     * @param _datas Array of Calldata(s) of function.
+     * @param _targetNames Array of Connector address.
+     * @param _datas Array of Calldata.
     */
     function cast(
         string[] calldata _targetNames,
