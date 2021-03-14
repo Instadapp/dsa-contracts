@@ -39,7 +39,8 @@ contract Controllers {
      * @dev Toggle a Chief. Enable if disable & vice versa
      * @param _chiefAddress Chief Address.
     */
-    function toggleChief(address _chiefAddress) external isChief {
+    function toggleChief(address _chiefAddress) external {
+        require(msg.sender == IndexInterface(instaIndex).master(), "toggleChief: not-master");
         chief[_chiefAddress] = !chief[_chiefAddress];
         emit LogController(_chiefAddress, chief[_chiefAddress]);
     }
@@ -73,9 +74,10 @@ contract InstaConnectorsV2 is Controllers {
      * @param _connectors Array of Connector Address.
     */
     function updateConnectors(string[] calldata _connectorNames, address[] calldata _connectors) external isChief {
+        require(_connectors.length == _connectors.length, "updateConnectors: not same length");
         for (uint i = 0; i < _connectors.length; i++) {
-            require(connectors[_connectorNames[i]] != address(0), "addConnectors: _connectorName not added to update");
-            require(_connectors[i] != address(0), "addConnectors: _connector address is not vaild");
+            require(connectors[_connectorNames[i]] != address(0), "updateConnectors: _connectorName not added to update");
+            require(_connectors[i] != address(0), "updateConnectors: _connector address is not vaild");
             ConnectorInterface(_connectors[i]).name(); // Checking if connector has function name()
             emit LogConnectorUpdated(_connectorNames[i], connectors[_connectorNames[i]], _connectors[i]);
             connectors[_connectorNames[i]] = _connectors[i];
@@ -88,7 +90,7 @@ contract InstaConnectorsV2 is Controllers {
     */
     function removeConnectors(string[] calldata _connectorNames) external isChief {
         for (uint i = 0; i < _connectorNames.length; i++) {
-            require(connectors[_connectorNames[i]] != address(0), "addConnectors: _connectorName not added to update");
+            require(connectors[_connectorNames[i]] != address(0), "removeConnectors: _connectorName not added to update");
             emit LogConnectorRemoved(_connectorNames[i], connectors[_connectorNames[i]]);
             delete connectors[_connectorNames[i]];
         }
