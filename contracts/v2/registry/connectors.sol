@@ -74,7 +74,7 @@ contract InstaConnectorsV2 is Controllers {
      * @param _connectors Array of Connector Address.
     */
     function updateConnectors(string[] calldata _connectorNames, address[] calldata _connectors) external isChief {
-        require(_connectors.length == _connectors.length, "updateConnectors: not same length");
+        require(_connectorNames.length == _connectors.length, "updateConnectors: not same length");
         for (uint i = 0; i < _connectors.length; i++) {
             require(connectors[_connectorNames[i]] != address(0), "updateConnectors: _connectorName not added to update");
             require(_connectors[i] != address(0), "updateConnectors: _connector address is not vaild");
