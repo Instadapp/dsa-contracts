@@ -451,10 +451,10 @@ describe("Core", function () {
       expect(isOk).to.be.false;
     })
 
-    it("New chief can add more chief", async function () {
+    it("New chief can not add more chief", async function () {
       expect(await instaConnectorsV2.chief(wallet1.address)).to.be.false
-      await instaConnectorsV2.connect(wallet0).toggleChief(wallet1.address)
-      expect(await instaConnectorsV2.chief(wallet1.address)).to.be.true
+      await expect(instaConnectorsV2.connect(wallet0).toggleChief(wallet1.address)).to.be.revertedWith('toggleChief: not-master');
+      expect(await instaConnectorsV2.chief(wallet1.address)).to.be.false
     })
 
     it("Can update multiple connector addresses", async function() {
@@ -480,7 +480,7 @@ describe("Core", function () {
       expect(addresses).to.not.eql(addressesArray);
 
       await expect (instaConnectorsV2.connect(wallet0).updateConnectors(connectorsArray, addressesArray))
-        .to.be.revertedWith('addConnectors: _connectorName not added to update');
+        .to.be.revertedWith('updateConnectors: _connectorName not added to update');
     })
 
     // after(async () => {
