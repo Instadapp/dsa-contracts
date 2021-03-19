@@ -14,6 +14,9 @@ require("solidity-coverage");
 require("@nomiclabs/hardhat-etherscan");
 
 require("dotenv").config();
+
+const { utils } = require("ethers");
+
 // const INFURA_ID = process.env.INFURA_ID;
 // assert.ok(INFURA_ID, "no Infura ID in process.env");
 const ALCHEMY_ID = process.env.ALCHEMY_ID;
@@ -47,6 +50,12 @@ module.exports = {
     kovan: {
       url: `https://eth-kovan.alchemyapi.io/v2/${ALCHEMY_ID}`,
       accounts: [`0x${PRIVATE_KEY}`]
+    },
+    mainnet: {
+      url: `https://eth.alchemyapi.io/v2/${ALCHEMY_ID}`,
+      accounts: [`0x${PRIVATE_KEY}`],
+      timeout: 150000,
+      gasPrice: parseInt(utils.parseUnits("160", "gwei"))
     }
   },
   solidity: {
