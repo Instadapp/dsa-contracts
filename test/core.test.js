@@ -451,9 +451,9 @@ describe("Core", function () {
       expect(isOk).to.be.false;
     })
 
-    it("New chief can add more chief", async function () {
+    it("New chief can not add more chief", async function () {
       expect(await instaConnectorsV2.chief(wallet1.address)).to.be.false
-      await expect(instaConnectorsV2.connect(wallet0).toggleChief(wallet1.address)).to.be.revertedWith('toggleChief: not-master')
+      await expect(instaConnectorsV2.connect(wallet0).toggleChief(wallet1.address)).to.be.revertedWith('toggleChief: not-master');
       expect(await instaConnectorsV2.chief(wallet1.address)).to.be.false
     })
 
