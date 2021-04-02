@@ -42,7 +42,7 @@ contract Record {
     // Is shield true/false.
     bool public shield;
 
-    constructor (address _instaIndex) internal {
+    constructor (address _instaIndex) {
         instaIndex = _instaIndex;
     }
 

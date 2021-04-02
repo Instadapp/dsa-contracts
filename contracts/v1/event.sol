@@ -9,7 +9,7 @@ contract InstaEvent {
 
     address public immutable instaList;
 
-    constructor (address _instaList) internal {
+    constructor (address _instaList) public {
         instaList = _instaList;
     }
 

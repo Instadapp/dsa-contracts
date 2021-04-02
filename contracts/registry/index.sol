@@ -158,7 +158,7 @@ contract InstaIndex is CloneFactory {
         address _origin
     ) external payable returns (address _account) {
         _account = build(_owner, accountVersion, _origin);
-        if (_targets.length > 0) AccountInterface(_account).cast.value(msg.value)(_targets, _datas, _origin);
+        if (_targets.length > 0) AccountInterface(_account).cast{value: msg.value}(_targets, _datas, _origin);
     }
 
     /**
