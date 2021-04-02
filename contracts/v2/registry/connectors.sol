@@ -19,9 +19,9 @@ contract Controllers {
     event LogController(address indexed addr, bool indexed isChief);
 
     // InstaIndex Address.
-    address public immutable instaIndex = 0x2971AdFa57b20E5a416aE5a708A8655A9c74f723;
+    address public immutable instaIndex;
 
-    constructor(address _instaIndex) internal {
+    constructor(address _instaIndex) {
         instaIndex = _instaIndex;
     }
 

@@ -20,7 +20,7 @@ contract Implementations is Setup {
 
     IndexInterface immutable public instaIndex;
 
-    constructor(address _instaIndex) internal {
+    constructor(address _instaIndex) {
         instaIndex = IndexInterface(_instaIndex);
     }
 

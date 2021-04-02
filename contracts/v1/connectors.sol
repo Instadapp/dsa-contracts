@@ -36,7 +36,7 @@ contract Controllers is DSMath {
     // InstaIndex Address.
     address public immutable instaIndex;
 
-    constructor (address _instaIndex) internal {
+    constructor (address _instaIndex) public {
         instaIndex = _instaIndex;
     }
 
@@ -79,7 +79,7 @@ contract Controllers is DSMath {
 
 contract Listings is Controllers {
 
-    constructor (address _instaIndex) internal Controllers(_instaIndex) {
+    constructor (address _instaIndex) public Controllers(_instaIndex) {
     }
 
     // Connectors Array.
