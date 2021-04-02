@@ -34,13 +34,17 @@ contract Record {
     event LogSwitchShield(bool _shield);
 
     // InstaIndex Address.
-    address public constant instaIndex = 0x0000000000000000000000000000000000000000;
+    address public immutable instaIndex;
     // The Account Module Version.
     uint public constant version = 1;
     // Auth Module(Address of Auth => bool).
     mapping (address => bool) private auth;
     // Is shield true/false.
     bool public shield;
+
+    constructor (address _instaIndex) internal {
+        instaIndex = _instaIndex;
+    }
 
     /**
      * @dev Check for Auth if enabled.
@@ -89,6 +93,9 @@ contract Record {
 }
 
 contract InstaAccount is Record {
+
+    constructor (address _instaIndex) public Record(_instaIndex) {
+    }
 
     event LogCast(address indexed origin, address indexed sender, uint value);
 

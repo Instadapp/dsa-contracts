@@ -15,12 +15,17 @@ interface ListInterface {
 contract Constants is Variables {
     uint public constant implementationVersion = 1;
     // InstaIndex Address.
-    address public constant instaIndex = 0x2971AdFa57b20E5a416aE5a708A8655A9c74f723;
+    address public immutable instaIndex = 0x2971AdFa57b20E5a416aE5a708A8655A9c74f723;
     // The Account Module Version.
     uint public constant version = 2;
+
+    constructor(address _instaIndex) internal {
+        instaIndex = _instaIndex;
+    }
 }
 
 contract Record is Constants {
+    constructor(address _instaIndex) internal Constants(_instaIndex) {}
 
     event LogEnableUser(address indexed user);
     event LogDisableUser(address indexed user);
@@ -62,6 +67,8 @@ contract Record is Constants {
 }
 
 contract InstaDefaultImplementation is Record {
+
+    constructor(address _instaIndex) public Record(_instaIndex) {}
 
     receive() external payable {}
 }

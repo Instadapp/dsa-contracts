@@ -7,7 +7,11 @@ interface ListInterface {
 
 contract InstaEvent {
 
-    address public constant instaList = 0x0000000000000000000000000000000000000000;
+    address public immutable instaList;
+
+    constructor (address _instaList) internal {
+        instaList = _instaList;
+    }
 
     event LogEvent(uint64 connectorType, uint64 indexed connectorID, uint64 indexed accountID, bytes32 indexed eventCode, bytes eventData);
 

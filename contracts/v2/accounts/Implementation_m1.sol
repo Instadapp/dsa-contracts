@@ -14,18 +14,19 @@ interface ConnectorsInterface {
 
 contract Constants is Variables {
     // InstaIndex Address.
-    address internal constant instaIndex = 0x2971AdFa57b20E5a416aE5a708A8655A9c74f723;
+    address internal immutable instaIndex;
     // Connnectors Address.
     address public immutable connectorsM1;
 
-    constructor(address _connectors) {
+    constructor(address _instaIndex, address _connectors) {
         connectorsM1 = _connectors;
+        instaIndex = _instaIndex;
     }
 }
 
 contract InstaImplementationM1 is Constants {
 
-    constructor(address _connectors) Constants(_connectors) {}
+    constructor(address _instaIndex, address _connectors) Constants(_instaIndex, _connectors) {}
 
     function decodeEvent(bytes memory response) internal pure returns (string memory _eventCode, bytes memory _eventParams) {
         if (response.length > 0) {
