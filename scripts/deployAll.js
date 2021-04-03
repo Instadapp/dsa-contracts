@@ -1,7 +1,12 @@
 const hre = require("hardhat");
 const { ethers } = hre;
 
+
 async function main() {
+  const [deployer] = await ethers.getSigners()
+  const deployerAddress = deployer.address
+  console.log(`\n\n\n Deployer Address: ${deployerAddress} \n\n\n`)
+
     if (hre.network.name === "mainnet") {
       console.log(
         "\n\n Deploying Contracts to mainnet. Hit ctrl + c to abort"
@@ -16,7 +21,6 @@ async function main() {
          );
     }
 
-    
     const InstaIndex = await ethers.getContractFactory("InstaIndex");
     const instaIndex = await InstaIndex.deploy();
     await instaIndex.deployed();
@@ -102,15 +106,53 @@ async function main() {
 
     console.log("InstaImplementationM1 deployed: ", instaAccountV2ImplM1.address);
 
-    console.log("\n\n###########")
-        const args = [
-            "0xf6839085F692bDe6A8062573E3DA35E7e947C21E",
+    console.log("\n\n########### setBasics ########")
+        const setBasicsArgs = [
+            deployerAddress,
             instaList.address,
             instaAccount.address,
             instaConnectors.address
         ]
-        const tx = await instaIndex.setBasics(...args)
-        const txDetails = tx.wait()
+        const tx = await instaIndex.setBasics(...setBasicsArgs)
+        const txDetails = await tx.wait()
+        console.log(`
+          status: ${txDetails.status == 1},
+          tx: ${txDetails.transactionHash},
+        `)
+    console.log("###########\n\n")
+
+    console.log("\n\n########### Add DSAv2 Implementations ########")
+      let txSetDefaultImplementation = await implementationsMapping.setDefaultImplementation(instaAccountV2DefaultImpl.address)
+      let txSetDefaultImplementationDetails = await txSetDefaultImplementation.wait()
+      
+      
+      const implementationV1Args = [
+          instaAccountV2ImplM1.address,
+          [
+            "cast(string[],bytes[],address)"
+          ].map((a) => web3.utils.keccak256(a).slice(0, 10))
+      ]
+      const txAddImplementation = await implementationsMapping.addImplementation(...implementationV1Args)
+      const txAddImplementationDetails = await txAddImplementation.wait()
+      console.log(`
+        status: ${txAddImplementationDetails.status == 1},
+        tx: ${txAddImplementationDetails.transactionHash},
+      `)
+    console.log("###########\n\n")
+
+    console.log("\n\n########### Add DSAv2 ########")
+      const addNewAccountArgs = [
+          instaAccountV2Proxy.address,
+          instaConnectorsV2Proxy.address,
+          "0x0000000000000000000000000000000000000000"
+      ]
+      const txAddNewAccount = await instaIndex.addNewAccount(...addNewAccountArgs)
+      const txDetailsAddNewAccount = await txAddNewAccount.wait()
+
+      console.log(`
+          status: ${txDetailsAddNewAccount.status == 1},
+          tx: ${txDetailsAddNewAccount.transactionHash},
+      `)
     console.log("###########\n\n")
 
 
