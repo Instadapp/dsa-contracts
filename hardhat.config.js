@@ -56,6 +56,13 @@ module.exports = {
       accounts: [`0x${PRIVATE_KEY}`],
       timeout: 150000,
       gasPrice: parseInt(utils.parseUnits("160", "gwei"))
+    },
+    matic: {
+      // url: `https://eth.alchemyapi.io/v2/${ALCHEMY_ID}`,
+      url: "https://rpc-mainnet.maticvigil.com/",
+      accounts: [`0x${PRIVATE_KEY}`],
+      timeout: 150000,
+      gasPrice: parseInt(utils.parseUnits("1", "gwei"))
     }
   },
   solidity: {
