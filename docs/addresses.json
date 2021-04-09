@@ -1,0 +1,36 @@
+{
+    "mainnet": {
+        "InstaIndex": "0x2971AdFa57b20E5a416aE5a708A8655A9c74f723",
+        "InstaList": "0x4c8a1BEb8a87765788946D6B19C6C6355194AbEb",
+        "versions": {
+            "v1": {
+                "InstaAccount": "0x939Daad09fC4A9B8f8A9352A485DAb2df4F4B3F8",
+                "InstaConnectors": "0xD6A602C01a023B98Ecfb29Df02FBA380d3B21E0c",
+                "InstaEvent": "0x2af7ea6Cb911035f3eb1ED895Cb6692C39ecbA97",
+                "InstaMemory": "0x8a5419CfC711B2343c17a6ABf4B2bAFaBb06957F"
+            },
+            "v2": {
+                "InstaAccountV2": "0xFE02a32Cbe0CB9ad9A945576A5bb53A3C123A3A3",
+                "InstaConnectorsV2Proxy": "0x7D53E606308A2E0A1D396F30dc305cc7f8483436",
+                "InstaConnectorsV2": "0xFE2390DAD597594439f218190fC2De40f9Cf1179",
+                "InstaImplementations": "0xCBA828153d3a85b30B5b912e1f2daCac5816aE9D",
+                "InstaDefaultImplementation": "0x28aDcDC02Ca7B3EDf11924102726066AA0fA7010",
+                "InstaImplementationM1": "0x77a34e599dA1e37215445c5740D57b63E5Bb98FD"
+            }
+        }
+    },
+    "polygon": {
+        "InstaIndex": "0xA9B99766E6C676Cf1975c0D3166F96C0848fF5ad",
+        "InstaList": "0x839c2D3aDe63DF5b0b8F3E57D5e145057Ab41556",
+        "versions": {
+            "v2": {
+                "InstaAccountV2": "0x28846f4051EB05594B3fF9dE76b7B5bf00431155",
+                "InstaConnectorsV2Proxy": "0x01fEF4d2B513C9F69E34b2f93Ef707FA9Ff60109",
+                "InstaConnectorsV2": "0x0a0a82D2F86b9E46AE60E22FCE4e8b916F858Ddc",
+                "InstaImplementations": "0x39d3d5e7c11D61E072511485878dd84711c19d4A",
+                "InstaDefaultImplementation": "0x2240770bEc8cB22ed716F2DCcC4F24980A904bC5",
+                "InstaImplementationM1": "0x7ECE9E841BdCfa3A482331E2b6b853e497Bd7C9f"
+            }
+        }
+    }
+}
