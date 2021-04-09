@@ -37,3 +37,7 @@ Get the test coverage
 ```
 npm run coverage
 ```
+
+### Deployed Contracts
+
+Deployed contract addresses can be found [here](docs/addresses.json)
