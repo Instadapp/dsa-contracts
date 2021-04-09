@@ -23,6 +23,12 @@
         "InstaIndex": "0xA9B99766E6C676Cf1975c0D3166F96C0848fF5ad",
         "InstaList": "0x839c2D3aDe63DF5b0b8F3E57D5e145057Ab41556",
         "versions": {
+            "v1": {
+                "InstaAccount": "0xA7c805e4ad4E7B51d2a1eB442B2014a9B63D3703",
+                "InstaConnectors": "0x3254Ce8f5b1c82431B8f21Df01918342215825C2",
+                "InstaEvent": "0xA4BF319968986D2352FA1c550D781bBFCCE3FcaB",
+                "InstaMemory": "0x6C7256cf7C003dD85683339F75DdE9971f98f2FD"
+            },
             "v2": {
                 "InstaAccountV2": "0x28846f4051EB05594B3fF9dE76b7B5bf00431155",
                 "InstaConnectorsV2Proxy": "0x01fEF4d2B513C9F69E34b2f93Ef707FA9Ff60109",
