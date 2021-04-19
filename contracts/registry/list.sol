@@ -1,4 +1,4 @@
-pragma solidity ^0.6.0;
+pragma solidity ^0.7.0;
 
 /**
  * @title InstaList
@@ -26,7 +26,11 @@ contract DSMath {
 contract Variables is DSMath {
 
     // InstaIndex Address.
-    address public constant instaIndex = 0x0000000000000000000000000000000000000000;
+    address public immutable instaIndex;
+
+    constructor (address _instaIndex) {
+        instaIndex = _instaIndex;
+    }
 
     // Smart Account Count.
     uint64 public accounts;
@@ -68,6 +72,9 @@ contract Variables is DSMath {
 }
 
 contract Configure is Variables {
+
+    constructor (address _instaIndex) Variables(_instaIndex) {
+    }
 
     /**
      * @dev Add Account to User Linked List.
@@ -134,6 +141,8 @@ contract Configure is Variables {
 }
 
 contract InstaList is Configure {
+    constructor (address _instaIndex) public Configure(_instaIndex) {}
+
 
     /**
      * @dev Enable Auth for Smart Account.

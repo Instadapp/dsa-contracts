@@ -1,4 +1,4 @@
-pragma solidity ^0.6.0;
+pragma solidity ^0.7.0;
 
 /**
  * @title InstaConnectors
@@ -34,7 +34,11 @@ contract Controllers is DSMath {
     event LogRemoveController(address indexed addr);
 
     // InstaIndex Address.
-    address public constant instaIndex = 0x0000000000000000000000000000000000000000;
+    address public immutable instaIndex;
+
+    constructor (address _instaIndex) {
+        instaIndex = _instaIndex;
+    }
 
     // Enabled Chief(Address of Chief => bool).
     mapping(address => bool) public chief;
@@ -74,6 +78,10 @@ contract Controllers is DSMath {
 
 
 contract Listings is Controllers {
+
+    constructor (address _instaIndex) Controllers(_instaIndex) {
+    }
+
     // Connectors Array.
     address[] public connectorArray;
     // Count of Connector's Enabled.
@@ -110,6 +118,9 @@ contract Listings is Controllers {
 
 
 contract InstaConnectors is Listings {
+
+    constructor (address _instaIndex) public Listings(_instaIndex) {
+    }
 
     event LogEnable(address indexed connector);
     event LogDisable(address indexed connector);

@@ -1,4 +1,4 @@
-pragma solidity ^0.6.0;
+pragma solidity ^0.7.0;
 
 interface ListInterface {
     function accountID(address) external view returns (uint64);
@@ -7,7 +7,11 @@ interface ListInterface {
 
 contract InstaEvent {
 
-    address public constant instaList = 0x0000000000000000000000000000000000000000;
+    address public immutable instaList;
+
+    constructor (address _instaList) public {
+        instaList = _instaList;
+    }
 
     event LogEvent(uint64 connectorType, uint64 indexed connectorID, uint64 indexed accountID, bytes32 indexed eventCode, bytes eventData);
 

@@ -19,7 +19,11 @@ contract Controllers {
     event LogController(address indexed addr, bool indexed isChief);
 
     // InstaIndex Address.
-    address public constant instaIndex = 0x2971AdFa57b20E5a416aE5a708A8655A9c74f723;
+    address public immutable instaIndex;
+
+    constructor(address _instaIndex) {
+        instaIndex = _instaIndex;
+    }
 
     // Enabled Chief(Address of Chief => bool).
     mapping(address => bool) public chief;
@@ -51,6 +55,8 @@ contract InstaConnectorsV2 is Controllers {
     event LogConnectorAdded(string indexed connectorName, address indexed connector);
     event LogConnectorUpdated(string indexed connectorName, address indexed oldConnector, address indexed newConnector);
     event LogConnectorRemoved(string indexed connectorName, address indexed connector);
+
+    constructor(address _instaIndex) public Controllers(_instaIndex) {}
 
     /**
      * @dev Add Connectors

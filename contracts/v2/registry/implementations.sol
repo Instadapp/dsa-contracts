@@ -18,7 +18,11 @@ contract Implementations is Setup {
     event LogAddImplementation(address indexed implementation, bytes4[] sigs);
     event LogRemoveImplementation(address indexed implementation, bytes4[] sigs);
 
-    IndexInterface constant public instaIndex = IndexInterface(0x2971AdFa57b20E5a416aE5a708A8655A9c74f723);
+    IndexInterface immutable public instaIndex;
+
+    constructor(address _instaIndex) {
+        instaIndex = IndexInterface(_instaIndex);
+    }
 
     modifier isMaster() {
         require(msg.sender == instaIndex.master(), "Implementations: not-master");
@@ -59,6 +63,8 @@ contract Implementations is Setup {
 }
 
 contract InstaImplementations is Implementations {
+    constructor(address _instaIndex) public Implementations(_instaIndex) {}
+
     function getImplementation(bytes4 _sig) external view returns (address) {
         address _implementation = sigImplementations[_sig];
         return _implementation == address(0) ? defaultImplementation : _implementation;
