@@ -52,9 +52,22 @@ contract Controllers {
 
 
 contract InstaConnectorsV2 is Controllers {
-    event LogConnectorAdded(string indexed connectorName, address indexed connector);
-    event LogConnectorUpdated(string indexed connectorName, address indexed oldConnector, address indexed newConnector);
-    event LogConnectorRemoved(string indexed connectorName, address indexed connector);
+    event LogConnectorAdded(
+        bytes32 indexed connectorNameHash,
+        string connectorName,
+        address indexed connector
+    );
+    event LogConnectorUpdated(
+        bytes32 indexed connectorNameHash,
+        string connectorName,
+        address indexed oldConnector,
+        address indexed newConnector
+    );
+    event LogConnectorRemoved(
+        bytes32 indexed connectorNameHash,
+        string connectorName,
+        address indexed connector
+    );
 
     constructor(address _instaIndex) public Controllers(_instaIndex) {}
 
@@ -70,7 +83,7 @@ contract InstaConnectorsV2 is Controllers {
             require(_connectors[i] != address(0), "addConnectors: _connectors address not vaild");
             ConnectorInterface(_connectors[i]).name(); // Checking if connector has function name()
             connectors[_connectorNames[i]] = _connectors[i];
-            emit LogConnectorAdded(_connectorNames[i], _connectors[i]);
+            emit LogConnectorAdded(keccak256(abi.encodePacked(_connectorNames[i])), _connectorNames[i], _connectors[i]);
         }
     }
 
@@ -85,7 +98,7 @@ contract InstaConnectorsV2 is Controllers {
             require(connectors[_connectorNames[i]] != address(0), "updateConnectors: _connectorName not added to update");
             require(_connectors[i] != address(0), "updateConnectors: _connector address is not vaild");
             ConnectorInterface(_connectors[i]).name(); // Checking if connector has function name()
-            emit LogConnectorUpdated(_connectorNames[i], connectors[_connectorNames[i]], _connectors[i]);
+            emit LogConnectorUpdated(keccak256(abi.encodePacked(_connectorNames[i])), _connectorNames[i], connectors[_connectorNames[i]], _connectors[i]);
             connectors[_connectorNames[i]] = _connectors[i];
         }
     }
@@ -97,7 +110,7 @@ contract InstaConnectorsV2 is Controllers {
     function removeConnectors(string[] calldata _connectorNames) external isChief {
         for (uint i = 0; i < _connectorNames.length; i++) {
             require(connectors[_connectorNames[i]] != address(0), "removeConnectors: _connectorName not added to update");
-            emit LogConnectorRemoved(_connectorNames[i], connectors[_connectorNames[i]]);
+            emit LogConnectorRemoved(keccak256(abi.encodePacked(_connectorNames[i])), _connectorNames[i], connectors[_connectorNames[i]]);
             delete connectors[_connectorNames[i]];
         }
     }
