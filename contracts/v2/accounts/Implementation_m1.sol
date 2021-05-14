@@ -15,7 +15,7 @@ interface ConnectorsInterface {
 contract Constants is Variables {
     // InstaIndex Address.
     address internal immutable instaIndex;
-    // Connnectors Address.
+    // Connectors Address.
     address public immutable connectorsM1;
 
     constructor(address _instaIndex, address _connectors) {
