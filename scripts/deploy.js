@@ -11,6 +11,7 @@ async function main() {
         "\n\n Deploying Contracts to kovan..."
       );
     }
+    const INSTA_INDEX = "0x2971AdFa57b20E5a416aE5a708A8655A9c74f723";
 
     const InstaConnectorsV2Impl = await ethers.getContractFactory("InstaConnectorsV2Impl");
     const instaConnectorsV2Impl = await InstaConnectorsV2Impl.deploy();
@@ -26,13 +27,13 @@ async function main() {
     console.log("InstaConnectorsV2 Proxy deployed: ", instaConnectorsV2Proxy.address);
 
     const InstaConnectorsV2 = await ethers.getContractFactory("InstaConnectorsV2");
-    const instaConnectorsV2 = await InstaConnectorsV2.deploy();
+    const instaConnectorsV2 = await InstaConnectorsV2.deploy(INSTA_INDEX);
     await instaConnectorsV2.deployed();
 
     console.log("InstaConnectorsV2 deployed: ", instaConnectorsV2.address);
 
     const InstaImplementations = await ethers.getContractFactory("InstaImplementations");
-    const implementationsMapping = await InstaImplementations.deploy();
+    const implementationsMapping = await InstaImplementations.deploy(INSTA_INDEX);
     await implementationsMapping.deployed();
 
     console.log("InstaImplementations deployed: ", implementationsMapping.address);
@@ -44,13 +45,13 @@ async function main() {
     console.log("InstaAccountV2 deployed: ", instaAccountV2Proxy.address);
 
     const InstaDefaultImplementation = await ethers.getContractFactory("InstaDefaultImplementation");
-    const instaAccountV2DefaultImpl = await InstaDefaultImplementation.deploy();
+    const instaAccountV2DefaultImpl = await InstaDefaultImplementation.deploy(INSTA_INDEX);
     await instaAccountV2DefaultImpl.deployed();
 
     console.log("InstaDefaultImplementation deployed: ", instaAccountV2DefaultImpl.address);
 
     const InstaImplementationM1 = await ethers.getContractFactory("InstaImplementationM1");
-    const instaAccountV2ImplM1 = await InstaImplementationM1.deploy(instaConnectorsV2.address);
+    const instaAccountV2ImplM1 = await InstaImplementationM1.deploy(INSTA_INDEX, instaConnectorsV2.address);
     await instaAccountV2ImplM1.deployed();
 
     console.log("InstaImplementationM1 deployed: ", instaAccountV2ImplM1.address);
