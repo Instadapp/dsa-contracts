@@ -165,7 +165,7 @@ describe("Core", function () {
 
     it("Should build DSA v2", async function () {
       const tx = await instaIndex.connect(wallet0).build(wallet0.address, 2, wallet0.address)
-      const dsaWalletAddress = "0xc8F3572102748a9956c2dFF6b998bd6250E3264c"
+      const dsaWalletAddress = "0xC13920c134d38408871E7AF5C102894CB5180B92"
       expect((await tx.wait()).events[1].args.account).to.be.equal(dsaWalletAddress);
       acountV2DsaM1Wallet0 = await ethers.getContractAt("InstaImplementationM1", dsaWalletAddress);
       acountV2DsaM2Wallet0 = await ethers.getContractAt("InstaImplementationM2", dsaWalletAddress);
@@ -174,23 +174,33 @@ describe("Core", function () {
     });
 
     it("Should deploy Auth connector", async function () {
+      const connectorName = "authV2"
       await deployConnector({
-        connectorName: "authV2",
+        connectorName,
         contract: "ConnectV2Auth",
         abi: (await deployments.getArtifact("ConnectV2Auth")).abi
       })
       expect(!!addresses.connectors["authV2"]).to.be.true
-      await instaConnectorsV2.connect(masterSigner).addConnectors(["authV2"], [addresses.connectors["authV2"]])
+      const tx = await instaConnectorsV2.connect(masterSigner).addConnectors(["authV2"], [addresses.connectors["authV2"]])
+      const receipt = await tx.wait()
+      const events = receipt.events
+      expect(events[0].args.connectorNameHash).to.be.eq(web3.utils.keccak256(connectorName));
+      expect(events[0].args.connectorName).to.be.eq(connectorName);
     });
 
     it("Should deploy EmitEvent connector", async function () {
+      const connectorName = "emitEvent"
       await deployConnector({
-        connectorName: "emitEvent",
+        connectorName,
         contract: "ConnectV2EmitEvent",
         abi: (await deployments.getArtifact("ConnectV2EmitEvent")).abi
       })
       expect(!!addresses.connectors["emitEvent"]).to.be.true
-      await instaConnectorsV2.connect(masterSigner).addConnectors(["emitEvent"], [addresses.connectors["emitEvent"]])
+      const tx = await instaConnectorsV2.connect(masterSigner).addConnectors(["emitEvent"], [addresses.connectors["emitEvent"]])
+      const receipt = await tx.wait()
+      const events = receipt.events
+      expect(events[0].args.connectorNameHash).to.be.eq(web3.utils.keccak256(connectorName));
+      expect(events[0].args.connectorName).to.be.eq(connectorName);
     });
 
     it("Should add wallet1 as auth", async function () {
@@ -265,7 +275,7 @@ describe("Core", function () {
 
     before(async function () {
       const tx = await instaIndex.connect(wallet0).build(wallet1.address, 2, wallet1.address)
-      const dsaWalletAddress = "0x15701ad369a488EA2b89Fa5525e3FD5d96cE40cf"
+      const dsaWalletAddress = "0x1ca642f25E95D43B7BCbf7570C9bC7Ef1d24ed37"
       expect((await tx.wait()).events[1].args.account).to.be.equal(dsaWalletAddress);
 
       acountV2DsaM1Wallet0 = await ethers.getContractAt("InstaImplementationM1", dsaWalletAddress);
@@ -273,14 +283,19 @@ describe("Core", function () {
       acountV2DsaDefaultWallet0 = await ethers.getContractAt("InstaDefaultImplementation", dsaWalletAddress);
     });
 
-    it("Should new connector", async function () {
+    it("Should add new connector", async function () {
+      const connectorName =  "authV1"
       await deployConnector({
-        connectorName: "authV1",
+        connectorName,
         contract: "ConnectV2Auth",
         abi: (await deployments.getArtifact("ConnectV2Auth")).abi
       })
       expect(!!addresses.connectors["authV1"]).to.be.true
-      await instaConnectorsV2.connect(masterSigner).addConnectors(["authV1"], [addresses.connectors["authV1"]])
+      const tx = await instaConnectorsV2.connect(masterSigner).addConnectors(["authV1"], [addresses.connectors["authV1"]])
+      const receipt = await tx.wait()
+      const events = receipt.events
+      expect(events[0].args.connectorNameHash).to.be.eq(web3.utils.keccak256(connectorName));
+      expect(events[0].args.connectorName).to.be.eq(connectorName);
     });
 
     it("Should emit event from wallet1", async function () {
@@ -335,9 +350,14 @@ describe("Core", function () {
       let [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray)
       expect(isOk).to.be.false;
 
-      await instaConnectorsV2.connect(masterSigner).addConnectors(connectorsArray, addressesArray);
-      [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray);
-      expect(isOk).to.be.true;
+      const tx = await instaConnectorsV2.connect(masterSigner).addConnectors(connectorsArray, addressesArray);
+      const receipt = await tx.wait()
+      const events = receipt.events
+      expect(events[0].args.connectorNameHash).to.be.eq(web3.utils.keccak256(connectorsArray[0]));
+      expect(events[0].args.connectorName).to.be.eq(connectorsArray[0]);
+
+      let [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(isOkEnd).to.be.true;
     });
 
     it("Cannot add same connector name twice", async function () {
@@ -360,9 +380,15 @@ describe("Core", function () {
       let [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray)
       expect(isOk).to.be.false;
 
-      await instaConnectorsV2.connect(masterSigner).addConnectors(connectorsArray, addressesArray);
-      [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray);
-      expect(isOk).to.be.true;
+      const tx = await instaConnectorsV2.connect(masterSigner).addConnectors(connectorsArray, addressesArray);
+      const receipt = await tx.wait()
+      const events = receipt.events
+      events.forEach((event, i) => {
+        expect(event.args.connectorNameHash).to.be.eq(web3.utils.keccak256(connectorsArray[i]));
+        expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
+      })
+      const [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(isOkEnd).to.be.true;
     });
 
     it("Connector can be removed", async function () {
@@ -371,9 +397,15 @@ describe("Core", function () {
       let [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray)
       expect(isOk).to.be.true;
 
-      await instaConnectorsV2.connect(masterSigner).removeConnectors(connectorsArray);
-      [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray);
-      expect(isOk).to.be.false;
+      const tx = await instaConnectorsV2.connect(masterSigner).removeConnectors(connectorsArray);
+      const receipt = await tx.wait()
+      const events = receipt.events
+      events.forEach((event, i) => {
+        expect(event.args.connectorNameHash).to.be.eq(web3.utils.keccak256(connectorsArray[i]));
+        expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
+      })
+      const [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(isOkEnd).to.be.false;
     });
 
     it("Multiple connectors can be removed", async function () {
@@ -382,9 +414,15 @@ describe("Core", function () {
       let [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray)
       expect(isOk).to.be.true;
       
-      await instaConnectorsV2.connect(masterSigner).removeConnectors(connectorsArray);
-      [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray);
-      expect(isOk).to.be.false;
+      const tx = await instaConnectorsV2.connect(masterSigner).removeConnectors(connectorsArray);
+      const receipt = await tx.wait()
+      const events = receipt.events
+      events.forEach((event, i) => {
+        expect(event.args.connectorNameHash).to.be.eq(web3.utils.keccak256(connectorsArray[i]));
+        expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
+      })
+      const [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(isOkEnd).to.be.false;
     });
 
     it("Connector can be added 2", async function () {
@@ -394,9 +432,15 @@ describe("Core", function () {
       let [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray)
       expect(isOk).to.be.false;
 
-      await instaConnectorsV2.connect(masterSigner).addConnectors(connectorsArray, addressesArray);
-      [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray);
-      expect(isOk).to.be.true;
+      const tx = await instaConnectorsV2.connect(masterSigner).addConnectors(connectorsArray, addressesArray);
+      const receipt = await tx.wait()
+      const events = receipt.events
+      events.forEach((event, i) => {
+        expect(event.args.connectorNameHash).to.be.eq(web3.utils.keccak256(connectorsArray[i]));
+        expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
+      })
+      const [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(isOkEnd).to.be.true;
     });
 
     it("Returns false if one of them is not a connector", async function () {
@@ -419,9 +463,15 @@ describe("Core", function () {
       let [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray)
       expect(isOk).to.be.false;
 
-      await instaConnectorsV2.connect(wallet0).addConnectors(connectorsArray, addressesArray);
-      [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray);
-      expect(isOk).to.be.true;
+      const tx = await instaConnectorsV2.connect(wallet0).addConnectors(connectorsArray, addressesArray);
+      const receipt = await tx.wait()
+      const events = receipt.events
+      events.forEach((event, i) => {
+        expect(event.args.connectorNameHash).to.be.eq(web3.utils.keccak256(connectorsArray[i]));
+        expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
+      })
+      const [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(isOkEnd).to.be.true;
     })
 
     it("Can update connector addresses", async function() {
@@ -502,9 +552,15 @@ describe("Core", function () {
       let [isOk, addresses_] = await instaConnectorsV2.isConnectors(connectorsArray)
       expect(isOk).to.be.false;
 
-      await instaConnectorsV2.connect(masterSigner).addConnectors(connectorsArray, addressesArray);
-      [isOk, addresses_] = await instaConnectorsV2.isConnectors(connectorsArray);
-      expect(isOk).to.be.true;
+      const tx = await instaConnectorsV2.connect(masterSigner).addConnectors(connectorsArray, addressesArray);
+      const receipt = await tx.wait()
+      const events = receipt.events
+      events.forEach((event, i) => {
+        expect(event.args.connectorNameHash).to.be.eq(web3.utils.keccak256(connectorsArray[i]));
+        expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
+      })
+      const [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(connectorsArray);
+      expect(isOkEnd).to.be.true;
     })
     
     it("Should be a deployed connector", async function () {

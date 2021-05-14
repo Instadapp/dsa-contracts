@@ -27,11 +27,15 @@ interface CheckInterface {
 }
 
 contract InstaImplementationM2 {
-    IndexInterface internal constant instaIndex = IndexInterface(0x2971AdFa57b20E5a416aE5a708A8655A9c74f723);
+    address internal immutable instaIndex;
+    // Connnectors Address.
+    address public immutable connectorsM1;
 
-    // address public constant connectorsM1 = address(0x5FbDB2315678afecb367f032d93F642f64180aa3);
-    address public constant connectorsM1 = address(0xFE2390DAD597594439f218190fC2De40f9Cf1179);
-
+    constructor(address _instaIndex, address _connectors) {
+        connectorsM1 = _connectors;
+        instaIndex = _instaIndex;
+    }
+    
     function decodeEvent(bytes memory response) internal pure returns (string memory _eventCode, bytes memory _eventParams) {
         (_eventCode, _eventParams) = abi.decode(response, (string, bytes));
     }
