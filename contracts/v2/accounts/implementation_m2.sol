@@ -148,7 +148,7 @@ contract InstaImplementationM2 is Constants {
     ) external payable 
     {      
         uint256 _length = _targetNames.length;
-        require(_auth[sender], "2: not-an-owner");
+        require(_auth[sender] || sender == address(this), "2: not-an-owner");
         require(msg.sender == flashloan, "2: not-flashloan-contract");
         require(_length != 0, "2: length-invalid");
         require(_length == _datas.length , "2: array-length-invalid");
@@ -184,7 +184,7 @@ contract InstaImplementationM2 is Constants {
         require(_status != _ENTERED, "2: cast-entered");
         _status = _ENTERED;
 
-        require(_auth[msg.sender], "2: permission-denied");
+        require(_auth[msg.sender] || msg.sender == address(this), "2: permission-denied");
         if (_amount == 0) {
             uint256 _length = _targetNames.length;
             require(_length != 0, "2: length-invalid");
