@@ -6,14 +6,10 @@ import { Variables } from "./variables.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 
-interface TokenInterface {
-    function transfer(address, uint) external returns (bool);
-    function balanceOf(address) external view returns (uint);
-}
-
 /**
  * @title InstaAccountV2.
  * @dev DeFi Smart Account Wallet.
+ * @notice Flashloan Module
  */
 
 interface ConnectorsInterface {
@@ -135,7 +131,10 @@ contract InstaImplementationM2 is Constants {
     }
 
     /**
-     * @dev This is similar to cast on implementation_m1
+     * @dev Callback function for flashloan
+     * @param sender msg.sender of the cast().
+     * @param _token flashloan token address.
+     * @param _amount flashloan amount.
      * @param _targetNames Array of Connector address.
      * @param _datas Array of Calldata.
     */
@@ -161,12 +160,20 @@ contract InstaImplementationM2 is Constants {
             uint256 transferAmt = ethBalance > _amount ? _amount : ethBalance;
             payable(flashloan).transfer(transferAmt);
         } else {
-            uint256 tokenBalance = TokenInterface(_token).balanceOf(address(this));
+            uint256 tokenBalance = IERC20(_token).balanceOf(address(this));
             uint256 transferAmt = tokenBalance > _amount ? _amount : tokenBalance;
             SafeERC20.safeTransfer(IERC20(_token), flashloan, transferAmt);
         }
     }
 
+    /**
+     * @dev This function is similar cast() on M1 with flashloan access.
+     * @param _targetNames Array of Connector names.
+     * @param _datas Array of Calldata.
+     * @param _origin
+     * @param _token Flashloan address.
+     * @param _amount Flashloan amount.
+    */
     function cast(
         string[] calldata _targetNames,
         bytes[] calldata _datas,
