@@ -29,7 +29,7 @@ contract Constants is Variables {
     // InstaIndex Address.
     address public immutable instaIndex;
     // Connectors Address.
-    address public immutable connectorsM1;
+    ConnectorsInterface public immutable connectors;
     // Instapool Address.
     address public immutable flashloan;
 
@@ -37,7 +37,7 @@ contract Constants is Variables {
     uint256 internal constant _ENTERED = 2;
 
     constructor(address _instaIndex, address _connectors, address _flashloan) {
-        connectorsM1 = _connectors;
+        connectors = ConnectorsInterface(_connectors);
         instaIndex = _instaIndex;
         flashloan = _flashloan;
     }
@@ -108,7 +108,7 @@ contract InstaImplementationM2 is Constants {
         string[] memory eventNames = new string[](_length);
         bytes[] memory eventParams = new bytes[](_length);
 
-        (bool isOk, address[] memory _targets) = ConnectorsInterface(connectorsM1).isConnectors(_targetNames);
+        (bool isOk, address[] memory _targets) = connectors.isConnectors(_targetNames);
 
         require(isOk, "2: not-connector");
 
