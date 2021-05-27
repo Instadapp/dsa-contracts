@@ -145,8 +145,7 @@ contract InstaImplementationM2 is Constants {
         string[] calldata _targetNames,
         bytes[] calldata _datas,
         address _origin
-    ) external payable 
-    {      
+    ) external payable {      
         uint256 _length = _targetNames.length;
         require(_auth[sender] || sender == address(this), "2: not-an-owner");
         require(msg.sender == flashloan, "2: not-flashloan-contract");
@@ -180,7 +179,7 @@ contract InstaImplementationM2 is Constants {
         address _origin,
         address _token,
         uint256 _amount
-    ) external {
+    ) external payable {
         require(_status != _ENTERED, "2: cast-entered");
         _status = _ENTERED;
 
