@@ -170,7 +170,6 @@ contract InstaImplementationM2 is Constants {
      * @dev This function is similar cast() on M1 with flashloan access.
      * @param _targetNames Array of Connector names.
      * @param _datas Array of Calldata.
-     * @param _origin
      * @param _token Flashloan address.
      * @param _amount Flashloan amount.
     */
