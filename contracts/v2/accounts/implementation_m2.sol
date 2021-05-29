@@ -19,7 +19,8 @@ interface ConnectorsInterface {
 interface FlashloanInterface {
     function initiateFlashLoan(	
         address token,	
-        uint256 amount,	
+        uint256 amount,
+        uint256 route,
         bytes calldata data	
     ) external;
 }
@@ -66,7 +67,8 @@ contract InstaImplementationM2 is Constants {
     event LogFlashCast(
         address indexed origin,
         address tokens,
-        uint256 amount
+        uint256 amount,
+        uint256 route
     );
 
     receive() external payable {}
@@ -176,10 +178,11 @@ contract InstaImplementationM2 is Constants {
     function cast(
         string[] calldata _targetNames,
         bytes[] calldata _datas,
-        address _origin,
         address _token,
-        uint256 _amount
-    ) external payable {
+        uint256 _amount,
+        uint route, // 0 for dydx route
+        address _origin
+    ) external {
         require(_status != _ENTERED, "2: cast-entered");
         _status = _ENTERED;
 
@@ -200,9 +203,9 @@ contract InstaImplementationM2 is Constants {
                 flashloan
             );
 
-            FlashloanInterface(flashloan).initiateFlashLoan(_token, _amount, data);
+            FlashloanInterface(flashloan).initiateFlashLoan(_token, _amount, route, data);
 
-            emit LogFlashCast(_origin, _token, _amount);
+            emit LogFlashCast(_origin, _token, _amount, route);
         }
         require(_status == _NOT_ENTERED, "2: cast-still-entered");
     }
