@@ -4,7 +4,6 @@ const axios = require('axios')
 const { ethers, artifacts, deployments } = hre
 const fs = require('fs/promises')
 const path = require('path')
-const test = require('@openzeppelin/upgrades-core')
 const {
   assertUpgradeSafe,
   assertStorageUpgradeSafe,
@@ -17,8 +16,11 @@ const {
   getStorageLayoutForAddress, // TODO: How to use this?
   isCurrentValidationData,
   getCode,
-  extractStorageLayout // TODO: How to use this?
+  extractStorageLayout, // TODO: How to use this?
+  solcInputOutputDecoder,
+  validate
 } = require('@openzeppelin/upgrades-core')
+const { normalizeValidationData } = require('@openzeppelin/upgrades-core/dist/validate/data.js')
 
 async function main () {
   try {
@@ -27,36 +29,15 @@ async function main () {
       'InstaImplementationM1',
       'InstaImplementationM2'
     ])
-    const addressImpl = await findImplByAddress(address)
+    const { implName } = await findImplByAddress(address)
     await checkForLocalMultipleImplementationStorage([
-      addressImpl,
+      implName,
       'InstaImplementationM2'
     ])
-    // HOW TO MAKE THIS WORK?
-    // const { provider } = hre.network
-    // const manifest = await Manifest.forNetwork(provider)
-    // const validations = await readValidations(hre)
-    // // let ImplFactory2 = await getCode(provider, "0x8a3462A50e1a9Fe8c9e7d9023CAcbD9a98D90021")
-    // const deploymentLayout = await getStorageLayoutForAddress(manifest, validations, address)
-    // // // console.log("main -> Impl", ImplFactory2)
-    // // ImplFactory2 = {bytecode: ImplFactory2}
-    // // // const ImplFactory = await ethers.getContractFactory('InstaImplementationM1') // need name?
-    // // // const ImplFactory2 = await ethers.getContractFactory('InstaDefaultImplementationV2') // need name?
-    // // // console.log("main -> ImplFactory", ImplFactory)
-    // // // const proxyAddress = '0x8a3462A50e1a9Fe8c9e7d9023CAcbD9a98D90021' // contract addr
-    // // // const unlinkedBytecode = getUnlinkedBytecode(validations, ImplFactory.bytecode)
-    // // const unlinkedBytecode2 = getUnlinkedBytecode(validations, ImplFactory2.bytecode)
-    // // // console.log("main -> unlinkedBytecode2", unlinkedBytecode2)
-    // // // const version = getVersion(unlinkedBytecode, ImplFactory.bytecode)
-    // // const version2 = getVersion(unlinkedBytecode2, ImplFactory2.bytecode)
-    // // console.log("main -> version2", version2)
-    // // const opts = ValidationOptions // not clear
-    // // assertUpgradeSafe(validations, version, opts)
-    // // const currentImplAddress = await getImplementationAddress(provider, proxyAddress)
-    // console.log("main -> deploymentLayout", deploymentLayout)
-    // // const layout = getStorageLayout(validations, version)
-    // const layout2 = getStorageLayout(validations, version2)
-    // // assertStorageUpgradeSafe(layout2, layout, false)
+    await checkForRemoteMultipleImplementationStorage({
+      address,
+      localName: 'InstaImplementationM2'
+    })
     console.log('main passed')
   } catch (error) {
     console.log('not passed', error)
@@ -75,6 +56,40 @@ async function checkForLocalMultipleImplementationStorage (implArr) {
       impl.layout = getStorageLayout(validations, impl.version)
     }
     assertStorageUpgradeSafe(implArr[0].layout, implArr[1].layout, false)
+    console.log('passed')
+  } catch (error) {
+    console.log('not passed', error)
+  }
+}
+
+async function checkForRemoteMultipleImplementationStorage ({ address, localName }) {
+  try {
+    const { implName, implPath } = await findImplByAddress(address)
+    const validations = await readValidations(hre)
+    const t = { context: {} }
+    const buildInfo = await artifacts.getBuildInfo(`${implPath}:${implName}`)
+    const decodeSrc = solcInputOutputDecoder(buildInfo.input, buildInfo.output)
+    t.context.validationRun = validate(buildInfo.output, decodeSrc)
+    t.context.validationData = normalizeValidationData([t.context.validationRun])
+    const { version } = t.context.validationRun[implName]
+    const updatedLayout = getStorageLayout(t.context.validationData, version)
+    const outdatedLayout = removeStorageLayoutMembers(updatedLayout)
+    const manifest = mockManifest({
+      manifestVersion: '3.1',
+      impls: {
+        [version.withoutMetadata]: {
+          address,
+          txHash: '0x6580b51f3edcacacf30d7b4140e4022b65d2a5ba7cbe7e4d91397f4c3b5e8a6b',
+          layout: outdatedLayout
+        }
+      }
+    })
+    const deploymentLayout = await getStorageLayoutForAddress(manifest, validations, address)
+    const localFactory = await ethers.getContractFactory(localName)
+    const localUnlinkedBytecode = getUnlinkedBytecode(validations, localFactory.bytecode)
+    const localversion = getVersion(localUnlinkedBytecode, localFactory.bytecode)
+    const localLayout = getStorageLayout(validations, localversion)
+    assertStorageUpgradeSafe(deploymentLayout, localLayout, false)
     console.log('passed')
   } catch (error) {
     console.log('not passed', error)
@@ -139,10 +154,35 @@ async function getEtherscanSourceCode (address) {
 
 async function findImplByAddress (address) {
   const code = await getEtherscanSourceCode(address)
-  const path = code.split('contracts')[1].split('"')[0]
-  const contractCode = await fs.readFile(`./contracts${path}`, { encoding: 'utf8' })
+  const implPath = `contracts${code.split('contracts')[1].split('"')[0]}`
+  const contractCode = await fs.readFile(implPath, { encoding: 'utf8' })
   const implName = contractCode
     .slice(contractCode.lastIndexOf('contract ') + 9)
     .split(' ')[0]
-  return implName
+  return { implName, implPath }
+}
+
+function mockManifest (data) {
+  const Manifest = {
+    data,
+    async read () {
+      return this.data
+    },
+    async write (data) {
+      this.data = data
+    },
+    async lockedRun (cb) {
+      return cb()
+    }
+  }
+  return Manifest
+}
+
+// Simulate a layout from a version without struct/enum members
+function removeStorageLayoutMembers (layout) {
+  const res = { ...layout, types: { ...layout.types } }
+  for (const id in res.types) {
+    res.types[id] = { ...layout.types[id], members: undefined }
+  }
+  return res
 }
