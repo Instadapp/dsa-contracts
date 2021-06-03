@@ -17,6 +17,8 @@ async function main() {
       console.log(
         "\n\n Deploying Contracts to kovan..."
       );
+    } else {
+      INSTA_INDEX = "0x2971AdFa57b20E5a416aE5a708A8655A9c74f723";
     }
 
     const InstaConnectorsV2Impl = await ethers.getContractFactory("InstaConnectorsV2Impl");
