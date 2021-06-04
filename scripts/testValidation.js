@@ -1,22 +1,24 @@
 const hre = require('hardhat')
 const axios = require('axios')
+const { execute } = require('@getvim/execute')
 
-const { ethers, artifacts, deployments } = hre
+const { ethers, artifacts } = hre
 const fs = require('fs/promises')
 const path = require('path')
 const {
   assertUpgradeSafe,
+  Manifest,
+  getImplementationAddress,
+  ValidationOptions,
+  getCode,
+  extractStorageLayout,
+  // TODO: remove above imports?
   assertStorageUpgradeSafe,
   getStorageLayout,
   getVersion,
   getUnlinkedBytecode,
-  Manifest,
-  getImplementationAddress,
-  ValidationOptions,
-  getStorageLayoutForAddress, // TODO: How to use this?
+  getStorageLayoutForAddress,
   isCurrentValidationData,
-  getCode,
-  extractStorageLayout, // TODO: How to use this?
   solcInputOutputDecoder,
   validate
 } = require('@openzeppelin/upgrades-core')
@@ -62,12 +64,51 @@ async function checkForLocalMultipleImplementationStorage (implArr) {
   }
 }
 
+async function createParentDir (path) {
+  path = path.split('/').slice(0, -1)
+  for (let index = 0; index < path.length; index++) {
+    const dir = path.slice(0, index + 1).join('/')
+    try {
+      await fs.access(dir)
+    } catch (e) {
+      await fs.mkdir(dir)
+    }
+  }
+}
+
 async function checkForRemoteMultipleImplementationStorage ({ address, localName }) {
   try {
-    const { implName, implPath } = await findImplByAddress(address)
+    const code = await getEtherscanSourceCode(address)
+    let codeUpd = code.split('\r\n')
+    const sourseStart = codeUpd.findIndex(s => s.includes('"sources":'))
+    const sourseEnd = codeUpd.findIndex((s, i) => s.startsWith(`${codeUpd[sourseStart].split('"')[0]}},`))
+    codeUpd = codeUpd.slice(sourseStart, sourseEnd)
+    const contracts = []
+    let contractObj = {}
+    for (let index = 0; index < codeUpd.length; index++) {
+      const str = codeUpd[index]
+      if (str.includes('contracts')) {
+        contractObj.path = str.split('"')[1]
+      } else if (str.includes('content": "')) {
+        contractObj.code = str
+          .split('content": "')[1]
+          .replace(/\\"/g, '"')
+          .replace(/\\n/g, '\n')
+        if (contractObj.code.endsWith('"')) contractObj.code = contractObj.code.slice(0, -1)
+        contracts.push(contractObj)
+        contractObj = {}
+      }
+    }
+    for (let index = 0; index < contracts.length; index++) {
+      const contract = contracts[index]
+      await createParentDir(`contracts/test/${contract.path}`)
+      await fs.writeFile(`contracts/test/${contract.path}`, contract.code)
+    }
+    await execute('npx hardhat compile')
+    const { implName } = await findImplByCode(code)
     const validations = await readValidations(hre)
     const t = { context: {} }
-    const buildInfo = await artifacts.getBuildInfo(`${implPath}:${implName}`)
+    const buildInfo = await artifacts.getBuildInfo(`${contracts[0].path}:${implName}`)
     const decodeSrc = solcInputOutputDecoder(buildInfo.input, buildInfo.output)
     t.context.validationRun = validate(buildInfo.output, decodeSrc)
     t.context.validationData = normalizeValidationData([t.context.validationRun])
@@ -154,6 +195,10 @@ async function getEtherscanSourceCode (address) {
 
 async function findImplByAddress (address) {
   const code = await getEtherscanSourceCode(address)
+  return findImplByCode(code)
+}
+
+async function findImplByCode (code) {
   const implPath = `contracts${code.split('contracts')[1].split('"')[0]}`
   const contractCode = await fs.readFile(implPath, { encoding: 'utf8' })
   const implName = contractCode
