@@ -21,6 +21,7 @@ describe("Flashloan Core", () => {
   let accountDSAM2Wallet;
   let deployedContracts;
   let implementationsMapping;
+  let _instaAccountV2ImplM2;
 
   before(async () => {
     [wallet] = await ethers.getSigners();
@@ -33,6 +34,14 @@ describe("Flashloan Core", () => {
     );
 
     masterSigner = await getMasterSigner();
+    const InstaImplementationM2 = await ethers.getContractFactory("InstaImplementationM2");
+    _instaAccountV2ImplM2 = await InstaImplementationM2.deploy(
+      "0x2971AdFa57b20E5a416aE5a708A8655A9c74f723",
+      "0x97b0B3A8bDeFE8cB9563a3c610019Ad10DB8aD11",
+      "0x2a1739d7f07d40e76852ca8f0d82275aa087992f"
+    );
+    await _instaAccountV2ImplM2.deployed();
+    console.log("instaAccountV2ImplM2", _instaAccountV2ImplM2.address)
   });
 
   describe("test Implementation M2", () => {
@@ -50,7 +59,7 @@ describe("Flashloan Core", () => {
       const tx = await implementationsMapping
         .connect(masterSigner)
         .addImplementation(
-          accountDSAM2Wallet.address,
+          _instaAccountV2ImplM2.address,
           instaAccountV2ImplM2Sigs
         );
       await tx.wait();
