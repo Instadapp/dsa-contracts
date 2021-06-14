@@ -32,10 +32,11 @@
             "v2": {
                 "InstaAccountV2": "0x28846f4051EB05594B3fF9dE76b7B5bf00431155",
                 "InstaConnectorsV2Proxy": "0x01fEF4d2B513C9F69E34b2f93Ef707FA9Ff60109",
-                "InstaConnectorsV2": "0x0a0a82D2F86b9E46AE60E22FCE4e8b916F858Ddc",
+                "InstaConnectorsV2": "0x2A00684bFAb9717C21271E0751BCcb7d2D763c88",
                 "InstaImplementations": "0x39d3d5e7c11D61E072511485878dd84711c19d4A",
                 "InstaDefaultImplementation": "0x2240770bEc8cB22ed716F2DCcC4F24980A904bC5",
-                "InstaImplementationM1": "0x7ECE9E841BdCfa3A482331E2b6b853e497Bd7C9f"
+                "InstaImplementationM1": "0x4aec8c5b1cf3498bef061e13d8e7f646feeb7029",
+                "InstaImplementationM2": "0x2638c8950e04ef002d083f62aeaa10ee32f1ae60"
             }
         }
     }
