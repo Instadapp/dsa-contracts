@@ -32,7 +32,7 @@
     "ethereum-waffle": "^3.2.1",
     "ethereumjs-abi": "^0.6.8",
     "ethers": "^5.0.26",
-    "hardhat": "^2.0.8",
+    "hardhat": "^2.4.0",
     "hardhat-deploy": "^0.7.0-beta.44",
     "hardhat-deploy-ethers": "^0.3.0-beta.7",
     "replace-in-file": "^5.0.2",

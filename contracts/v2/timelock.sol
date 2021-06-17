@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.0;
 
-import "@openzeppelin/contracts/access/TimelockController.sol";
-import "@openzeppelin/contracts/proxy/Initializable.sol.sol";
+import {TimelockController} from "@openzeppelin/contracts/access/TimelockController.sol";
+import { Initializable } from "@openzeppelin/contracts/proxy/Initializable.sol";
 
 interface IndexInterface {
     function master() external view returns (address);
@@ -17,12 +17,12 @@ contract InstaTimelockContract is Initializable, TimelockController {
 
     constructor() public {
         address[] memory masterSig = new address[](1);
-        masterSig[i] = instaIndex.master();
-        uint256 minDelay = 3 days;
+        masterSig[0] = instaIndex.master();
+        uint256 minDelay = 10 days;
         TimelockController(minDelay, masterSig, masterSig);
     }
 
-    function initializer() external initializer {
+    function initialize() external initializer() {
         instaIndex.updateMaster();
         instaIndex.changeMaster(governanceTimelock);
     }
