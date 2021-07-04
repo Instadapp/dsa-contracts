@@ -1,7 +1,7 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
-import { Variables } from "./variables.sol";
+import { Variables } from "../variables.sol";
 
 /**
  * @title InstaAccountV2.
