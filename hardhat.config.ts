@@ -1,21 +1,16 @@
-// Buidler
-require("@nomiclabs/hardhat-ethers");
-require("@nomiclabs/hardhat-waffle");
-require("@nomiclabs/hardhat-web3")
-require("hardhat-deploy");
-require("hardhat-deploy-ethers");
-
-require('@openzeppelin/hardhat-upgrades');
-require("@tenderly/hardhat-tenderly");
-
-require("hardhat-gas-reporter");
-require("solidity-coverage");
-
-require("@nomiclabs/hardhat-etherscan");
-
-require("dotenv").config();
-
-const { utils } = require("ethers");
+import "dotenv/config";
+import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-waffle";
+import "@nomiclabs/hardhat-web3";
+import "@nomiclabs/hardhat-etherscan";
+import "@typechain/hardhat";
+import "hardhat-deploy";
+import "hardhat-deploy-ethers";
+import "@openzeppelin/hardhat-upgrades";
+import "@tenderly/hardhat-tenderly";
+import "hardhat-gas-reporter";
+import "solidity-coverage";
+import { utils } from "ethers";
 
 // const INFURA_ID = process.env.INFURA_ID;
 // assert.ok(INFURA_ID, "no Infura ID in process.env");
@@ -55,14 +50,14 @@ module.exports = {
       url: `https://eth.alchemyapi.io/v2/${ALCHEMY_ID}`,
       accounts: [`0x${PRIVATE_KEY}`],
       timeout: 150000,
-      gasPrice: parseInt(utils.parseUnits("160", "gwei"))
+      gasPrice: utils.parseUnits("160", "gwei").toNumber()
     },
     matic: {
       // url: `https://eth.alchemyapi.io/v2/${ALCHEMY_ID}`,
       url: "https://rpc-mainnet.maticvigil.com/",
       accounts: [`0x${PRIVATE_KEY}`],
       timeout: 150000,
-      gasPrice: parseInt(utils.parseUnits("1", "gwei"))
+      gasPrice: utils.parseUnits("1", "gwei").toNumber()
     }
   },
   solidity: {
@@ -89,7 +84,10 @@ module.exports = {
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN
-  }
-
+  },
+  typechain: {
+    outDir: "typechain",
+    target: "ethers-v5",
+  },
 };
 
