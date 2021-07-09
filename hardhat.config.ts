@@ -13,7 +13,6 @@ import "solidity-coverage";
 import { utils } from "ethers";
 import { HardhatUserConfig } from "hardhat/config";
 
-
 const ALCHEMY_ID = process.env.ALCHEMY_ID;
 if (!ALCHEMY_ID) {
   throw new Error("Please Set ALCHEMY_ID in .env");
@@ -30,7 +29,7 @@ const config: HardhatUserConfig = {
   tenderly: {
     project: "team-development",
     username: "InstaDApp",
-    forkNetwork: "1"
+    forkNetwork: "1",
   },
   networks: {
     hardhat: {
@@ -43,21 +42,21 @@ const config: HardhatUserConfig = {
     },
     kovan: {
       url: `https://eth-kovan.alchemyapi.io/v2/${ALCHEMY_ID}`,
-      accounts: [`0x${PRIVATE_KEY}`]
+      accounts: [`0x${PRIVATE_KEY}`],
     },
     mainnet: {
       url: `https://eth.alchemyapi.io/v2/${ALCHEMY_ID}`,
       accounts: [`0x${PRIVATE_KEY}`],
       timeout: 150000,
-      gasPrice: utils.parseUnits("160", "gwei").toNumber()
+      gasPrice: utils.parseUnits("160", "gwei").toNumber(),
     },
     matic: {
       // url: `https://eth.alchemyapi.io/v2/${ALCHEMY_ID}`,
       url: "https://rpc-mainnet.maticvigil.com/",
       accounts: [`0x${PRIVATE_KEY}`],
       timeout: 150000,
-      gasPrice: utils.parseUnits("1", "gwei").toNumber()
-    }
+      gasPrice: utils.parseUnits("1", "gwei").toNumber(),
+    },
   },
   solidity: {
     compilers: [
@@ -78,19 +77,19 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer: { enabled: false },
         },
-      }
-    ]
+      },
+    ],
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN
+    apiKey: process.env.ETHERSCAN,
   },
   typechain: {
     outDir: "typechain",
     target: "ethers-v5",
   },
   mocha: {
-    timeout: 200000
-  }
+    timeout: 200000,
+  },
 };
 
 export default config;
