@@ -1,25 +1,36 @@
-const { expect, use } = require("chai");
-const hre = require("hardhat");
-const { web3, deployments, waffle } = hre;
+import { Signer } from "@ethersproject/abstract-signer";
+import { expect, use } from "chai";
+import { solidity } from "ethereum-waffle";
+import { web3, deployments, waffle, ethers } from "hardhat";
+import addresses from "../scripts/constant/addresses";
+import deployConnector from "../scripts/deployConnector";
+import deployContracts from "../scripts/deployContracts";
+import encodeSpells from "../scripts/encodeSpells";
+import getMasterSigner from "../scripts/getMasterSigner";
+import {
+  ConnectCompound,
+  ConnectCompound__factory,
+  ConnectV2Auth,
+  ConnectV2Auth__factory,
+  ConnectV2EmitEvent__factory,
+  InstaAccountV2,
+  InstaConnectorsV2,
+  InstaDefaultImplementation,
+  InstaDefaultImplementationV2,
+  InstaDefaultImplementationV2__factory,
+  InstaDefaultImplementation__factory,
+  InstaImplementationM1,
+  InstaImplementationM1__factory,
+  InstaImplementationM2,
+  InstaImplementationM2__factory,
+  InstaImplementations,
+  InstaIndex,
+} from "../typechain";
+
+use(solidity);
 const { provider, deployContract } = waffle;
 
-const deployContracts = require("../scripts/deployContracts");
-const deployConnector = require("../scripts/deployConnector");
-const enableConnector = require("../scripts/enableConnector");
-
-const encodeSpells = require("../scripts/encodeSpells.js");
-const expectEvent = require("../scripts/expectEvent");
-
-const getMasterSigner = require("../scripts/getMasterSigner");
-
-const addresses = require("../scripts/constant/addresses");
-const abis = require("../scripts/constant/abis");
-
-const compoundArtifact = require("../artifacts/contracts/v2/connectors/test/compound.test.sol/ConnectCompound.json");
-const connectAuth = require("../artifacts/contracts/v2/connectors/test/auth.test.sol/ConnectV2Auth.json");
-const defaultTest2 = require("../artifacts/contracts/v2/accounts/test/implementation_default.v2.test.sol/InstaDefaultImplementationV2.json");
-const { ethers } = require("hardhat");
-const { solidity } = require("ethereum-waffle");
+const defaultV2TestArtifact = require("../artifacts/contracts/v2/accounts/test/implementation_default.v2.test.sol/InstaDefaultImplementationV2.json");
 
 describe("Core", function () {
   const address_zero = "0x0000000000000000000000000000000000000000";
@@ -31,14 +42,14 @@ describe("Core", function () {
   const maxValue =
     "115792089237316195423570985008687907853269984665640564039457584007913129639935";
 
-  let instaConnectorsV2,
-    implementationsMapping,
-    instaAccountV2Proxy,
-    instaAccountV2ImplM1,
-    instaAccountV2ImplM2,
-    instaAccountV2DefaultImpl,
-    instaAccountV2DefaultImplV2,
-    instaIndex;
+  let instaConnectorsV2: InstaConnectorsV2,
+    implementationsMapping: InstaImplementations,
+    instaAccountV2Proxy: InstaAccountV2,
+    instaAccountV2ImplM1: InstaImplementationM1,
+    instaAccountV2ImplM2: InstaImplementationM2,
+    instaAccountV2DefaultImpl: InstaDefaultImplementation,
+    instaAccountV2DefaultImplV2: InstaDefaultImplementationV2,
+    instaIndex: InstaIndex;
 
   const instaAccountV2DefaultImplSigs = [
     "enable(address)",
@@ -62,19 +73,17 @@ describe("Core", function () {
     "castWithFlashloan(string[],bytes[],address)",
   ].map((a) => web3.utils.keccak256(a).slice(0, 10));
 
-  let masterSigner;
+  let masterSigner: Signer;
 
-  let acountV2DsaM1Wallet0;
-  let acountV2DsaM2Wallet0;
-  let acountV2DsaDefaultWallet0;
-  let acountV2DsaDefaultWalletM2;
-  let InstaImplementationM1Factory;
-  let InstaImplementationM2Factory;
-  let InstaDefaultImplementationV2Factory;
-  let AuthFactory;
-  let ConnectV2EmitEventFactory;
+  let accountV2DsaM1Wallet0: InstaImplementationM1;
+  let accountV2DsaM2Wallet0: InstaImplementationM2;
+  let accountV2DsaDefaultWallet0: InstaDefaultImplementation;
+  let accountV2DsaDefaultWalletM2: InstaDefaultImplementationV2;
 
-  let authV3, authV4, compound, compound2;
+  let authV3: ConnectV2Auth,
+    authV4: ConnectV2Auth,
+    compound: ConnectCompound,
+    compound2: ConnectCompound;
 
   const wallets = provider.getWallets();
   let [wallet0, wallet1, wallet2, wallet3] = wallets;
@@ -90,25 +99,8 @@ describe("Core", function () {
 
     masterSigner = await getMasterSigner();
 
-    instaAccountV2DefaultImplV2 = await deployContract(
-      masterSigner,
-      defaultTest2,
-      []
-    );
-
-    InstaImplementationM1Factory = await ethers.getContractFactory(
-      "InstaImplementationM1"
-    );
-    InstaImplementationM2Factory = await ethers.getContractFactory(
-      "InstaImplementationM2"
-    );
-
-    InstaDefaultImplementationV2Factory = await ethers.getContractFactory(
-      "InstaDefaultImplementationV2"
-    );
-    AuthFactory = await ethers.getContractFactory("ConnectV2Auth");
-    ConnectV2EmitEventFactory = await ethers.getContractFactory(
-      "ConnectV2EmitEvent"
+    instaAccountV2DefaultImplV2 = <InstaDefaultImplementationV2>(
+      await deployContract(masterSigner, defaultV2TestArtifact, [])
     );
   });
 
@@ -266,28 +258,29 @@ describe("Core", function () {
 
   describe("Auth", function () {
     it("Should build DSA v2", async function () {
+      const signer = (await ethers.getSigners())[0];
       const tx = await instaIndex
         .connect(wallet0)
         .build(wallet0.address, 2, wallet0.address);
       const dsaWalletAddress = "0xC13920c134d38408871E7AF5C102894CB5180B92";
-      expect((await tx.wait()).events[1].args.account).to.be.equal(
-        dsaWalletAddress
+      const receipt = await tx.wait();
+
+      expect(receipt.events?.[1].args?.account).to.be.equal(dsaWalletAddress);
+      accountV2DsaM1Wallet0 = InstaImplementationM1__factory.connect(
+        dsaWalletAddress,
+        signer
       );
-      acountV2DsaM1Wallet0 = await ethers.getContractAt(
-        "InstaImplementationM1",
-        dsaWalletAddress
+      accountV2DsaM2Wallet0 = InstaImplementationM2__factory.connect(
+        dsaWalletAddress,
+        signer
       );
-      acountV2DsaM2Wallet0 = await ethers.getContractAt(
-        "InstaImplementationM2",
-        dsaWalletAddress
+      accountV2DsaDefaultWallet0 = InstaDefaultImplementation__factory.connect(
+        dsaWalletAddress,
+        signer
       );
-      acountV2DsaDefaultWallet0 = await ethers.getContractAt(
-        "InstaDefaultImplementation",
-        dsaWalletAddress
-      );
-      acountV2DsaDefaultWalletM2 = await ethers.getContractAt(
-        "InstaDefaultImplementationV2",
-        dsaWalletAddress
+      accountV2DsaDefaultWalletM2 = InstaDefaultImplementationV2__factory.connect(
+        dsaWalletAddress,
+        signer
       );
     });
 
@@ -304,10 +297,10 @@ describe("Core", function () {
         .addConnectors(["authV2"], [addresses.connectors["authV2"]]);
       const receipt = await tx.wait();
       const events = receipt.events;
-      expect(events[0].args.connectorNameHash).to.be.eq(
+      expect(events?.[0].args?.connectorNameHash).to.be.eq(
         web3.utils.keccak256(connectorName)
       );
-      expect(events[0].args.connectorName).to.be.eq(connectorName);
+      expect(events?.[0].args?.connectorName).to.be.eq(connectorName);
     });
 
     it("Should deploy EmitEvent connector", async function () {
@@ -323,10 +316,10 @@ describe("Core", function () {
         .addConnectors(["emitEvent"], [addresses.connectors["emitEvent"]]);
       const receipt = await tx.wait();
       const events = receipt.events;
-      expect(events[0].args.connectorNameHash).to.be.eq(
+      expect(events?.[0].args?.connectorNameHash).to.be.eq(
         web3.utils.keccak256(connectorName)
       );
-      expect(events[0].args.connectorName).to.be.eq(connectorName);
+      expect(events?.[0].args?.connectorName).to.be.eq(connectorName);
     });
 
     it("Should add wallet1 as auth", async function () {
@@ -335,17 +328,23 @@ describe("Core", function () {
         method: "add",
         args: [wallet1.address],
       };
-      const tx = await acountV2DsaM1Wallet0
+      const tx = await accountV2DsaM1Wallet0
         .connect(wallet0)
         .cast(...encodeSpells([spells]), wallet1.address);
 
       await expect(tx).to.emit(
-        InstaImplementationM1Factory.attach(acountV2DsaM1Wallet0.address),
+        InstaImplementationM1__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
 
       await expect(tx).to.emit(
-        AuthFactory.attach(acountV2DsaM1Wallet0.address),
+        ConnectV2Auth__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogAddAuth"
       );
     });
@@ -356,16 +355,22 @@ describe("Core", function () {
         method: "add",
         args: [wallet2.address],
       };
-      const tx = await acountV2DsaM2Wallet0
+      const tx = await accountV2DsaM2Wallet0
         .connect(wallet1)
         .castWithFlashloan(...encodeSpells([spells]), wallet1.address);
       await expect(tx).to.emit(
-        InstaImplementationM2Factory.attach(acountV2DsaM2Wallet0.address),
+        InstaImplementationM2__factory.connect(
+          accountV2DsaM2Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
 
       await expect(tx).to.emit(
-        AuthFactory.attach(acountV2DsaM2Wallet0.address),
+        ConnectV2Auth__factory.connect(
+          accountV2DsaM2Wallet0.address,
+          masterSigner
+        ),
         "LogAddAuth"
       );
     });
@@ -376,17 +381,23 @@ describe("Core", function () {
         method: "remove",
         args: [wallet1.address],
       };
-      const tx = await acountV2DsaM1Wallet0
+      const tx = await accountV2DsaM1Wallet0
         .connect(wallet2)
         .cast(...encodeSpells([spells]), wallet2.address);
 
       await expect(tx).to.emit(
-        InstaImplementationM2Factory.attach(acountV2DsaM2Wallet0.address),
+        InstaImplementationM2__factory.connect(
+          accountV2DsaM2Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
 
       await expect(tx).to.emit(
-        AuthFactory.attach(acountV2DsaM2Wallet0.address),
+        ConnectV2Auth__factory.connect(
+          accountV2DsaM2Wallet0.address,
+          masterSigner
+        ),
         "LogRemoveAuth"
       );
     });
@@ -402,45 +413,47 @@ describe("Core", function () {
     });
 
     it("Should add wallet3 as auth using default implmentation", async function () {
-      const tx = await acountV2DsaDefaultWallet0
+      const tx = await accountV2DsaDefaultWallet0
         .connect(wallet0)
         .enable(wallet3.address);
 
-      expect(await acountV2DsaDefaultWallet0.isAuth(wallet3.address)).to.be
+      expect(await accountV2DsaDefaultWallet0.isAuth(wallet3.address)).to.be
         .true;
       await expect(tx).to.emit(
-        InstaDefaultImplementationV2Factory.attach(
-          acountV2DsaDefaultWallet0.address
+        InstaDefaultImplementationV2__factory.connect(
+          accountV2DsaDefaultWallet0.address,
+          masterSigner
         ),
         "LogEnableUser"
       );
     });
 
     it("Should remove wallet0 as auth using default implmentation", async function () {
-      const tx = await acountV2DsaDefaultWallet0
+      const tx = await accountV2DsaDefaultWallet0
         .connect(wallet3)
         .disable(wallet0.address);
 
-      expect(await acountV2DsaDefaultWallet0.isAuth(wallet0.address)).to.be
+      expect(await accountV2DsaDefaultWallet0.isAuth(wallet0.address)).to.be
         .false;
       await expect(tx).to.emit(
-        InstaDefaultImplementationV2Factory.attach(
-          acountV2DsaDefaultWallet0.address
+        InstaDefaultImplementationV2__factory.connect(
+          accountV2DsaDefaultWallet0.address,
+          masterSigner
         ),
         "LogDisableUser"
       );
     });
 
     it("Should switch shield", async function () {
-      const tx = await acountV2DsaDefaultWalletM2
+      const tx = await accountV2DsaDefaultWalletM2
         .connect(wallet3)
         .switchShield(true);
-      const receipt = await tx.wait();
 
-      expect(await acountV2DsaDefaultWalletM2.shield()).to.be.true;
+      expect(await accountV2DsaDefaultWalletM2.shield()).to.be.true;
       await expect(tx).to.emit(
-        InstaDefaultImplementationV2Factory.attach(
-          acountV2DsaDefaultWalletM2.address
+        InstaDefaultImplementationV2__factory.connect(
+          accountV2DsaDefaultWalletM2.address,
+          masterSigner
         ),
         "LogSwitchShield"
       );
@@ -453,21 +466,20 @@ describe("Core", function () {
         .connect(wallet0)
         .build(wallet1.address, 2, wallet1.address);
       const dsaWalletAddress = "0x1ca642f25E95D43B7BCbf7570C9bC7Ef1d24ed37";
-      expect((await tx.wait()).events[1].args.account).to.be.equal(
-        dsaWalletAddress
-      );
+      const receipt = await tx.wait();
+      expect(receipt?.events?.[1].args?.account).to.be.equal(dsaWalletAddress);
 
-      acountV2DsaM1Wallet0 = await ethers.getContractAt(
-        "InstaImplementationM1",
-        dsaWalletAddress
+      accountV2DsaM1Wallet0 = <InstaImplementationM1>(
+        await ethers.getContractAt("InstaImplementationM1", dsaWalletAddress)
       );
-      acountV2DsaM2Wallet0 = await ethers.getContractAt(
-        "InstaImplementationM2",
-        dsaWalletAddress
+      accountV2DsaM2Wallet0 = <InstaImplementationM2>(
+        await ethers.getContractAt("InstaImplementationM2", dsaWalletAddress)
       );
-      acountV2DsaDefaultWallet0 = await ethers.getContractAt(
-        "InstaDefaultImplementation",
-        dsaWalletAddress
+      accountV2DsaDefaultWallet0 = <InstaDefaultImplementation>(
+        await ethers.getContractAt(
+          "InstaDefaultImplementation",
+          dsaWalletAddress
+        )
       );
     });
 
@@ -483,11 +495,12 @@ describe("Core", function () {
         .connect(masterSigner)
         .addConnectors(["authV1"], [addresses.connectors["authV1"]]);
       const receipt = await tx.wait();
-      const events = receipt.events;
-      expect(events[0].args.connectorNameHash).to.be.eq(
+      const events = receipt?.events;
+
+      expect(events?.[0].args?.connectorNameHash).to.be.eq(
         web3.utils.keccak256(connectorName)
       );
-      expect(events[0].args.connectorName).to.be.eq(connectorName);
+      expect(events?.[0].args?.connectorName).to.be.eq(connectorName);
     });
 
     it("Should emit event from wallet1", async function () {
@@ -496,15 +509,21 @@ describe("Core", function () {
         method: "add",
         args: [wallet3.address],
       };
-      const tx = await acountV2DsaM1Wallet0
+      const tx = await accountV2DsaM1Wallet0
         .connect(wallet1)
         .cast(...encodeSpells([spells]), wallet3.address);
       await expect(tx).to.emit(
-        InstaImplementationM1Factory.attach(acountV2DsaM1Wallet0.address),
+        InstaImplementationM1__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
       await expect(tx).to.emit(
-        AuthFactory.attach(acountV2DsaM1Wallet0.address),
+        ConnectV2Auth__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogAddAuth"
       );
     });
@@ -515,18 +534,22 @@ describe("Core", function () {
         method: "emitEvent",
         args: [],
       };
-      const tx = await acountV2DsaM1Wallet0
+      const tx = await accountV2DsaM1Wallet0
         .connect(wallet1)
         .cast(...encodeSpells([spells]), wallet3.address);
-      // const receipt = await tx.wait();
-      // console.log(receipt.events);
       expect(tx).emit(
-        InstaImplementationM1Factory.attach(acountV2DsaM1Wallet0.address),
+        InstaImplementationM1__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
 
       expect(tx).emit(
-        ConnectV2EmitEventFactory.attach(acountV2DsaM1Wallet0.address),
+        ConnectV2EmitEvent__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogEmitEvent"
       );
     });
@@ -534,10 +557,16 @@ describe("Core", function () {
 
   describe("Connectors", function () {
     before(async function () {
-      compound = await deployContract(masterSigner, compoundArtifact, []);
-      authV3 = await deployContract(masterSigner, connectAuth, []);
-      authV4 = await deployContract(masterSigner, connectAuth, []);
-      compound2 = await deployContract(masterSigner, compoundArtifact, []);
+      const compoundDeployer = <ConnectCompound__factory>(
+        await ethers.getContractFactory("ConnectCompound")
+      );
+      compound = await compoundDeployer.deploy();
+      const authDeployer = <ConnectV2Auth__factory>(
+        await ethers.getContractFactory("ConnectV2Auth")
+      );
+      authV3 = await authDeployer.deploy();
+      authV4 = await authDeployer.deploy();
+      compound2 = await compoundDeployer.deploy();
     });
 
     it("Connector adding should work", async function () {
@@ -554,10 +583,11 @@ describe("Core", function () {
         .addConnectors(connectorsArray, addressesArray);
       const receipt = await tx.wait();
       const events = receipt.events;
-      expect(events[0].args.connectorNameHash).to.be.eq(
+
+      expect(events?.[0].args?.connectorNameHash).to.be.eq(
         web3.utils.keccak256(connectorsArray[0])
       );
-      expect(events[0].args.connectorName).to.be.eq(connectorsArray[0]);
+      expect(events?.[0].args?.connectorName).to.be.eq(connectorsArray[0]);
 
       let [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(
         connectorsArray
@@ -597,11 +627,11 @@ describe("Core", function () {
         .addConnectors(connectorsArray, addressesArray);
       const receipt = await tx.wait();
       const events = receipt.events;
-      events.forEach((event, i) => {
-        expect(event.args.connectorNameHash).to.be.eq(
+      events?.forEach((event, i) => {
+        expect(event.args?.connectorNameHash).to.be.eq(
           web3.utils.keccak256(connectorsArray[i])
         );
-        expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
+        expect(event.args?.connectorName).to.be.eq(connectorsArray[i]);
       });
       const [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(
         connectorsArray
@@ -622,11 +652,11 @@ describe("Core", function () {
         .removeConnectors(connectorsArray);
       const receipt = await tx.wait();
       const events = receipt.events;
-      events.forEach((event, i) => {
-        expect(event.args.connectorNameHash).to.be.eq(
+      events?.forEach((event, i) => {
+        expect(event.args?.connectorNameHash).to.be.eq(
           web3.utils.keccak256(connectorsArray[i])
         );
-        expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
+        expect(event.args?.connectorName).to.be.eq(connectorsArray[i]);
       });
       const [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(
         connectorsArray
@@ -647,11 +677,11 @@ describe("Core", function () {
         .removeConnectors(connectorsArray);
       const receipt = await tx.wait();
       const events = receipt.events;
-      events.forEach((event, i) => {
-        expect(event.args.connectorNameHash).to.be.eq(
+      events?.forEach((event, i) => {
+        expect(event.args?.connectorNameHash).to.be.eq(
           web3.utils.keccak256(connectorsArray[i])
         );
-        expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
+        expect(event.args?.connectorName).to.be.eq(connectorsArray[i]);
       });
       const [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(
         connectorsArray
@@ -673,11 +703,11 @@ describe("Core", function () {
         .addConnectors(connectorsArray, addressesArray);
       const receipt = await tx.wait();
       const events = receipt.events;
-      events.forEach((event, i) => {
-        expect(event.args.connectorNameHash).to.be.eq(
+      events?.forEach((event, i) => {
+        expect(event.args?.connectorNameHash).to.be.eq(
           web3.utils.keccak256(connectorsArray[i])
         );
-        expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
+        expect(event.args?.connectorName).to.be.eq(connectorsArray[i]);
       });
       const [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(
         connectorsArray
@@ -716,11 +746,11 @@ describe("Core", function () {
         .addConnectors(connectorsArray, addressesArray);
       const receipt = await tx.wait();
       const events = receipt.events;
-      events.forEach((event, i) => {
-        expect(event.args.connectorNameHash).to.be.eq(
+      events?.forEach((event, i) => {
+        expect(event.args?.connectorNameHash).to.be.eq(
           web3.utils.keccak256(connectorsArray[i])
         );
-        expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
+        expect(event.args?.connectorName).to.be.eq(connectorsArray[i]);
       });
       const [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(
         connectorsArray
@@ -833,11 +863,11 @@ describe("Core", function () {
         .addConnectors(connectorsArray, addressesArray);
       const receipt = await tx.wait();
       const events = receipt.events;
-      events.forEach((event, i) => {
-        expect(event.args.connectorNameHash).to.be.eq(
+      events?.forEach((event, i) => {
+        expect(event.args?.connectorNameHash).to.be.eq(
           web3.utils.keccak256(connectorsArray[i])
         );
-        expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
+        expect(event.args?.connectorName).to.be.eq(connectorsArray[i]);
       });
       const [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(
         connectorsArray
@@ -847,7 +877,7 @@ describe("Core", function () {
 
     it("Should be a deployed connector", async function () {
       const connectorsArray = ["compound"];
-      [isOk, addresses_] = await instaConnectorsV2.isConnectors(
+      let [isOk, addresses_] = await instaConnectorsV2.isConnectors(
         connectorsArray
       );
       expect(isOk).to.be.true;
@@ -859,13 +889,16 @@ describe("Core", function () {
         method: "deposit",
         args: [ethAddr, ethers.utils.parseEther("1.0"), 0, 0],
       };
-      const tx = await acountV2DsaM1Wallet0
+      const tx = await accountV2DsaM1Wallet0
         .connect(wallet1)
         .cast(...encodeSpells([spells]), wallet3.address, {
           value: ethers.utils.parseEther("1.0"),
         });
       expect(tx).emit(
-        InstaImplementationM1Factory.attach(acountV2DsaM1Wallet0.address),
+        InstaImplementationM1__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
     });
@@ -877,7 +910,7 @@ describe("Core", function () {
         args: [ethAddr, ethers.utils.parseEther("0.5"), 0, 0],
       };
 
-      const tx = await acountV2DsaM1Wallet0
+      const tx = await accountV2DsaM1Wallet0
         .connect(wallet1)
         .cast(...encodeSpells([spells]), wallet3.address);
 
@@ -887,13 +920,16 @@ describe("Core", function () {
 
       await expect(tx)
         .to.emit(
-          CompoundFactory.attach(acountV2DsaM1Wallet0.address),
+          CompoundFactory.attach(accountV2DsaM1Wallet0.address),
           "LogDeposit"
         )
         .withArgs(ethAddr, cEthAddr, ethers.utils.parseEther("0.5"), 0, 0);
 
       await expect(tx).to.emit(
-        InstaImplementationM1Factory.attach(acountV2DsaM1Wallet0.address),
+        InstaImplementationM1__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
     });
@@ -905,12 +941,15 @@ describe("Core", function () {
         args: [ethAddr, maxValue, 0, 0],
       };
 
-      const tx = await acountV2DsaM1Wallet0
+      const tx = await accountV2DsaM1Wallet0
         .connect(wallet1)
         .cast(...encodeSpells([spells]), wallet3.address);
 
       await expect(tx).to.emit(
-        InstaImplementationM1Factory.attach(acountV2DsaM1Wallet0.address),
+        InstaImplementationM1__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
     });
@@ -929,7 +968,7 @@ describe("Core", function () {
         },
       ];
 
-      const tx = await acountV2DsaM1Wallet0
+      const tx = await accountV2DsaM1Wallet0
         .connect(wallet1)
         .cast(...encodeSpells(spells), wallet3.address);
 
@@ -938,18 +977,21 @@ describe("Core", function () {
       );
 
       await expect(tx).to.emit(
-        InstaImplementationM1Factory.attach(acountV2DsaM1Wallet0.address),
+        InstaImplementationM1__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
       await expect(tx)
         .to.emit(
-          CompoundFactory.attach(acountV2DsaM1Wallet0.address),
+          CompoundFactory.attach(accountV2DsaM1Wallet0.address),
           "LogBorrow"
         )
         .withArgs(daiAddr, cDaiAddr, ethers.utils.parseEther("10"), 0, 123);
       await expect(tx)
         .to.emit(
-          CompoundFactory.attach(acountV2DsaM1Wallet0.address),
+          CompoundFactory.attach(accountV2DsaM1Wallet0.address),
           "LogPayback"
         )
         .withArgs(daiAddr, cDaiAddr, ethers.utils.parseEther("10"), 123, 0);
@@ -962,7 +1004,7 @@ describe("Core", function () {
         args: [ethAddr, ethers.utils.parseEther("0.5"), 0, 0],
       };
 
-      const tx = await acountV2DsaM1Wallet0
+      const tx = await accountV2DsaM1Wallet0
         .connect(wallet1)
         .cast(...encodeSpells([spells]), wallet3.address);
 
@@ -970,12 +1012,15 @@ describe("Core", function () {
         "ConnectCompound"
       );
       await expect(tx).to.emit(
-        InstaImplementationM1Factory.attach(acountV2DsaM1Wallet0.address),
+        InstaImplementationM1__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
       await expect(tx)
         .to.emit(
-          CompoundFactory.attach(acountV2DsaM1Wallet0.address),
+          CompoundFactory.attach(accountV2DsaM1Wallet0.address),
           "LogWithdraw"
         )
         .withArgs(ethAddr, cEthAddr, ethers.utils.parseEther("0.5"), 0, 0);
@@ -1007,13 +1052,16 @@ describe("Core", function () {
         method: "deposit",
         args: [ethAddr, ethers.utils.parseEther("5.0"), 0, 0],
       };
-      const tx = await acountV2DsaM1Wallet0
+      const tx = await accountV2DsaM1Wallet0
         .connect(wallet1)
         .cast(...encodeSpells([spells]), wallet3.address, {
           value: ethers.utils.parseEther("5.0"),
         });
       await expect(tx).to.emit(
-        InstaImplementationM1Factory.attach(acountV2DsaM1Wallet0.address),
+        InstaImplementationM1__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
     });
@@ -1029,20 +1077,23 @@ describe("Core", function () {
       const daiContract = new ethers.Contract(daiAddr, abi, provider);
 
       expect(
-        await daiContract.balanceOf(acountV2DsaM1Wallet0.address)
+        await daiContract.balanceOf(accountV2DsaM1Wallet0.address)
       ).to.equal(0);
 
-      const tx = await acountV2DsaM1Wallet0
+      const tx = await accountV2DsaM1Wallet0
         .connect(wallet1)
         .cast(...encodeSpells([spells]), wallet3.address);
 
       await expect(tx).to.emit(
-        InstaImplementationM1Factory.attach(acountV2DsaM1Wallet0.address),
+        InstaImplementationM1__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
 
       expect(
-        await daiContract.balanceOf(acountV2DsaM1Wallet0.address)
+        await daiContract.balanceOf(accountV2DsaM1Wallet0.address)
       ).to.not.equal(0);
     });
 
@@ -1057,7 +1108,7 @@ describe("Core", function () {
         args: [
           usdcAddr,
           daiAddr,
-          await daiContract.balanceOf(acountV2DsaM1Wallet0.address),
+          await daiContract.balanceOf(accountV2DsaM1Wallet0.address),
           0,
           0,
           0,
@@ -1065,26 +1116,29 @@ describe("Core", function () {
       };
 
       expect(
-        await daiContract.balanceOf(acountV2DsaM1Wallet0.address)
+        await daiContract.balanceOf(accountV2DsaM1Wallet0.address)
       ).to.not.equal(0);
       expect(
-        await usdcContract.balanceOf(acountV2DsaM1Wallet0.address)
+        await usdcContract.balanceOf(accountV2DsaM1Wallet0.address)
       ).to.equal(0);
 
-      const tx = await acountV2DsaM1Wallet0
+      const tx = await accountV2DsaM1Wallet0
         .connect(wallet1)
         .cast(...encodeSpells([spells]), wallet3.address);
 
       await expect(tx).to.emit(
-        InstaImplementationM1Factory.attach(acountV2DsaM1Wallet0.address),
+        InstaImplementationM1__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
 
       expect(
-        await daiContract.balanceOf(acountV2DsaM1Wallet0.address)
+        await daiContract.balanceOf(accountV2DsaM1Wallet0.address)
       ).to.equal(0);
       expect(
-        await usdcContract.balanceOf(acountV2DsaM1Wallet0.address)
+        await usdcContract.balanceOf(accountV2DsaM1Wallet0.address)
       ).to.not.equal(0);
     });
 
@@ -1099,19 +1153,22 @@ describe("Core", function () {
       const daiContract = new ethers.Contract(daiAddr, abi, provider);
 
       expect(
-        await daiContract.balanceOf(acountV2DsaM1Wallet0.address)
+        await daiContract.balanceOf(accountV2DsaM1Wallet0.address)
       ).to.equal(0);
 
-      const tx = await acountV2DsaM1Wallet0
+      const tx = await accountV2DsaM1Wallet0
         .connect(wallet1)
         .cast(...encodeSpells([spells]), wallet3.address);
       await expect(tx).to.emit(
-        InstaImplementationM1Factory.attach(acountV2DsaM1Wallet0.address),
+        InstaImplementationM1__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
 
       expect(
-        await daiContract.balanceOf(acountV2DsaM1Wallet0.address)
+        await daiContract.balanceOf(accountV2DsaM1Wallet0.address)
       ).to.not.equal(0);
     });
 
@@ -1120,7 +1177,7 @@ describe("Core", function () {
       const usdcContract = new ethers.Contract(usdcAddr, abi, provider);
 
       const usdcBalance = await usdcContract.balanceOf(
-        acountV2DsaM1Wallet0.address
+        accountV2DsaM1Wallet0.address
       );
       const withdrawAmt = usdcBalance.div(ethers.BigNumber.from(2));
 
@@ -1132,11 +1189,14 @@ describe("Core", function () {
         args: [usdcAddr, withdrawAmt, wallet1.address, 0, 0],
       };
 
-      const tx = await acountV2DsaM1Wallet0
+      const tx = await accountV2DsaM1Wallet0
         .connect(wallet1)
         .cast(...encodeSpells([spells]), wallet3.address);
       await expect(tx).to.emit(
-        InstaImplementationM1Factory.attach(acountV2DsaM1Wallet0.address),
+        InstaImplementationM1__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
 
@@ -1151,7 +1211,7 @@ describe("Core", function () {
 
       let tx = await usdcContract
         .connect(wallet1)
-        .approve(acountV2DsaM1Wallet0.address, maxValue);
+        .approve(accountV2DsaM1Wallet0.address, maxValue);
       await tx.wait();
 
       const spells = {
@@ -1159,11 +1219,14 @@ describe("Core", function () {
         method: "deposit",
         args: [usdcAddr, maxValue, 0, 0],
       };
-      tx = await acountV2DsaM1Wallet0
+      tx = await accountV2DsaM1Wallet0
         .connect(wallet1)
         .cast(...encodeSpells([spells]), wallet3.address);
       await expect(tx).to.emit(
-        InstaImplementationM1Factory.attach(acountV2DsaM1Wallet0.address),
+        InstaImplementationM1__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
 
@@ -1179,18 +1242,21 @@ describe("Core", function () {
         args: [usdcAddr, maxValue, 0, 0],
       };
 
-      const tx = await acountV2DsaM1Wallet0
+      const tx = await accountV2DsaM1Wallet0
         .connect(wallet1)
         .cast(...encodeSpells([spells]), wallet3.address);
 
       const compound = await ethers.getContractFactory("ConnectCompound");
 
       await expect(tx).to.emit(
-        InstaImplementationM1Factory.attach(acountV2DsaM1Wallet0.address),
+        InstaImplementationM1__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
       await expect(tx).to.emit(
-        compound.attach(acountV2DsaM1Wallet0.address),
+        compound.attach(accountV2DsaM1Wallet0.address),
         "LogDeposit"
       );
     });
@@ -1209,21 +1275,24 @@ describe("Core", function () {
         },
       ];
 
-      const tx = await acountV2DsaM1Wallet0
+      const tx = await accountV2DsaM1Wallet0
         .connect(wallet1)
         .cast(...encodeSpells(spells), wallet3.address);
 
       const compound = await ethers.getContractFactory("ConnectCompound");
 
       await expect(tx).to.emit(
-        InstaImplementationM1Factory.attach(acountV2DsaM1Wallet0.address),
+        InstaImplementationM1__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
       await expect(tx)
-        .to.emit(compound.attach(acountV2DsaM1Wallet0.address), "LogBorrow")
+        .to.emit(compound.attach(accountV2DsaM1Wallet0.address), "LogBorrow")
         .withArgs(ethAddr, cEthAddr, ethers.utils.parseEther("0.01"), 0, 1235);
       await expect(tx)
-        .to.emit(compound.attach(acountV2DsaM1Wallet0.address), "LogPayback")
+        .to.emit(compound.attach(accountV2DsaM1Wallet0.address), "LogPayback")
         .withArgs(ethAddr, cEthAddr, ethers.utils.parseEther("0.01"), 1235, 0);
     });
 
@@ -1234,7 +1303,7 @@ describe("Core", function () {
         args: [usdcAddr, maxValue, 0, 0],
       };
 
-      const tx = await acountV2DsaM1Wallet0
+      const tx = await accountV2DsaM1Wallet0
         .connect(wallet1)
         .cast(...encodeSpells([spells]), wallet3.address);
 
@@ -1242,12 +1311,15 @@ describe("Core", function () {
       const eventName = "LogWithdraw";
 
       await expect(tx).to.emit(
-        InstaImplementationM1Factory.attach(acountV2DsaM1Wallet0.address),
+        InstaImplementationM1__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
 
       await expect(tx).to.emit(
-        compound.attach(acountV2DsaM1Wallet0.address),
+        compound.attach(accountV2DsaM1Wallet0.address),
         eventName
       );
     });
@@ -1264,11 +1336,14 @@ describe("Core", function () {
           0,
         ],
       };
-      const tx = await acountV2DsaM1Wallet0
+      const tx = await accountV2DsaM1Wallet0
         .connect(wallet1)
         .cast(...encodeSpells([spells]), wallet3.address);
       await expect(tx).to.emit(
-        InstaImplementationM1Factory.attach(acountV2DsaM1Wallet0.address),
+        InstaImplementationM1__factory.connect(
+          accountV2DsaM1Wallet0.address,
+          masterSigner
+        ),
         "LogCast"
       );
     });
