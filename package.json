@@ -6,7 +6,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "hardhat test",
+    "test": "hardhat run scripts/run-tests.ts",
     "coverage": "hardhat coverage --testfiles 'test/core.test.js'",
     "compile": "hardhat compile",
     "typechain": "hardhat typechain"
@@ -34,6 +34,7 @@
     "@typechain/ethers-v5": "^7.0.1",
     "@typechain/hardhat": "^2.1.2",
     "@types/chai": "^4.2.21",
+    "@types/inquirer": "^7.3.3",
     "@types/mocha": "^8.2.3",
     "@types/node": "^16.3.1",
     "chai": "^4.2.0",
@@ -45,6 +46,7 @@
     "hardhat-deploy": "^0.7.0-beta.44",
     "hardhat-deploy-ethers": "^0.3.0-beta.7",
     "hardhat-gas-reporter": "^1.0.4",
+    "inquirer": "^8.1.1",
     "replace-in-file": "^5.0.2",
     "solc": "^0.6.12",
     "solidity-coverage": "^0.7.14",

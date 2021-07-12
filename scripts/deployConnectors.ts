@@ -4,14 +4,7 @@ export default async function deployConnectors(
   connectors: deployConnectorArgs[]
 ) {
   const instances = await Promise.all(
-    connectors.map(async (connector) => {
-      const instance = await deployConnector({
-        connectorName: connector.connectorName,
-        contract: connector.contract,
-        abi: connector.abi,
-      });
-      return instance;
-    })
+    connectors.map((connector) => deployConnector(connector))
   );
 
   return instances;
