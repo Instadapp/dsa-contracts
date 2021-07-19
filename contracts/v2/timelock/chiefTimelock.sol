@@ -12,6 +12,7 @@ interface IndexInterface {
 
 contract InstaChiefTimelockContract is TimelockController {
 
-    constructor (address[] memory masterSig) public TimelockController(2 days, masterSig, masterSig){
+    constructor (address[] memory chiefMultiSig) public TimelockController(2 days, chiefMultiSig, chiefMultiSig) {
+        require(chiefMultiSig.length == 1, "chiefMultiSig length != 1");
     }
 }
