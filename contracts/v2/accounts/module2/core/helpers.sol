@@ -2,12 +2,14 @@ pragma solidity ^0.7.0;
 
 import { Variables } from "./variables.sol";
 import { DSMath } from "../../common/math.sol";
+import { AccountInterface } from "../../common/interfaces.sol";
 import { IERC20, SafeERC20, CTokenInterface } from "./interface.sol";
 import { Basic } from "../../common/basic.sol";
 
 
 contract Helpers is Variables, DSMath, Basic {
     using SafeERC20 for IERC20;
+
 
     function encodeTokenKey(address _tokenFrom, address _tokenTo) public pure returns (bytes32 _key) {
         _key = keccak256(abi.encode(_tokenFrom, _tokenTo));
@@ -125,6 +127,10 @@ contract Helpers is Variables, DSMath, Basic {
     }
 
     modifier isDSA() {
+        uint64 _dsaId = instaList.accountID(msg.sender);
+        uint _verion = AccountInterface(msg.sender).version();
+        require(_dsaId != 0, "not-a-dsa");
+        require(_verion == 2, "not-dsa-v2");
         _;
     }
 

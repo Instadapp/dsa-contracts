@@ -4,6 +4,8 @@ pragma experimental ABIEncoderV2;
 
 interface AccountInterface {
 
+    function version() external view returns (uint);
+
     function cast(
         string[] calldata _targetNames,
         bytes[] calldata _datas,

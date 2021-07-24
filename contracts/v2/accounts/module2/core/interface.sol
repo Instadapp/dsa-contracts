@@ -78,3 +78,7 @@ interface AaveProtocolDataProvider {
             address variableDebtTokenAddress
         );
 }
+
+interface InstaListInterface {
+    function accountID(address _dsa) external view returns (uint64);
+}

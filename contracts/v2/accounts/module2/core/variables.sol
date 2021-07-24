@@ -1,8 +1,10 @@
 pragma solidity ^0.7.0;
 
-import { IERC20, SafeERC20, CTokenInterface, AaveProtocolDataProvider } from "./interface.sol";
+import { IERC20, SafeERC20, CTokenInterface, AaveProtocolDataProvider, InstaListInterface } from "./interface.sol";
 
 contract Variables {
+
+    InstaListInterface public constant instaList = InstaListInterface(0x4c8a1BEb8a87765788946D6B19C6C6355194AbEb);
 
     // mapping (address => bool) public tokenWhitelisted; // white listed stable coins
 
