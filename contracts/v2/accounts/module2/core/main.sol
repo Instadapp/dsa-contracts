@@ -132,9 +132,10 @@ contract DeFiLimitOrder is Internals {
         create(_tokenFrom, _tokenTo, _price, _route, _pos);
     }
 
-    function sell(address _tokenFrom, address _tokenTo, uint _amountFrom, bytes8 _orderId, address _to) external returns (uint _amountTo) {
+    function sell(address _tokenFrom, address _tokenTo, uint _amountFrom, uint _minAmountTo, bytes8 _orderId, address _to) external returns (uint _amountTo) {
         IERC20(_tokenFrom).safeTransferFrom(msg.sender, address(this), _amountFrom);
         _amountTo = _sell(_tokenFrom, _tokenTo, _amountFrom, _orderId);
+        require(_minAmountTo < _amountTo, "excess-slippage");
         IERC20(_tokenTo).safeTransfer(_to, _amountTo);
     }
 
@@ -142,6 +143,7 @@ contract DeFiLimitOrder is Internals {
         address _tokenFrom,
         address _tokenTo,
         uint _amountFrom,
+        uint _minAmountTo,
         bytes8[] memory _orderIds,
         uint[] memory _distributions,
         uint _units,
@@ -153,6 +155,7 @@ contract DeFiLimitOrder is Internals {
             uint _amountFromPerOrder = div(mul(_amountFrom, _distributions[i]), _units);
             _amountTo = add(_amountTo, _sell(_tokenFrom, _tokenTo, _amountFromPerOrder, _orderIds[i]));
         }
+        require(_minAmountTo < _amountTo, "excess-slippage");
         IERC20(_tokenTo).safeTransfer(_to, _amountTo);
     }
 
