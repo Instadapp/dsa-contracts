@@ -1,6 +1,6 @@
 pragma solidity ^0.7.0;
 
-import { IERC20, SafeERC20 } from "./interface.sol";
+import { IERC20, SafeERC20, CTokenInterface, AaveProtocolDataProvider } from "./interface.sol";
 
 contract Variables {
 
@@ -12,6 +12,8 @@ contract Variables {
     mapping (uint => bool) public route;
     mapping (uint => mapping (address => bool)) public routeTokenAllowed;
     mapping (uint => address[]) public routeTokensArray;
+    mapping (address => CTokenInterface) public tokenToCtoken;
+    AaveProtocolDataProvider aaveData = AaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d);
 
     mapping (bytes32 => OrderLink) public ordersLinks;
     mapping (bytes32 => mapping (bytes8 => OrderList)) public ordersLists; // abi.encode(tokenFrom, tokenTo) => DSA => DSA's order

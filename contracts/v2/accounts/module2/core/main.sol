@@ -3,13 +3,12 @@ pragma solidity ^0.7.0;
 
 import { Helpers } from "./helpers.sol";
 import { AccountInterface } from "../../common/interfaces.sol";
-import { Basic } from "../../common/basic.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+// import { Basic } from "../../common/basic.sol";
+import { IERC20, SafeERC20, CTokenInterface } from "./interface.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 
-contract Admin is Helpers, Basic, Ownable {
+contract Admin is Helpers, Ownable {
 
     function updateMinAmount(uint _minAmount) external onlyOwner {
         minAmount = _minAmount;
@@ -34,17 +33,65 @@ contract Admin is Helpers, Basic, Ownable {
         }
     }
 
+    function updateTokenToCtokenMap(address _token, address _ctoken) external onlyOwner {
+        if (_ctoken != address(0) && _token != address(0)) {
+            tokenToCtoken[_token] = CTokenInterface(_ctoken);
+        } else {
+            delete tokenToCtoken[_token];
+        }
+    }
+
 }
 
-contract DeFiLimitOrder is Admin {
+contract Internals is Admin {
+    using SafeERC20 for IERC20;
+
+    function _sell(address _tokenFrom, address _tokenTo, uint _amountFrom, bytes8 _orderId) internal returns (uint _amountTo) {
+        bytes32 _key = encodeTokenKey(_tokenTo, _tokenFrom); // inverse the params to get key as user is filling
+        OrderList memory _order = ordersLists[_key][_orderId];
+        IERC20 _tokenFromContract = IERC20(_tokenFrom);
+        IERC20 _tokenToContract = IERC20(_tokenTo);
+        uint _amountFrom18 = convertTo18(_tokenFromContract.decimals(), _amountFrom);
+        uint _amountTo18 = wdiv(_amountFrom18, _order.price);
+        _amountTo = convert18ToDec(_tokenToContract.decimals(), _amountTo18);
+
+        _tokenFromContract.safeTransfer(_order.dsa, _amountFrom);
+        AccountInterface(_order.dsa).castLimitOrder(_tokenFrom, _tokenFrom, _amountFrom, _amountTo, _order.route);
+    }
+
+    function _cancel(bytes32 _key, OrderList memory _order, bytes8 _orderId) internal {
+        ordersLinks[_key].count--;
+        if (_order.prev == bytes8(0)) {
+            ordersLinks[_key].first = _order.next;
+        }
+        if (_order.next == bytes8(0)) {
+            ordersLinks[_key].last = _order.prev;
+        }
+        if (_order.prev != bytes8(0)) {
+            ordersLists[_key][_order.prev].next = _order.next;
+        }
+        if (_order.next != bytes8(0)) {
+            ordersLists[_key][_order.next].prev = _order.prev;
+        }
+        delete ordersLists[_key][_orderId];
+    }
+
+}
+
+contract DeFiLimitOrder is Internals {
     using SafeERC20 for IERC20;
 
     function create(address _tokenFrom, address _tokenTo, uint128 _price, uint32 _route, bytes8 _pos) public isDSA {
         require(route[_route], "wrong-route");
+        (bool _isOk,) = checkUserPosition(msg.sender, uint(_route));
+        require(_isOk, "not-valid-order");
         checkPrice(_price);
         bytes32 _key = encodeTokenKey(_tokenFrom, _tokenTo);
         bytes8 _key2 = encodeDsaKey(msg.sender, _route);
-        // check if user's order already exists or not if yes then cancel it and then create new one.
+        OrderList memory _orderExists = ordersLists[_key][_key2];
+        if (_orderExists.dsa != address(0)) {
+            _cancel(_key, _orderExists, _key2);
+        }
         OrderLink memory _link = ordersLinks[_key];
         if (_pos == bytes8(0)) {
             if (_link.first == bytes8(0) && _link.last == bytes8(0) && _link.count == 0) { // if no previous order in the list
@@ -85,19 +132,6 @@ contract DeFiLimitOrder is Admin {
         create(_tokenFrom, _tokenTo, _price, _route, _pos);
     }
 
-    function _sell(address _tokenFrom, address _tokenTo, uint _amountFrom, bytes8 _orderId) internal returns (uint _amountTo) {
-        bytes32 _key = encodeTokenKey(_tokenTo, _tokenFrom); // inverse the params to get key as user is filling
-        OrderList memory _order = ordersLists[_key][_orderId];
-        IERC20 _tokenFromContract = IERC20(_tokenFrom);
-        IERC20 _tokenToContract = IERC20(_tokenTo);
-        uint _amountFrom18 = convertTo18(_tokenFromContract.decimals(), _amountFrom);
-        uint _amountTo18 = wdiv(_amountFrom18, _order.price);
-        _amountTo = convert18ToDec(_tokenToContract.decimals(), _amountTo18);
-
-        _tokenFromContract.safeTransfer(_order.dsa, _amountFrom);
-        AccountInterface(_order.dsa).castLimitOrder(_tokenFrom, _tokenFrom, _amountFrom, _amountTo, _order.route);
-    }
-
     function sell(address _tokenFrom, address _tokenTo, uint _amountFrom, bytes8 _orderId, address _to) external returns (uint _amountTo) {
         IERC20(_tokenFrom).safeTransferFrom(msg.sender, address(this), _amountFrom);
         _amountTo = _sell(_tokenFrom, _tokenTo, _amountFrom, _orderId);
@@ -113,6 +147,7 @@ contract DeFiLimitOrder is Admin {
         uint _units,
         address _to
     ) external returns (uint _amountTo) {
+        require(_orderIds.length == _distributions.length, "not-equal-length");
         IERC20(_tokenFrom).safeTransferFrom(msg.sender, address(this), _amountFrom);
         for (uint i = 0; i < _distributions.length; i++) {
             uint _amountFromPerOrder = div(mul(_amountFrom, _distributions[i]), _units);
@@ -121,38 +156,18 @@ contract DeFiLimitOrder is Admin {
         IERC20(_tokenTo).safeTransfer(_to, _amountTo);
     }
 
-    // minAmount = minimum order amount to be used for swaps
-    function sell(address _tokenFrom, address _tokenTo, uint _amountFrom, uint _minAmount, address _to) public returns (uint _amountTo) {
-
-    }
-
-    function _cancel(bytes32 _key, OrderList memory _order, bytes8 _orderId) internal {
-        ordersLinks[_key].count--;
-        if (_order.prev == bytes8(0)) {
-            ordersLinks[_key].first = _order.next;
-        }
-        if (_order.next == bytes8(0)) {
-            ordersLinks[_key].last = _order.prev;
-        }
-        if (_order.prev != bytes8(0)) {
-            ordersLists[_key][_order.prev].next = _order.next;
-        }
-        if (_order.next != bytes8(0)) {
-            ordersLists[_key][_order.next].prev = _order.prev;
-        }
-        delete ordersLists[_key][_orderId];
-    }
-
     function cancel(address _tokenFrom, address _tokenTo, bytes8 _orderId) public {
         bytes32 _key = encodeTokenKey(_tokenFrom, _tokenTo);
         OrderList memory _order = ordersLists[_key][_orderId];
+        require(_order.dsa == msg.sender, "not-the-order-owner");
         _cancel(_key, _order, _orderId);
     }
 
     function cancelPublic(address _tokenFrom, address _tokenTo, bytes8 _orderId) public {
         bytes32 _key = encodeTokenKey(_tokenFrom, _tokenTo);
         OrderList memory _order = ordersLists[_key][_orderId];
-        // check is the limit order requirement is less than minAmount
+        (bool _isOk,) = checkUserPosition(_order.dsa, uint(_order.route));
+        require(!_isOk, "order-meets-min-requirement");
         _cancel(_key, _order, _orderId);
     }
 

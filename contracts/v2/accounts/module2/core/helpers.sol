@@ -2,11 +2,11 @@ pragma solidity ^0.7.0;
 
 import { Variables } from "./variables.sol";
 import { DSMath } from "../../common/math.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20, SafeERC20, CTokenInterface } from "./interface.sol";
+import { Basic } from "../../common/basic.sol";
 
 
-contract Helpers is Variables, DSMath {
+contract Helpers is Variables, DSMath, Basic {
     using SafeERC20 for IERC20;
 
     function encodeTokenKey(address _tokenFrom, address _tokenTo) public pure returns (bytes32 _key) {
@@ -17,20 +17,67 @@ contract Helpers is Variables, DSMath {
         _key = bytes8(keccak256(abi.encode(_dsa, _route)));
     }
 
-    function checkUsersNetDebtCompound(address _user) public returns(bool, uint) {
-
+    // route = 1
+    function checkUsersNetColCompound(address _dsa, uint _route) public view returns(bool, uint) {
+        uint _netColBal;
+        address[] memory _tokens = routeTokensArray[_route];
+        for (uint i = 0; i < _tokens.length; i++) {
+            IERC20 _token = IERC20(_tokens[i]);
+            CTokenInterface _ctoken = tokenToCtoken[_tokens[i]];
+            uint _ctokenBal = _ctoken.borrowBalanceStored(_dsa);
+            uint _ctokenExchangeRate = _ctoken.exchangeRateStored();
+            _netColBal += div(mul(_ctokenBal, _ctokenExchangeRate), 10 ** _token.decimals()); // 18 decimals for all tokens
+        }
+        return (minAmount < _netColBal, _netColBal);
     }
 
-    function checkUsersNetColCompound(address _user) public returns(bool, uint) {
-
+    // route = 2
+    function checkUsersNetDebtCompound(address _dsa, uint _route) public view returns(bool, uint) {
+        uint _netBorrowBal;
+        address[] memory _tokens = routeTokensArray[_route];
+        for (uint i = 0; i < _tokens.length; i++) {
+            IERC20 _token = IERC20(_tokens[i]);
+            CTokenInterface _ctoken = tokenToCtoken[_tokens[i]];
+            uint _borrowBal = _ctoken.borrowBalanceStored(_dsa);
+            _netBorrowBal += convertTo18(_token.decimals(), _borrowBal);
+        }
+        return (minAmount < _netBorrowBal, _netBorrowBal);
     }
 
-    function checkUsersNetDebtAave(address _user) public returns(bool, uint) {
-
+    // route = 3
+    function checkUsersNetColAave(address _dsa, uint _route) public view returns(bool, uint) {
+        uint _netColBal;
+        address[] memory _tokens = routeTokensArray[_route];
+        for (uint i = 0; i < _tokens.length; i++) {
+            (uint _supplyBal,,,,,,,,) = aaveData.getUserReserveData(_tokens[i], _dsa);
+            _netColBal += _supplyBal;
+        }
+        return (minAmount < _netColBal, _netColBal);
     }
 
-    function checkUsersNetColAave(address _user) public returns(bool, uint) {
+    // route = 4
+    function checkUsersNetDebtAave(address _dsa, uint _route) public view returns(bool, uint) {
+        uint _netBorrowBal;
+        address[] memory _tokens = routeTokensArray[_route];
+        for (uint i = 0; i < _tokens.length; i++) {
+            (,,uint _borrowBal,,,,,,) = aaveData.getUserReserveData(_tokens[i], _dsa);
+            _netBorrowBal += _borrowBal;
+        }
+        return (minAmount < _netBorrowBal, _netBorrowBal);
+    }
 
+    function checkUserPosition(address _dsa, uint _route) public view returns(bool _isOk, uint _netPos) {
+        if (_route == 1) {
+            (_isOk, _netPos) = checkUsersNetColCompound(_dsa, _route);
+        } else if (_route == 2) {
+            (_isOk, _netPos) = checkUsersNetDebtCompound(_dsa, _route);
+        } else if (_route == 3) {
+            (_isOk, _netPos) = checkUsersNetColAave(_dsa, _route);
+        } else if (_route == 4) {
+            (_isOk, _netPos) = checkUsersNetDebtAave(_dsa, _route);
+        } else {
+            _isOk = false;
+        }
     }
 
     function findCreatePosLoop(bytes32 _key, bytes8 _prevPosCheck, bytes8 _nextPosCheck, uint128 _price) view public returns(bytes8 _pos) {
