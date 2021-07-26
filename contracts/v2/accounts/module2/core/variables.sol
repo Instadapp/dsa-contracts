@@ -5,6 +5,7 @@ import { IERC20, SafeERC20, CTokenInterface, AaveProtocolDataProvider, InstaList
 contract Variables {
 
     InstaListInterface public constant instaList = InstaListInterface(0x4c8a1BEb8a87765788946D6B19C6C6355194AbEb);
+    AaveProtocolDataProvider aaveData = AaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d);
 
     // mapping (address => bool) public tokenWhitelisted; // white listed stable coins
 
@@ -15,7 +16,6 @@ contract Variables {
     mapping (uint => mapping (address => bool)) public routeTokenAllowed;
     mapping (uint => address[]) public routeTokensArray;
     mapping (address => CTokenInterface) public tokenToCtoken;
-    AaveProtocolDataProvider aaveData = AaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d);
 
     mapping (bytes32 => OrderLink) public ordersLinks;
     mapping (bytes32 => mapping (bytes8 => OrderList)) public ordersLists; // abi.encode(tokenFrom, tokenTo) => DSA => DSA's order
