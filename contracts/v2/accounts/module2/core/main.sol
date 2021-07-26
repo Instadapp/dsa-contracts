@@ -1,6 +1,7 @@
 pragma solidity ^0.7.0;
 
 
+import { Events } from "./events.sol";
 import { Helpers } from "./helpers.sol";
 import { AccountInterface } from "../../common/interfaces.sol";
 // import { Basic } from "../../common/basic.sol";
@@ -8,21 +9,24 @@ import { IERC20, SafeERC20, CTokenInterface } from "./interface.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 
-contract Admin is Helpers, Ownable {
+contract Admin is Helpers, Ownable, Events {
 
     function updateMinAmount(uint _minAmount) external onlyOwner {
         minAmount = _minAmount;
+        emit LogMinAmount(_minAmount);
     }
 
     function updatePriceSlippage(uint _priceSlippage) external onlyOwner {
         priceSlippage = _priceSlippage;
+        emit LogPriceSlippage(_priceSlippage);
     }
 
     function toggleRoute(uint _route) external onlyOwner {
         route[_route] = !route[_route];
+        emit LogToggleRoute(_route, route[_route]);
     }
 
-    function enableRouteTokens(uint _route, address[] memory _tokens) external onlyOwner {
+    function updateRouteTokens(uint _route, address[] memory _tokens) external onlyOwner {
         require(route[_route], "route-not-enabled");
         for (uint i = 0; i < routeTokensArray[_route].length; i++) {
             delete routeTokenAllowed[_route][routeTokensArray[_route][i]];
@@ -31,14 +35,18 @@ contract Admin is Helpers, Ownable {
         for (uint i = 0; i < routeTokensArray[_route].length; i++) {
             routeTokenAllowed[_route][routeTokensArray[_route][i]] = true;
         }
+        emit LogUpdateRouteTokens(_route, _tokens);
     }
 
-    function updateTokenToCtokenMap(address _token, address _ctoken) external onlyOwner {
-        if (_ctoken != address(0) && _token != address(0)) {
-            tokenToCtoken[_token] = CTokenInterface(_ctoken);
-        } else {
-            delete tokenToCtoken[_token];
+    function updateTokenToCtokenMap(address[] memory _tokens, address[] memory _ctokens) external onlyOwner {
+        for (uint i = 0; i < _tokens.length; i++) {
+            if (_ctokens[i] != address(0) && _tokens[i] != address(0)) {
+                tokenToCtoken[_tokens[i]] = CTokenInterface(_ctokens[i]);
+            } else {
+                delete tokenToCtoken[_tokens[i]];
+            }
         }
+        emit LogUpdateTokenToCtokenMap(_tokens, _ctokens);
     }
 
 }
@@ -124,6 +132,7 @@ contract DeFiLimitOrder is Internals {
                 ordersLinks[_key].count++;
             }
         }
+        emit LogCreate(_tokenFrom, _tokenTo, _price, _route, _pos);
     }
 
     function create(address _tokenFrom, address _tokenTo, uint128 _price, uint32 _route) external isDSA {
@@ -137,6 +146,7 @@ contract DeFiLimitOrder is Internals {
         _amountTo = _sell(_tokenFrom, _tokenTo, _amountFrom, _orderId);
         require(_minAmountTo < _amountTo, "excess-slippage");
         IERC20(_tokenTo).safeTransfer(_to, _amountTo);
+        emit LogSell(_tokenFrom, _tokenTo, _amountFrom, _amountTo, _orderId, _to);
     }
 
     function sell(
@@ -157,6 +167,16 @@ contract DeFiLimitOrder is Internals {
         }
         require(_minAmountTo < _amountTo, "excess-slippage");
         IERC20(_tokenTo).safeTransfer(_to, _amountTo);
+        emit LogSell(
+            _tokenFrom,
+            _tokenTo,
+            _amountFrom,
+            _amountTo,
+            _orderIds,
+            _distributions,
+            _units,
+            _to
+        );
     }
 
     function cancel(address _tokenFrom, address _tokenTo, bytes8 _orderId) public {
@@ -164,6 +184,7 @@ contract DeFiLimitOrder is Internals {
         OrderList memory _order = ordersLists[_key][_orderId];
         require(_order.dsa == msg.sender, "not-the-order-owner");
         _cancel(_key, _order, _orderId);
+        emit LogCancel(_tokenFrom, _tokenTo, _orderId);
     }
 
     function cancelPublic(address _tokenFrom, address _tokenTo, bytes8 _orderId) public {
@@ -172,6 +193,7 @@ contract DeFiLimitOrder is Internals {
         (bool _isOk,) = checkUserPosition(_order.dsa, uint(_order.route));
         require(!_isOk, "order-meets-min-requirement");
         _cancel(_key, _order, _orderId);
+        emit LogCancelPublic(_tokenFrom, _tokenTo, _orderId);
     }
 
 }
