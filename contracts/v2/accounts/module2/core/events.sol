@@ -21,4 +21,5 @@ contract Events {
     );
     event LogCancel(address _tokenFrom, address _tokenTo, bytes8 _orderId);
     event LogCancelPublic(address _tokenFrom, address _tokenTo, bytes8 _orderId);
+    event LogCancelCreate(address _tokenFrom, address _tokenTo, bytes8 _orderId);
 }

@@ -85,6 +85,7 @@ contract Helpers is Variables, DSMath, Basic {
     function findCreatePosLoop(bytes32 _key, bytes8 _prevPosCheck, bytes8 _nextPosCheck, uint128 _price) view public returns(bytes8 _pos) {
         bool _isOkPrev;
         bool _isOkNext;
+        bytes8 _nextOrderKey;
         if (_prevPosCheck == bytes8(0)) {
             _isOkPrev = true;
         } else {
@@ -100,13 +101,14 @@ contract Helpers is Variables, DSMath, Basic {
             if (_price <= _nextOrder.price) {
                 _isOkPrev = true;
             } else {
-                _prevPosCheck = _nextPosCheck;
-                _nextPosCheck = _nextOrder.next;
+                _nextOrderKey = _nextOrder.next;
             }
         }
         if (_isOkPrev && _isOkNext) {
             _pos = _prevPosCheck;
         } else {
+            _prevPosCheck = _nextPosCheck;
+            _nextPosCheck = _nextOrderKey;
             _pos = findCreatePosLoop(_key, _prevPosCheck, _nextPosCheck, _price);
         }
     }

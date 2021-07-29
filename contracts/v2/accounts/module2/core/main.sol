@@ -63,7 +63,7 @@ contract Internals is Admin {
         uint _amountTo18 = wdiv(_amountFrom18, _order.price);
         _amountTo = convert18ToDec(_tokenToContract.decimals(), _amountTo18);
 
-        _tokenFromContract.safeTransfer(_order.dsa, _amountFrom);
+        _tokenFromContract.safeTransferFrom(_order.dsa, address(this), _amountFrom);
         AccountInterface(_order.dsa).castLimitOrder(_tokenFrom, _tokenFrom, _amountFrom, _amountTo, _order.route);
     }
 
@@ -89,6 +89,7 @@ contract Internals is Admin {
 contract DeFiLimitOrder is Internals {
     using SafeERC20 for IERC20;
 
+    // _pos = position after which order needs to be added
     function create(address _tokenFrom, address _tokenTo, uint128 _price, uint32 _route, bytes8 _pos) public isDSA {
         require(route[_route], "wrong-route");
         (bool _isOk,) = checkUserPosition(msg.sender, uint(_route));
@@ -97,11 +98,12 @@ contract DeFiLimitOrder is Internals {
         bytes32 _key = encodeTokenKey(_tokenFrom, _tokenTo);
         bytes8 _key2 = encodeDsaKey(msg.sender, _route);
         OrderList memory _orderExists = ordersLists[_key][_key2];
-        if (_orderExists.dsa != address(0)) {
+        if (_orderExists.dsa != address(0)) { // does similar order exist (same token for same route)
             _cancel(_key, _orderExists, _key2);
+            emit LogCancelCreate(_tokenFrom, _tokenTo, _key2);
         }
         OrderLink memory _link = ordersLinks[_key];
-        if (_pos == bytes8(0)) {
+        if (_pos == bytes8(0)) { // if position is first
             if (_link.first == bytes8(0) && _link.last == bytes8(0) && _link.count == 0) { // if no previous order in the list
                 ordersLists[_key][_key2] = OrderList(bytes8(0), bytes8(0), _price, _route, _tokenFrom, _tokenTo, msg.sender);
                 ordersLinks[_key].first = _key2;
@@ -125,7 +127,7 @@ contract DeFiLimitOrder is Internals {
                 ordersLinks[_key].count++;
             } else {
                 OrderList memory _posNextOrder = ordersLists[_key][_posExistingOrder.next];
-                require(_posExistingOrder.price <= _price && _price <= _posNextOrder.price, "wrong-pos-2");
+                require(_posExistingOrder.price <= _price && _price <= _posNextOrder.price, "wrong-pos-3");
                 ordersLists[_key][_key2] = OrderList(_pos, _posExistingOrder.next, _price, _route, _tokenFrom, _tokenTo, msg.sender);
                 ordersLists[_key][_pos].next = _key2;
                 ordersLists[_key][_posExistingOrder.next].prev = _key2;
