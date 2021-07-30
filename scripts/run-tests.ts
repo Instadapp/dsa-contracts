@@ -45,6 +45,7 @@ async function testRunner() {
     paths = [join(testsPath, testName)];
   }
 
+  await execScript("npx hardhat typechain");
   for (const path of paths) {
     await execScript("npx hardhat test " + path);
   }
