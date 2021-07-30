@@ -1,5 +1,5 @@
 import hre from "hardhat";
-import { INSTA_INDEX } from "../store";
+import { INSTA_INDEX } from "../../store";
 import {
   InstaAccountV2__factory,
   InstaConnectorsV2__factory,
@@ -8,7 +8,7 @@ import {
   InstaImplementationM2__factory,
   InstaImplementations__factory,
   InstaIndex,
-} from "../typechain";
+} from "../../typechain";
 const { ethers } = hre;
 
 export default async function deployContracts() {

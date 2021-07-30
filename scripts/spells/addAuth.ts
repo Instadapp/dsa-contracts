@@ -1,5 +1,5 @@
 import { Contract, Signer } from "ethers";
-import encodeSpells from "../encodeSpells";
+import encodeSpells from "../utils/encodeSpells";
 
 export default async function addAuth(
   dsaWallet: Contract,

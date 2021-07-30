@@ -3,9 +3,9 @@ import { expect, use } from "chai";
 import { solidity } from "ethereum-waffle";
 import { web3, deployments, waffle, ethers } from "hardhat";
 import addresses from "../scripts/constant/addresses";
-import deployConnector from "../scripts/deployConnector";
-import encodeSpells from "../scripts/encodeSpells";
-import getMasterSigner from "../scripts/getMasterSigner";
+import deployConnector from "../scripts/deploy/deployConnector";
+import encodeSpells from "../scripts/utils/encodeSpells";
+import getMasterSigner from "../scripts/utils/getMasterSigner";
 import { INSTA_INDEX } from "../store";
 import {
   ConnectCompound,

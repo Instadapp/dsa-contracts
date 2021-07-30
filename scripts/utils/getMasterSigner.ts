@@ -1,7 +1,7 @@
 import { parseEther } from "ethers/lib/utils";
 import { ethers, network } from "hardhat";
-import { INSTA_INDEX } from "../store";
-import { InstaIndex } from "../typechain";
+import { INSTA_INDEX } from "../../store";
+import { InstaIndex } from "../../typechain";
 
 export default async function getMasterSigner() {
   const signer = (await ethers.getSigners())[0];

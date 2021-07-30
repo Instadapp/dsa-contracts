@@ -1,4 +1,4 @@
-import abis from "./constant/abis";
+import abis from "../constant/abis";
 import { web3 } from "hardhat";
 
 interface Spell {

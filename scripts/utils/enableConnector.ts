@@ -1,6 +1,6 @@
 import { AbiItem } from "web3-utils";
-import abis from "./constant/abis";
-import addresses from "./constant/addresses";
+import abis from "../constant/abis";
+import addresses from "../constant/addresses";
 
 export interface updateConnectorArgs {
   connectorName: string;

@@ -1,6 +1,6 @@
 import inquirer from "inquirer";
 import { promises as fs } from "fs";
-import { join } from "path/posix";
+import { join } from "path";
 import { spawn } from "child_process";
 
 export async function execScript(cmd: string): Promise<number> {

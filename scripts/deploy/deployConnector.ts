@@ -1,5 +1,5 @@
-import abis from "./constant/abis";
-import addresses from "./constant/addresses";
+import abis from "../constant/abis";
+import addresses from "../constant/addresses";
 import { ethers } from "hardhat";
 import { AbiItem } from "web3-utils";
 
