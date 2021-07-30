@@ -20,7 +20,7 @@ contract Helpers is Variables, DSMath, Basic {
     }
 
     // route = 1
-    function checkUsersNetColCompound(address _dsa, uint _route) public view returns(bool, uint) {
+    function checkUsersNetColCompound(address _dsa, uint _route) private view returns(bool, uint) {
         uint _netColBal;
         address[] memory _tokens = routeTokensArray[_route];
         for (uint i = 0; i < _tokens.length; i++) {
@@ -34,7 +34,7 @@ contract Helpers is Variables, DSMath, Basic {
     }
 
     // route = 2
-    function checkUsersNetDebtCompound(address _dsa, uint _route) public view returns(bool, uint) {
+    function checkUsersNetDebtCompound(address _dsa, uint _route) private view returns(bool, uint) {
         uint _netBorrowBal;
         address[] memory _tokens = routeTokensArray[_route];
         for (uint i = 0; i < _tokens.length; i++) {
@@ -47,7 +47,7 @@ contract Helpers is Variables, DSMath, Basic {
     }
 
     // route = 3
-    function checkUsersNetColAave(address _dsa, uint _route) public view returns(bool, uint) {
+    function checkUsersNetColAave(address _dsa, uint _route) private view returns(bool, uint) {
         uint _netColBal;
         address[] memory _tokens = routeTokensArray[_route];
         for (uint i = 0; i < _tokens.length; i++) {
@@ -58,7 +58,7 @@ contract Helpers is Variables, DSMath, Basic {
     }
 
     // route = 4
-    function checkUsersNetDebtAave(address _dsa, uint _route) public view returns(bool, uint) {
+    function checkUsersNetDebtAave(address _dsa, uint _route) private view returns(bool, uint) {
         uint _netBorrowBal;
         address[] memory _tokens = routeTokensArray[_route];
         for (uint i = 0; i < _tokens.length; i++) {
@@ -82,7 +82,7 @@ contract Helpers is Variables, DSMath, Basic {
         }
     }
 
-    function findCreatePosLoop(bytes32 _key, bytes8 _prevPosCheck, bytes8 _nextPosCheck, uint128 _price) view public returns(bytes8 _pos) {
+    function findCreatePosLoop(bytes32 _key, bytes8 _prevPosCheck, bytes8 _nextPosCheck, uint128 _price) view private returns(bytes8 _pos) {
         bool _isOkPrev;
         bool _isOkNext;
         bytes8 _nextOrderKey;
