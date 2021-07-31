@@ -189,6 +189,14 @@ contract DeFiLimitOrder is Internals {
         emit LogCancel(_tokenFrom, _tokenTo, _orderId);
     }
 
+    // this contract owner can cancel any limit orders (owner will be a multi-sig)
+    function cancelOwner(address _tokenFrom, address _tokenTo, bytes8 _orderId) public onlyOwner {
+        bytes32 _key = encodeTokenKey(_tokenFrom, _tokenTo);
+        OrderList memory _order = ordersLists[_key][_orderId];
+        _cancel(_key, _order, _orderId);
+        emit LogCancelOwner(_tokenFrom, _tokenTo, _orderId);
+    }
+
     function cancelPublic(address _tokenFrom, address _tokenTo, bytes8 _orderId) public {
         bytes32 _key = encodeTokenKey(_tokenFrom, _tokenTo);
         OrderList memory _order = ordersLists[_key][_orderId];
