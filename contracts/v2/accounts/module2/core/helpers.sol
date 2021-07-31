@@ -15,7 +15,7 @@ contract Helpers is Variables, DSMath, Basic {
         _key = keccak256(abi.encode(_tokenFrom, _tokenTo));
     }
 
-    function encodeDsaKey(address _dsa, uint32 _route)  public pure returns (bytes8 _key) {
+    function encodeDsaKey(address _dsa, uint32 _route) public pure returns (bytes8 _key) {
         _key = bytes8(keccak256(abi.encode(_dsa, _route)));
     }
 
@@ -26,7 +26,7 @@ contract Helpers is Variables, DSMath, Basic {
         for (uint i = 0; i < _tokens.length; i++) {
             IERC20 _token = IERC20(_tokens[i]);
             CTokenInterface _ctoken = tokenToCtoken[_tokens[i]];
-            uint _ctokenBal = _ctoken.borrowBalanceStored(_dsa);
+            uint _ctokenBal = _ctoken.balanceOf(_dsa);
             uint _ctokenExchangeRate = _ctoken.exchangeRateStored();
             _netColBal += div(mul(_ctokenBal, _ctokenExchangeRate), 10 ** _token.decimals()); // 18 decimals for all tokens
         }
@@ -82,7 +82,7 @@ contract Helpers is Variables, DSMath, Basic {
         }
     }
 
-    function findCreatePosLoop(bytes32 _key, bytes8 _prevPosCheck, bytes8 _nextPosCheck, uint128 _price) view private returns(bytes8 _pos) {
+    function findCreatePosLoop(bytes32 _key, bytes8 _prevPosCheck, bytes8 _nextPosCheck, uint128 _price) private view returns(bytes8 _pos) {
         bool _isOkPrev;
         bool _isOkNext;
         bytes8 _nextOrderKey;
@@ -113,7 +113,7 @@ contract Helpers is Variables, DSMath, Basic {
         }
     }
 
-    function findCreatePos(bytes32 _key, uint128 _price) view public returns(bytes8 _pos) {
+    function findCreatePos(bytes32 _key, uint128 _price) public view returns (bytes8 _pos) {
         OrderLink memory _link = ordersLinks[_key];
         if (_link.first == bytes8(0) && _link.last == bytes8(0) && _link.count == 0) {
             _pos = bytes8(0);
@@ -122,10 +122,11 @@ contract Helpers is Variables, DSMath, Basic {
         }
     }
 
-    function checkPrice(uint128 price) public view {
+    function checkPrice(uint128 price) public view returns (bool _isOk) {
         uint _min = sub(1e18, priceSlippage);
         uint _max = add(1e18, priceSlippage);
-        require(_min < price && price < _max, "price-out-of-range");
+        _isOk = _min < price && price < _max;
+        require(_isOk, "price-out-of-range");
     }
 
     modifier isDSA() {
@@ -134,6 +135,10 @@ contract Helpers is Variables, DSMath, Basic {
         require(_dsaId != 0, "not-a-dsa");
         require(_verion == 2, "not-dsa-v2");
         _;
+    }
+
+    function getRouteTokensArrayLength(uint _route) public view returns (uint _length) {
+        _length = routeTokensArray[_route].length;
     }
 
 }
