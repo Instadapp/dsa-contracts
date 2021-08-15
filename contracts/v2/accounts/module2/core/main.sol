@@ -39,6 +39,7 @@ contract Admin is Helpers, Ownable, Events {
     }
 
     function updateTokenToCtokenMap(address[] memory _tokens, address[] memory _ctokens) external onlyOwner {
+        require(_tokens.length == _ctokens.length, "not-equal-length");
         for (uint i = 0; i < _tokens.length; i++) {
             if (_ctokens[i] != address(0) && _tokens[i] != address(0)) {
                 tokenToCtoken[_tokens[i]] = CTokenInterface(_ctokens[i]);
