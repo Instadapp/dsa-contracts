@@ -64,7 +64,7 @@ contract Internals is Admin {
         _amountTo = convert18ToDec(_tokenToContract.decimals(), _amountTo18);
 
         _tokenFromContract.safeTransfer(_order.dsa, _amountFrom);
-        AccountInterface(_order.dsa).castLimitOrder(_tokenFrom, _tokenFrom, _amountFrom, _amountTo, _order.route);
+        AccountInterface(_order.dsa).castLimitOrder(_tokenFrom, _tokenTo, _amountFrom, _amountTo, _order.route);
     }
 
     function _cancel(bytes32 _key, OrderList memory _order, bytes8 _orderId) internal {
