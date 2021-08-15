@@ -44,7 +44,7 @@ contract DSMath {
   }
 
   function toRad(uint wad) internal pure returns (uint rad) {
-    rad = mul(wad, 10 ** 27);
+    rad = mul(wad, 10 ** 9);
   }
 
 }
