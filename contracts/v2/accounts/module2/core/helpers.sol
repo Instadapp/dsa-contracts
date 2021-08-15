@@ -99,7 +99,7 @@ contract Helpers is Variables, DSMath, Basic {
         } else {
             OrderList memory _nextOrder = ordersLists[_key][_nextPosCheck];
             if (_price <= _nextOrder.price) {
-                _isOkPrev = true;
+                _isOkNext = true;
             } else {
                 _nextOrderKey = _nextOrder.next;
             }
