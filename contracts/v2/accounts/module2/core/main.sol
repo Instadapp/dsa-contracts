@@ -63,7 +63,7 @@ contract Internals is Admin {
         uint _amountTo18 = wdiv(_amountFrom18, _order.price);
         _amountTo = convert18ToDec(_tokenToContract.decimals(), _amountTo18);
 
-        _tokenFromContract.safeTransferFrom(_order.dsa, address(this), _amountFrom);
+        _tokenFromContract.safeTransfer(_order.dsa, _amountFrom);
         AccountInterface(_order.dsa).castLimitOrder(_tokenFrom, _tokenFrom, _amountFrom, _amountTo, _order.route);
     }
 
