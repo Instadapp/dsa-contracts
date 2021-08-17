@@ -17,7 +17,6 @@ interface ConnectorsInterface {
 contract Constants is Variables {
     // InstaIndex Address.
     address internal immutable limitOrderContract;
-    // Connectors Address.
 
     constructor(address _limitOrderContract) {
         limitOrderContract = _limitOrderContract;
