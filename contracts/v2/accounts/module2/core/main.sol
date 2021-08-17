@@ -8,14 +8,21 @@ import { AccountInterface } from "../../common/interfaces.sol";
 import { IERC20, SafeERC20, CTokenInterface } from "./interface.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-
 contract Admin is Helpers, Ownable, Events {
 
+    /**
+     * @dev min amount needed to create an order.
+     * @param _minAmount minimum amount in 18 decimals. 1e18 = 1 stable coin
+    */
     function updateMinAmount(uint _minAmount) external onlyOwner {
         minAmount = _minAmount;
         emit LogMinAmount(_minAmount);
     }
 
+    /**
+     * @dev minimum price slippage to save from wrong order creation.
+     * @param _priceSlippage price slippage in 18 decimals. 1e16 means 1%.
+    */
     function updatePriceSlippage(uint _priceSlippage) external onlyOwner {
         priceSlippage = _priceSlippage;
         emit LogPriceSlippage(_priceSlippage);
