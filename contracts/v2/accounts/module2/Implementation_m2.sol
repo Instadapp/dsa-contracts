@@ -26,7 +26,7 @@ contract Constants is Variables {
 
 contract InstaImplementationM2 is Constants {
 
-    constructor(address _limitOrderContract, address _connectors) Constants(_limitOrderContract) {}
+    constructor(address _limitOrderContract) Constants(_limitOrderContract) {}
 
     event LogLimitOrderCast(
         address tokenFrom,
