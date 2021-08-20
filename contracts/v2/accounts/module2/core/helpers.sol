@@ -52,7 +52,8 @@ contract Helpers is Variables, DSMath, Basic {
         address[] memory _tokens = routeTokensArray[_route];
         for (uint i = 0; i < _tokens.length; i++) {
             (uint _supplyBal,,,,,,,,) = aaveData.getUserReserveData(_tokens[i], _dsa);
-            _netColBal += _supplyBal;
+            uint _convertTo18 = convertTo18(IERC20(_tokens[i]).decimals(), _supplyBal);
+            _netColBal += _convertTo18;
         }
         return (minAmount < _netColBal, _netColBal);
     }
@@ -63,7 +64,8 @@ contract Helpers is Variables, DSMath, Basic {
         address[] memory _tokens = routeTokensArray[_route];
         for (uint i = 0; i < _tokens.length; i++) {
             (,,uint _borrowBal,,,,,,) = aaveData.getUserReserveData(_tokens[i], _dsa);
-            _netBorrowBal += _borrowBal;
+            uint _convertTo18 = convertTo18(IERC20(_tokens[i]).decimals(), _borrowBal);
+            _netBorrowBal += _convertTo18;
         }
         return (minAmount < _netBorrowBal, _netBorrowBal);
     }
