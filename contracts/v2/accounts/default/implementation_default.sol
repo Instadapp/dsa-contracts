@@ -2,7 +2,6 @@ pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
 import { Variables } from "../variables.sol";
-import "hardhat/console.sol";
 
 interface IndexInterface {
     function list() external view returns (address);
