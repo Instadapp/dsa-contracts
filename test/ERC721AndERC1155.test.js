@@ -4,19 +4,9 @@ const { web3, deployments, waffle } = hre;
 const { provider, deployContract } = waffle
 
 const deployContracts = require("../scripts/deployContracts")
-const deployConnector = require("../scripts/deployConnector")
-const enableConnector = require("../scripts/enableConnector")
-
-const encodeSpells = require("../scripts/encodeSpells.js")
-const expectEvent = require("../scripts/expectEvent")
 
 const getMasterSigner = require("../scripts/getMasterSigner")
 
-const addresses = require("../scripts/constant/addresses");
-const abis = require("../scripts/constant/abis");
-
-const compoundArtifact = require("../artifacts/contracts/v2/connectors/test/compound.test.sol/ConnectCompound.json");
-const connectAuth = require("../artifacts/contracts/v2/connectors/test/auth.test.sol/ConnectV2Auth.json");
 const defaultTest2 = require("../artifacts/contracts/v2/accounts/test/implementation_default.v2.test.sol/InstaDefaultImplementationV2.json");
 const { ethers } = require("hardhat");
 
