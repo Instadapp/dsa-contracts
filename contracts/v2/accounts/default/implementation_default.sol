@@ -2,6 +2,7 @@ pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
 import {Variables} from "../variables.sol";
+import "hardhat/console.sol";
 
 interface IndexInterface {
     function list() external view returns (address);
@@ -69,9 +70,14 @@ contract Record is Constants {
     }
 
     /**
-    * @dev ERC721 token receiver
-    */
-    function onERC721Received(address, address, uint256, bytes calldata) external returns (bytes4) {
+     * @dev ERC721 token receiver
+     */
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external returns (bytes4) {
         return 0x150b7a02; // keccak256("onERC721Received(address,address,uint256,bytes)")
     }
 
@@ -85,7 +91,7 @@ contract Record is Constants {
         uint256,
         bytes memory
     ) public pure virtual returns (bytes4) {
-        return this.onERC1155Received.selector;
+        return 0xf23a6e61; // keccak256("onERC1155Received(address,address,uint256,uint256,bytes)")
     }
 
     /**
@@ -98,7 +104,7 @@ contract Record is Constants {
         uint256[] calldata values,
         bytes calldata data
     ) public pure virtual returns (bytes4) {
-        this.onERC1155BatchReceived.selector;
+        return 0xc690df554; // keccak256("onERC1155Received(address,address,uint256[],uint256[],bytes)")
     }
 }
 
