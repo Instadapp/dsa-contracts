@@ -1,7 +1,7 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
-import {Variables} from "../variables.sol";
+import { Variables } from "../variables.sol";
 import "hardhat/console.sol";
 
 interface IndexInterface {
@@ -78,7 +78,7 @@ contract Record is Constants {
         uint256,
         bytes calldata
     ) external returns (bytes4) {
-        return 0x150b7a02; // keccak256("onERC721Received(address,address,uint256,bytes)")
+        return 0x150b7a02; // bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))
     }
 
     /**
@@ -90,21 +90,21 @@ contract Record is Constants {
         uint256,
         uint256,
         bytes memory
-    ) public pure virtual returns (bytes4) {
-        return 0xf23a6e61; // keccak256("onERC1155Received(address,address,uint256,uint256,bytes)")
+    ) external returns (bytes4) {
+        return 0xf23a6e61; // bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))
     }
 
     /**
      * @dev ERC1155 token receiver
      */
     function onERC1155BatchReceived(
-        address operator,
-        address from,
-        uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
-    ) public pure virtual returns (bytes4) {
-        return 0xbc197c81; // keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)")
+        address,
+        address,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
+    ) external returns (bytes4) {
+        return 0xbc197c81; // bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))
     }
 }
 
