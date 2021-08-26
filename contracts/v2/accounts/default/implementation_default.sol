@@ -104,7 +104,7 @@ contract Record is Constants {
         uint256[] calldata values,
         bytes calldata data
     ) public pure virtual returns (bytes4) {
-        return 0xc690df55; // keccak256("onERC1155Received(address,address,uint256[],uint256[],bytes)")
+        return 0xbc197c81; // keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)")
     }
 }
 
