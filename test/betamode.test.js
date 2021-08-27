@@ -48,7 +48,7 @@ describe("Betamode", function () {
     let acountV2DsaDefaultWallet0;
 
     const wallets = provider.getWallets()
-    let [wallet0, wallet1, wallet2, wallet3] = wallets
+    let [wallet0] = wallets
     before(async () => {
         const result = await deployContracts()
         instaAccountV2DefaultImpl = result.instaAccountV2DefaultImpl
