@@ -76,7 +76,6 @@ contract Record is Constants {
         emit LogDisableUser(user);
     }
 
-
     function toggleBeta() public {
         require(msg.sender == address(this), "not-self");
         _beta = !_beta;
@@ -120,7 +119,6 @@ contract Record is Constants {
     ) external returns (bytes4) {
         return 0xbc197c81; // bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))
     }
-
 }
 
 contract InstaDefaultImplementation is Record {
