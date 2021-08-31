@@ -8,14 +8,6 @@ import { Variables } from "../variables.sol";
  * @dev DeFi Smart Account Wallet.
  */
 
-interface AccountInterface {
-    function enable(address) external;
-    function disable(address) external;
-    function isAuth(address) external view returns (bool);
-    function isBeta() external view returns (bool);
-    function toggleBeta() external;
-}
-
 interface ConnectorsInterface {
     function isConnectors(string[] calldata connectorNames) external view returns (bool, address[] memory);
 }
@@ -94,8 +86,7 @@ contract InstaImplementationBetaTest is Constants {
     payable 
     returns (bytes32) // Dummy return to fix instaIndex buildWithCast function
     {   
-        AccountInterface _dsa = AccountInterface(address(this));
-        require(_dsa.isBeta(), "Beta-does-not-enabled");
+        require(_beta, "Beta-does-not-enabled");
         uint256 _length = _targetNames.length;
         require(_auth[msg.sender] || msg.sender == instaIndex, "1: permission-denied");
         require(_length != 0, "1: length-invalid");
