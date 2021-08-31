@@ -26,7 +26,8 @@ describe("Betamode", function () {
         instaAccountV2ImplM2,
         instaAccountV2DefaultImpl,
         instaAccountV2DefaultImplV2,
-        instaIndex
+        instaIndex,
+        instaAccountV2ImplBeta
 
     const instaAccountV2DefaultImplSigsV2 = [
         "enable(address)",
@@ -42,10 +43,15 @@ describe("Betamode", function () {
         "cast(string[],bytes[],address)"
     ].map((a) => web3.utils.keccak256(a).slice(0, 10))
 
+    const instaAccountV2ImplBetaSigs = [
+        "castBeta(string[],bytes[],address)"
+    ].map((a) => web3.utils.keccak256(a).slice(0, 10))
+
     let masterSigner;
 
     let acountV2DsaM1Wallet0;
     let acountV2DsaDefaultWallet0;
+    let acountV2DsaBetaWallet0;
 
     const wallets = provider.getWallets()
     let [wallet0] = wallets
@@ -58,6 +64,9 @@ describe("Betamode", function () {
         instaAccountV2Proxy = result.instaAccountV2Proxy
         instaAccountV2ImplM1 = result.instaAccountV2ImplM1
         instaAccountV2ImplM2 = result.instaAccountV2ImplM2
+
+        const InstaAccountV2ImplBeta = await ethers.getContractFactory("InstaImplementationBetaTest");
+        instaAccountV2ImplBeta = await InstaAccountV2ImplBeta.deploy(instaIndex.address, instaConnectorsV2.address);
 
         masterSigner = await getMasterSigner()
 
@@ -89,6 +98,15 @@ describe("Betamode", function () {
             })
         });
 
+        it("Should add instaAccountV2ImplBeta sigs to mapping.", async function () {
+            const tx = await implementationsMapping.connect(masterSigner).addImplementation(instaAccountV2ImplBeta.address, instaAccountV2ImplBetaSigs);
+            await tx.wait()
+            expect(await implementationsMapping.getSigImplementation(instaAccountV2ImplBetaSigs[0])).to.be.equal(instaAccountV2ImplBeta.address);
+            (await implementationsMapping.getImplementationSigs(instaAccountV2ImplBeta.address)).forEach((a, i) => {
+                expect(a).to.be.eq(instaAccountV2ImplBetaSigs[i])
+            })
+        });
+
         it("Should add InstaAccountV2 in Index.sol", async function () {
             const tx = await instaIndex.connect(masterSigner).addNewAccount(instaAccountV2Proxy.address, address_zero, address_zero)
             await tx.wait()
@@ -112,6 +130,7 @@ describe("Betamode", function () {
             expect((await tx.wait()).events[1].args.account).to.be.equal(dsaWalletAddress);
             acountV2DsaM1Wallet0 = await ethers.getContractAt("InstaImplementationM1", dsaWalletAddress);
             acountV2DsaDefaultWallet0 = await ethers.getContractAt("InstaDefaultImplementation", dsaWalletAddress);
+            acountV2DsaBetaWallet0 = await ethers.getContractAt("InstaImplementationBetaTest", dsaWalletAddress);
         });
 
         it("Should deploy Beta connector", async function () {
@@ -146,8 +165,8 @@ describe("Betamode", function () {
                 method: "disable",
                 args: []
             }
-            const tx1 = await acountV2DsaM1Wallet0.connect(wallet0).cast(...encodeSpells([spell1]), wallet0.address)
-            const receipt1 = await tx1.wait()
+            const tx1 = await acountV2DsaBetaWallet0.connect(wallet0).castBeta(...encodeSpells([spell1]), wallet0.address)
+            const receipt1 = await tx1.wait();
 
             enabled = await acountV2DsaDefaultWallet0.connect(wallet0).isBeta();
             expect(enabled).to.equal(false);
