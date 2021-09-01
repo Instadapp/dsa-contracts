@@ -70,19 +70,19 @@ module.exports = {
       {
         version: "0.6.0",
         settings: {
-          optimizer: { enabled: false },
+          optimizer: { enabled: true },
         },
       },
       {
         version: "0.6.8",
         settings: {
-          optimizer: { enabled: false },
+          optimizer: { enabled: true },
         },
       },
       {
         version: "0.7.0",
         settings: {
-          optimizer: { enabled: false },
+          optimizer: { enabled: true },
         },
       }
     ]
