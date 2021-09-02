@@ -19,15 +19,6 @@ contract Admin is Helpers, Ownable, Events {
         emit LogMinAmount(_minAmount);
     }
 
-    /**
-     * @dev minimum price slippage to save from wrong order creation.
-     * @param _priceSlippage price slippage in 18 decimals. 1e16 means 1%.
-    */
-    function updatePriceSlippage(uint _priceSlippage) external onlyOwner {
-        priceSlippage = _priceSlippage;
-        emit LogPriceSlippage(_priceSlippage);
-    }
-
     function toggleRoute(uint _route) external onlyOwner {
         route[_route] = !route[_route];
         emit LogToggleRoute(_route, route[_route]);
@@ -102,7 +93,6 @@ contract DeFiLimitOrder is Internals {
         require(route[_route], "wrong-route");
         (bool _isOk,) = checkUserPosition(msg.sender, uint(_route));
         require(_isOk, "not-valid-order");
-        checkPrice(_price);
         bytes32 _key = encodeTokenKey(_tokenFrom, _tokenTo);
         bytes8 _key2 = encodeDsaKey(msg.sender, _route);
         OrderList memory _orderExists = ordersLists[_key][_key2];

@@ -1,17 +1,28 @@
 pragma solidity ^0.7.0;
 
-import { IERC20, SafeERC20, CTokenInterface, AaveProtocolDataProvider, InstaListInterface } from "./interface.sol";
+import {
+    IERC20,
+    SafeERC20,
+    CTokenInterface,
+    AaveProtocolDataProvider,
+    InstaListInterface,
+    ComptrollerLensInterface,
+    AaveAddressProvider
+} from "./interface.sol";
 
 contract Variables {
 
     InstaListInterface public constant instaList = InstaListInterface(0x4c8a1BEb8a87765788946D6B19C6C6355194AbEb);
+    ComptrollerLensInterface comptroller = ComptrollerLensInterface(0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B);
     AaveProtocolDataProvider aaveData = AaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d);
+    AaveAddressProvider public constant aaveAddressProvider =
+        AaveAddressProvider(0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5);
+    address public constant usdc = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
 
     // mapping (address => bool) public tokenWhitelisted; // white listed stable coins
 
     // 1e18 = 1
     uint public minAmount; // Minimum $ of debt or collateral (in all the white listed tokens combine) to create an order
-    uint public priceSlippage; // Min and max price that could be set. 1e16 meaning 1% slippage
     mapping (uint => bool) public route;
     mapping (uint => mapping (address => bool)) public routeTokenAllowed;
     mapping (uint => address[]) public routeTokensArray;

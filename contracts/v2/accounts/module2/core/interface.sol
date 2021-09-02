@@ -5,6 +5,45 @@ import { IERC20 } from "../../common/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 
+interface ComptrollerLensInterface {
+    function markets(address)
+        external
+        view
+        returns (
+            bool,
+            uint256,
+            bool
+        );
+    
+    function getAssetsIn(address)
+        external
+        view
+        returns (
+            address[] memory
+        );
+
+    function getAccountLiquidity(address)
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256
+        );
+
+    function borrowCaps(address) external view returns (uint256);
+
+    function borrowGuardianPaused(address) external view returns (bool);
+
+    function oracle() external view returns (address);
+
+    function compSpeeds(address) external view returns (uint256);
+}
+
+interface OracleComp {
+    function getUnderlyingPrice(address) external view returns (uint256);
+}
+
 interface CTokenInterface {
     function exchangeRateStored() external view returns (uint256);
 
@@ -19,6 +58,36 @@ interface CTokenInterface {
     function balanceOf(address) external view returns (uint256);
 
     function getCash() external view returns (uint256);
+}
+
+interface AaveLendingPool {
+    function getUserAccountData(address user)
+        external
+        view
+        returns (
+            uint256 totalCollateralETH,
+            uint256 totalDebtETH,
+            uint256 availableBorrowsETH,
+            uint256 currentLiquidationThreshold,
+            uint256 ltv,
+            uint256 healthFactor
+        );
+}
+
+interface AaveAddressProvider {
+    function getLendingPool() external view returns (address);
+
+    function getPriceOracle() external view returns (address);
+}
+
+interface AavePriceOracle {
+    function getAssetPrice(address _asset) external view returns (uint256);
+
+    function getAssetsPrices(address[] calldata _assets) external view returns (uint256[] memory);
+
+    function getSourceOfAsset(address _asset) external view returns (uint256);
+
+    function getFallbackOracle() external view returns (uint256);
 }
 
 interface AaveProtocolDataProvider {

@@ -3,7 +3,7 @@ pragma solidity ^0.7.0;
 import { Variables } from "./variables.sol";
 import { DSMath } from "../../common/math.sol";
 import { AccountInterface } from "../../common/interfaces.sol";
-import { IERC20, SafeERC20, CTokenInterface } from "./interface.sol";
+import { IERC20, SafeERC20, CTokenInterface, OracleComp, AaveLendingPool, AavePriceOracle } from "./interface.sol";
 import { Basic } from "../../common/basic.sol";
 
 
@@ -21,14 +21,18 @@ contract Helpers is Variables, DSMath, Basic {
 
     // route = 1
     function checkUsersNetColCompound(address _dsa, uint _route) private view returns(bool, uint) {
-        uint _netColBal;
-        address[] memory _tokens = routeTokensArray[_route];
-        for (uint i = 0; i < _tokens.length; i++) {
-            IERC20 _token = IERC20(_tokens[i]);
-            CTokenInterface _ctoken = tokenToCtoken[_tokens[i]];
+        uint _netColBal; // net collateral value in USD
+        OracleComp _oracleComp = OracleComp(comptroller.oracle());
+        address[] memory _ctokens = comptroller.getAssetsIn(_dsa);
+        for (uint i = 0; i < _ctokens.length; i++) {
+            CTokenInterface _ctoken = CTokenInterface(_ctokens[i]);
+            IERC20 _token = IERC20(_ctoken.underlying());
+            uint _decimals = _token.decimals();
+            uint _price = div(_oracleComp.getUnderlyingPrice(_ctokens[i]), 10 ** (18 - _decimals));
             uint _ctokenBal = _ctoken.balanceOf(_dsa);
             uint _ctokenExchangeRate = _ctoken.exchangeRateStored();
-            _netColBal += div(mul(_ctokenBal, _ctokenExchangeRate), 10 ** _token.decimals()); // 18 decimals for all tokens
+            uint _tknBal = div(mul(_ctokenBal, _ctokenExchangeRate), 10 ** _decimals);
+            _netColBal += wmul(_tknBal, _price);
         }
         return (minAmount < _netColBal, _netColBal);
     }
@@ -36,38 +40,43 @@ contract Helpers is Variables, DSMath, Basic {
     // route = 2
     function checkUsersNetDebtCompound(address _dsa, uint _route) private view returns(bool, uint) {
         uint _netBorrowBal;
-        address[] memory _tokens = routeTokensArray[_route];
-        for (uint i = 0; i < _tokens.length; i++) {
-            IERC20 _token = IERC20(_tokens[i]);
-            CTokenInterface _ctoken = tokenToCtoken[_tokens[i]];
+        // address[] memory _tokens = routeTokensArray[_route];
+        OracleComp _oracleComp = OracleComp(comptroller.oracle());
+        address[] memory _ctokens = comptroller.getAssetsIn(_dsa);
+        for (uint i = 0; i < _ctokens.length; i++) {
+            CTokenInterface _ctoken = CTokenInterface(_ctokens[i]);
+            IERC20 _token = IERC20(_ctoken.underlying());
+            uint _decimals = _token.decimals();
+            uint _price = div(_oracleComp.getUnderlyingPrice(_ctokens[i]), 10 ** (18 - _decimals));
             uint _borrowBal = _ctoken.borrowBalanceStored(_dsa);
-            _netBorrowBal += convertTo18(_token.decimals(), _borrowBal);
+            uint _tknBal = mul(_borrowBal, 10 ** (18 - _decimals));
+            _netBorrowBal += wmul(_tknBal, _price);
         }
         return (minAmount < _netBorrowBal, _netBorrowBal);
     }
 
     // route = 3
     function checkUsersNetColAave(address _dsa, uint _route) private view returns(bool, uint) {
-        uint _netColBal;
-        address[] memory _tokens = routeTokensArray[_route];
-        for (uint i = 0; i < _tokens.length; i++) {
-            (uint _supplyBal,,,,,,,,) = aaveData.getUserReserveData(_tokens[i], _dsa);
-            uint _convertTo18 = convertTo18(IERC20(_tokens[i]).decimals(), _supplyBal);
-            _netColBal += _convertTo18;
-        }
-        return (minAmount < _netColBal, _netColBal);
+        uint _netColInUsd;
+        (uint totalColInEth, , , , , ) = AaveLendingPool(
+                aaveAddressProvider.getLendingPool()
+            ).getUserAccountData(_dsa);
+        AavePriceOracle _oracleContract = AavePriceOracle(aaveAddressProvider.getPriceOracle());
+        uint _price = _oracleContract.getAssetPrice(usdc);
+        _netColInUsd = wdiv(totalColInEth, _price);
+        return (minAmount < _netColInUsd, _netColInUsd);
     }
 
     // route = 4
     function checkUsersNetDebtAave(address _dsa, uint _route) private view returns(bool, uint) {
-        uint _netBorrowBal;
-        address[] memory _tokens = routeTokensArray[_route];
-        for (uint i = 0; i < _tokens.length; i++) {
-            (,,uint _borrowBal,,,,,,) = aaveData.getUserReserveData(_tokens[i], _dsa);
-            uint _convertTo18 = convertTo18(IERC20(_tokens[i]).decimals(), _borrowBal);
-            _netBorrowBal += _convertTo18;
-        }
-        return (minAmount < _netBorrowBal, _netBorrowBal);
+        uint _netDebtInUsd;
+        (, uint totalDebtInEth, , , , ) = AaveLendingPool(
+                aaveAddressProvider.getLendingPool()
+            ).getUserAccountData(_dsa);
+        AavePriceOracle _oracleContract = AavePriceOracle(aaveAddressProvider.getPriceOracle());
+        uint _price = _oracleContract.getAssetPrice(usdc);
+        _netDebtInUsd = wdiv(totalDebtInEth, _price);
+        return (minAmount < _netDebtInUsd, _netDebtInUsd);
     }
 
     function checkUserPosition(address _dsa, uint _route) public view returns(bool _isOk, uint _netPos) {
@@ -122,13 +131,6 @@ contract Helpers is Variables, DSMath, Basic {
         } else {
             _pos = findCreatePosLoop(_key, bytes8(0), _link.first, _price);
         }
-    }
-
-    function checkPrice(uint128 price) public view returns (bool _isOk) {
-        uint _min = sub(1e18, priceSlippage);
-        uint _max = add(1e18, priceSlippage);
-        _isOk = _min < price && price < _max;
-        require(_isOk, "price-out-of-range");
     }
 
     modifier isDSA() {
