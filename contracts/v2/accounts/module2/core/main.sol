@@ -62,8 +62,13 @@ contract Internals is Admin {
         uint _amountTo18 = wdiv(_amountFrom18, _order.price);
         _amountTo = convert18ToDec(_tokenToContract.decimals(), _amountTo18);
 
-        _tokenFromContract.safeTransfer(_order.dsa, _amountFrom);
-        AccountInterface(_order.dsa).castLimitOrder(_tokenFrom, _tokenTo, _amountFrom, _amountTo, _order.route);
+        uint _value;
+        if (_tokenFrom != ethAddr) {
+            _tokenFromContract.safeTransfer(_order.dsa, _amountFrom);
+        } else {
+            _value = _amountFrom;
+        }
+        AccountInterface(_order.dsa).castLimitOrder{value: _value}(_tokenFrom, _tokenTo, _amountFrom, _amountTo, _order.route);
     }
 
     function _cancel(bytes32 _key, OrderList memory _order, bytes8 _orderId) internal {
@@ -141,11 +146,17 @@ contract DeFiLimitOrder is Internals {
         create(_tokenFrom, _tokenTo, _price, _route, _pos);
     }
 
-    function sell(address _tokenFrom, address _tokenTo, uint _amountFrom, uint _minAmountTo, bytes8 _orderId, address _to) external returns (uint _amountTo) {
-        IERC20(_tokenFrom).safeTransferFrom(msg.sender, address(this), _amountFrom);
+    function sell(address _tokenFrom, address _tokenTo, uint _amountFrom, uint _minAmountTo, bytes8 _orderId, address _to) external payable returns (uint _amountTo) {
+        if (_tokenFrom != ethAddr) {
+            IERC20(_tokenFrom).safeTransferFrom(msg.sender, address(this), _amountFrom);
+        }
         _amountTo = _sell(_tokenFrom, _tokenTo, _amountFrom, _orderId);
         require(_minAmountTo < _amountTo, "excess-slippage");
-        IERC20(_tokenTo).safeTransfer(_to, _amountTo);
+        if (_tokenTo != ethAddr) {
+            IERC20(_tokenTo).safeTransfer(_to, _amountTo);
+        } else {
+            _to.call{value: _amountTo}("");
+        }
         emit LogSell(_tokenFrom, _tokenTo, _amountFrom, _amountTo, _orderId, _to);
     }
 
@@ -158,15 +169,21 @@ contract DeFiLimitOrder is Internals {
         uint[] memory _distributions,
         uint _units,
         address _to
-    ) external returns (uint _amountTo) {
+    ) external payable returns (uint _amountTo) {
         require(_orderIds.length == _distributions.length, "not-equal-length");
-        IERC20(_tokenFrom).safeTransferFrom(msg.sender, address(this), _amountFrom);
+        if (_tokenFrom != ethAddr) {
+            IERC20(_tokenFrom).safeTransferFrom(msg.sender, address(this), _amountFrom);
+        }
         for (uint i = 0; i < _distributions.length; i++) {
             uint _amountFromPerOrder = div(mul(_amountFrom, _distributions[i]), _units);
             _amountTo = add(_amountTo, _sell(_tokenFrom, _tokenTo, _amountFromPerOrder, _orderIds[i]));
         }
         require(_minAmountTo < _amountTo, "excess-slippage");
-        IERC20(_tokenTo).safeTransfer(_to, _amountTo);
+        if (_tokenTo != ethAddr) {
+            IERC20(_tokenTo).safeTransfer(_to, _amountTo);
+        } else {
+            _to.call{value: _amountTo}("");
+        }
         emit LogSell(
             _tokenFrom,
             _tokenTo,

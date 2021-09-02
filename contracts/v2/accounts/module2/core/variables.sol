@@ -17,7 +17,8 @@ contract Variables {
     AaveProtocolDataProvider aaveData = AaveProtocolDataProvider(0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d);
     AaveAddressProvider public constant aaveAddressProvider =
         AaveAddressProvider(0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5);
-    address public constant usdc = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    address internal constant usdcAddr = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    address internal constant ethAddr = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     // mapping (address => bool) public tokenWhitelisted; // white listed stable coins
 

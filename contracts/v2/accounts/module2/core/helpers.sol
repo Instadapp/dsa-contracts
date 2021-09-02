@@ -62,7 +62,7 @@ contract Helpers is Variables, DSMath, Basic {
                 aaveAddressProvider.getLendingPool()
             ).getUserAccountData(_dsa);
         AavePriceOracle _oracleContract = AavePriceOracle(aaveAddressProvider.getPriceOracle());
-        uint _price = _oracleContract.getAssetPrice(usdc);
+        uint _price = _oracleContract.getAssetPrice(usdcAddr);
         _netColInUsd = wdiv(totalColInEth, _price);
         return (minAmount < _netColInUsd, _netColInUsd);
     }
@@ -74,7 +74,7 @@ contract Helpers is Variables, DSMath, Basic {
                 aaveAddressProvider.getLendingPool()
             ).getUserAccountData(_dsa);
         AavePriceOracle _oracleContract = AavePriceOracle(aaveAddressProvider.getPriceOracle());
-        uint _price = _oracleContract.getAssetPrice(usdc);
+        uint _price = _oracleContract.getAssetPrice(usdcAddr);
         _netDebtInUsd = wdiv(totalDebtInEth, _price);
         return (minAmount < _netDebtInUsd, _netDebtInUsd);
     }
