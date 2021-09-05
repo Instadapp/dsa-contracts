@@ -20,7 +20,9 @@ interface AccountInterface {
         address tokenTo,
         uint amountFrom,
         uint amountTo,
-        uint32 _route
+        uint32 _route,
+        address ctokenFrom,
+        address ctokenTo
     )
     external
     payable;

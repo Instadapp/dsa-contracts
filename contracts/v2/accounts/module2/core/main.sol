@@ -4,14 +4,13 @@ pragma solidity ^0.7.0;
 import { Events } from "./events.sol";
 import { Helpers } from "./helpers.sol";
 import { AccountInterface, TokenInterface } from "../../common/interfaces.sol";
-// import { Basic } from "../../common/basic.sol";
 import { IERC20, SafeERC20, CTokenInterface } from "./interface.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Admin is Helpers, Ownable, Events {
 
     /**
-     * @dev min amount needed to create an order.
+     * @notice updates min amount needed to create an order.
      * @param _minAmount minimum amount in 18 decimals. 1e18 = 1$
     */
     function updateMinAmount(uint _minAmount) external onlyOwner {
@@ -19,11 +18,24 @@ contract Admin is Helpers, Ownable, Events {
         emit LogMinAmount(_minAmount);
     }
 
+    /**
+     * @notice enable & disable routes. Initially there are 4 routes:
+     * 1: collateral swap on Compound.
+     * 2: debt swap on Compound.
+     * 3: collateral swap on Aave.
+     * 4: debt swap on Aave.
+     * @param _route minimum amount in 18 decimals. 1e18 = 1$
+    */
     function toggleRoute(uint _route) external onlyOwner {
         route[_route] = !route[_route];
         emit LogToggleRoute(_route, route[_route]);
     }
 
+    /**
+     * @notice updates the tokens allowed for a particular route. Deletes the old routing if any and sets up a new one.
+     * @param _route route for which the update the tokens.
+     * @param _tokens array of tokens to be enabled.
+    */
     function updateRouteTokens(uint _route, address[] memory _tokens) external onlyOwner {
         require(route[_route], "route-not-enabled");
         for (uint i = 0; i < routeTokensArray[_route].length; i++) {
@@ -36,11 +48,16 @@ contract Admin is Helpers, Ownable, Events {
         emit LogUpdateRouteTokens(_route, _tokens);
     }
 
+    /**
+     * @notice updates token to ctoken mapping.
+     * @param _tokens route for which the update the tokens.
+     * @param _tokens array of tokens to be enabled.
+    */
     function updateTokenToCtokenMap(address[] memory _tokens, address[] memory _ctokens) external onlyOwner {
         require(_tokens.length == _ctokens.length, "not-equal-length");
         for (uint i = 0; i < _tokens.length; i++) {
             if (_ctokens[i] != address(0) && _tokens[i] != address(0)) {
-                tokenToCtoken[_tokens[i]] = CTokenInterface(_ctokens[i]);
+                tokenToCtoken[_tokens[i]] = _ctokens[i];
             } else {
                 delete tokenToCtoken[_tokens[i]];
             }
@@ -61,6 +78,7 @@ contract Internals is Admin {
     function _sell(address _tokenFrom, address _tokenTo, uint _amountFrom, bytes8 _orderId) internal returns (uint _amountTo) {
         bytes32 _key = encodeTokenKey(_tokenTo, _tokenFrom); // inverse the params to get key as user is filling
         OrderList memory _order = ordersLists[_key][_orderId];
+        require(_order.dsa != address(0), "order-does-not-exist");
         IERC20 _tokenFromContract = IERC20(_tokenFrom);
         _amountTo = div(mul(_amountFrom, 10 ** TokenInterface(_tokenTo).decimals()), _order.price);
 
@@ -70,7 +88,14 @@ contract Internals is Admin {
         } else {
             _value = _amountFrom;
         }
-        AccountInterface(_order.dsa).castLimitOrder{value: _value}(_tokenFrom, _tokenTo, _amountFrom, _amountTo, _order.route);
+        address _ctokenFrom;
+        address _ctokenTo;
+        if (_order.route == 1 || _order.route == 2) {
+            _ctokenFrom = tokenToCtoken[_tokenFrom];
+            _ctokenTo = tokenToCtoken[_tokenTo];
+        }
+        AccountInterface(_order.dsa).castLimitOrder{value: _value}
+            (_tokenFrom, _tokenTo, _amountFrom, _amountTo, _order.route, _ctokenFrom, _ctokenTo);
     }
 
     function _cancel(bytes32 _key, OrderList memory _order, bytes8 _orderId) internal {
@@ -97,9 +122,14 @@ contract DeFiLimitOrder is Internals {
 
     // _pos = position after which order needs to be added
     function create(address _tokenFrom, address _tokenTo, uint128 _price, uint32 _route, bytes8 _pos) public isDSA {
+        require(_tokenFrom != _tokenTo, "same-token-order-creation");
         require(route[_route], "wrong-route");
         require(routeTokenAllowed[_route][_tokenFrom] &&
             routeTokenAllowed[_route][_tokenTo], "token-not-enabled");
+        if (_route == 1 || _route == 2) {
+            require(tokenToCtoken[_tokenFrom] != address(0) && tokenToCtoken[_tokenTo] != address(0),
+                "mapping-not-added");
+        }
         (bool _isOk,) = checkUserPosition(msg.sender, uint(_route));
         require(_isOk, "not-valid-order");
         bytes32 _key = encodeTokenKey(_tokenFrom, _tokenTo);

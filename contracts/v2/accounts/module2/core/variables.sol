@@ -27,7 +27,7 @@ contract Variables {
     mapping (uint => bool) public route;
     mapping (uint => mapping (address => bool)) public routeTokenAllowed;
     mapping (uint => address[]) public routeTokensArray;
-    mapping (address => CTokenInterface) public tokenToCtoken;
+    mapping (address => address) public tokenToCtoken;
     mapping (address => bool) public canCancel;
 
     mapping (bytes32 => OrderLink) public ordersLinks;
