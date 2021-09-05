@@ -40,7 +40,6 @@ contract Helpers is Variables, DSMath, Basic {
     // route = 2
     function checkUsersNetDebtCompound(address _dsa, uint _route) private view returns(bool, uint) {
         uint _netBorrowBal;
-        // address[] memory _tokens = routeTokensArray[_route];
         OracleComp _oracleComp = OracleComp(comptroller.oracle());
         address[] memory _ctokens = comptroller.getAssetsIn(_dsa);
         for (uint i = 0; i < _ctokens.length; i++) {

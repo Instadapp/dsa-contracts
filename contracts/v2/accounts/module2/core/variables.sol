@@ -28,6 +28,7 @@ contract Variables {
     mapping (uint => mapping (address => bool)) public routeTokenAllowed;
     mapping (uint => address[]) public routeTokensArray;
     mapping (address => CTokenInterface) public tokenToCtoken;
+    mapping (address => bool) public canCancel;
 
     mapping (bytes32 => OrderLink) public ordersLinks;
     mapping (bytes32 => mapping (bytes8 => OrderList)) public ordersLists; // abi.encode(tokenFrom, tokenTo) => DSA => DSA's order

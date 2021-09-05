@@ -3,7 +3,7 @@ pragma solidity ^0.7.0;
 
 import { Events } from "./events.sol";
 import { Helpers } from "./helpers.sol";
-import { AccountInterface } from "../../common/interfaces.sol";
+import { AccountInterface, TokenInterface } from "../../common/interfaces.sol";
 // import { Basic } from "../../common/basic.sol";
 import { IERC20, SafeERC20, CTokenInterface } from "./interface.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -12,7 +12,7 @@ contract Admin is Helpers, Ownable, Events {
 
     /**
      * @dev min amount needed to create an order.
-     * @param _minAmount minimum amount in 18 decimals. 1e18 = 1 stable coin
+     * @param _minAmount minimum amount in 18 decimals. 1e18 = 1$
     */
     function updateMinAmount(uint _minAmount) external onlyOwner {
         minAmount = _minAmount;
@@ -30,8 +30,8 @@ contract Admin is Helpers, Ownable, Events {
             delete routeTokenAllowed[_route][routeTokensArray[_route][i]];
         }
         routeTokensArray[_route] = _tokens;
-        for (uint i = 0; i < routeTokensArray[_route].length; i++) {
-            routeTokenAllowed[_route][routeTokensArray[_route][i]] = true;
+        for (uint i = 0; i < _tokens.length; i++) {
+            routeTokenAllowed[_route][_tokens[i]] = true;
         }
         emit LogUpdateRouteTokens(_route, _tokens);
     }
@@ -48,6 +48,11 @@ contract Admin is Helpers, Ownable, Events {
         emit LogUpdateTokenToCtokenMap(_tokens, _ctokens);
     }
 
+    function updateCanCancel(address _user) external onlyOwner {
+        canCancel[_user] = !canCancel[_user];
+        emit LogUpdateCanCancel(_user, canCancel[_user]);
+    }
+
 }
 
 contract Internals is Admin {
@@ -57,10 +62,7 @@ contract Internals is Admin {
         bytes32 _key = encodeTokenKey(_tokenTo, _tokenFrom); // inverse the params to get key as user is filling
         OrderList memory _order = ordersLists[_key][_orderId];
         IERC20 _tokenFromContract = IERC20(_tokenFrom);
-        IERC20 _tokenToContract = IERC20(_tokenTo);
-        uint _amountFrom18 = convertTo18(_tokenFromContract.decimals(), _amountFrom);
-        uint _amountTo18 = wdiv(_amountFrom18, _order.price);
-        _amountTo = convert18ToDec(_tokenToContract.decimals(), _amountTo18);
+        _amountTo = div(mul(_amountFrom, 10 ** TokenInterface(_tokenTo).decimals()), _order.price);
 
         uint _value;
         if (_tokenFrom != ethAddr) {
@@ -96,6 +98,8 @@ contract DeFiLimitOrder is Internals {
     // _pos = position after which order needs to be added
     function create(address _tokenFrom, address _tokenTo, uint128 _price, uint32 _route, bytes8 _pos) public isDSA {
         require(route[_route], "wrong-route");
+        require(routeTokenAllowed[_route][_tokenFrom] &&
+            routeTokenAllowed[_route][_tokenTo], "token-not-enabled");
         (bool _isOk,) = checkUserPosition(msg.sender, uint(_route));
         require(_isOk, "not-valid-order");
         bytes32 _key = encodeTokenKey(_tokenFrom, _tokenTo);
@@ -204,8 +208,9 @@ contract DeFiLimitOrder is Internals {
         emit LogCancel(_tokenFrom, _tokenTo, _orderId);
     }
 
-    // this contract owner can cancel any limit orders (owner will be a multi-sig)
-    function cancelOwner(address _tokenFrom, address _tokenTo, bytes8 _orderId) public onlyOwner {
+    // The enabled addresses can cancel any order anytime. Doesn't result in risk to users assets
+    function cancelOwner(address _tokenFrom, address _tokenTo, bytes8 _orderId) public {
+        require(canCancel[msg.sender], "not-enabled-for-cancellation");
         bytes32 _key = encodeTokenKey(_tokenFrom, _tokenTo);
         OrderList memory _order = ordersLists[_key][_orderId];
         _cancel(_key, _order, _orderId);
