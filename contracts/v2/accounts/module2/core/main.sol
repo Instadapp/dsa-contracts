@@ -50,8 +50,8 @@ contract Admin is Helpers, Ownable, Events {
 
     /**
      * @notice updates token to ctoken mapping.
-     * @param _tokens route for which the update the tokens.
-     * @param _tokens array of tokens to be enabled.
+     * @param _tokens array of tokens addresses.
+     * @param _ctokens array of ctokens addresses.
     */
     function updateTokenToCtokenMap(address[] memory _tokens, address[] memory _ctokens) external onlyOwner {
         require(_tokens.length == _ctokens.length, "not-equal-length");
@@ -65,9 +65,13 @@ contract Admin is Helpers, Ownable, Events {
         emit LogUpdateTokenToCtokenMap(_tokens, _ctokens);
     }
 
-    function updateCanCancel(address _user) external onlyOwner {
+    /**
+     * @notice Add/Remove addresses with allowance to cancel any order.
+     * @param _user address to enable or disable.
+    */
+    function toggleCanCancel(address _user) external onlyOwner {
         canCancel[_user] = !canCancel[_user];
-        emit LogUpdateCanCancel(_user, canCancel[_user]);
+        emit LogToggleCanCancel(_user, canCancel[_user]);
     }
 
 }
@@ -75,6 +79,14 @@ contract Admin is Helpers, Ownable, Events {
 contract Internals is Admin {
     using SafeERC20 for IERC20;
 
+    /**
+     * @notice Checks if the order exist. If yes then calls the DSA attached to that order.
+     * @param _tokenFrom address of token from.
+     * @param _tokenTo address of token to.
+     * @param _amountFrom token from amount to swap.
+     * @param _orderId bytes8 order ID.
+     * @return _amountTo amount of token to.
+    */
     function _sell(address _tokenFrom, address _tokenTo, uint _amountFrom, bytes8 _orderId) internal returns (uint _amountTo) {
         bytes32 _key = encodeTokenKey(_tokenTo, _tokenFrom); // inverse the params to get key as user is filling
         OrderList memory _order = ordersLists[_key][_orderId];
@@ -98,6 +110,12 @@ contract Internals is Admin {
             (_tokenFrom, _tokenTo, _amountFrom, _amountTo, _order.route, _ctokenFrom, _ctokenTo);
     }
 
+    /**
+     * @notice Cancels an order. Removes from linked list & deletes it.
+     * @param _key bytes32 token pair key.
+     * @param _order Order Struct.
+     * @param _orderId bytes8 Order ID.
+    */
     function _cancel(bytes32 _key, OrderList memory _order, bytes8 _orderId) internal {
         ordersLinks[_key].count--;
         if (_order.prev == bytes8(0)) {
@@ -120,7 +138,14 @@ contract Internals is Admin {
 contract DeFiLimitOrder is Internals {
     using SafeERC20 for IERC20;
 
-    // _pos = position after which order needs to be added
+    /**
+     * @notice Creates an order. Only DSAs can call it. Check is order is valid, if yes then adds it to the linked list according to the price.
+     * @param _tokenFrom address of token from.
+     * @param _tokenTo address of token to.
+     * @param _price amount of token to with decimal per token from without decimal. Eg:- if user wants to spend 1 DAI for 1 USDC then price will be 1e6.
+     * @param _route order route. 1: Compound's collateral swap. 2: Compound's debt swap. 3: Aave's collateral swap. 4: Aave's debt swap.
+     * @param _pos position of order in the linked list.
+    */
     function create(address _tokenFrom, address _tokenTo, uint128 _price, uint32 _route, bytes8 _pos) public isDSA {
         require(_tokenFrom != _tokenTo, "same-token-order-creation");
         require(route[_route], "wrong-route");
@@ -174,12 +199,28 @@ contract DeFiLimitOrder is Internals {
         emit LogCreate(_tokenFrom, _tokenTo, _price, _route, _pos);
     }
 
+    /**
+     * @notice Calls create() to create the order. Search the pos by looping through linked list. (Not gas efficient)
+     * @param _tokenFrom address of token from.
+     * @param _tokenTo address of token to.
+     * @param _price amount of token to with decimal per token from without decimal. Eg:- if user wants to spend 1 DAI for 1 USDC then price will be 1e6.
+     * @param _route order route. 1: Compound's collateral swap. 2: Compound's debt swap. 3: Aave's collateral swap. 4: Aave's debt swap.
+    */
     function create(address _tokenFrom, address _tokenTo, uint128 _price, uint32 _route) external isDSA {
         bytes32 _key = encodeTokenKey(_tokenFrom, _tokenTo);
         bytes8 _pos = findCreatePos(_key, _price);
         create(_tokenFrom, _tokenTo, _price, _route, _pos);
     }
 
+    /**
+     * @notice Fills the order partially or full.
+     * @param _tokenFrom address of token from.
+     * @param _tokenTo address of token to.
+     * @param _amountFrom amount of token from to swap.
+     * @param _minAmountTo minimum amount of token to user will accept.
+     * @param _orderId bytes8 order ID to fill.
+     * @param _to address to which the tokens needs to be sent after swap.
+    */
     function sell(address _tokenFrom, address _tokenTo, uint _amountFrom, uint _minAmountTo, bytes8 _orderId, address _to) external payable returns (uint _amountTo) {
         if (_tokenFrom != ethAddr) {
             IERC20(_tokenFrom).safeTransferFrom(msg.sender, address(this), _amountFrom);
@@ -194,6 +235,16 @@ contract DeFiLimitOrder is Internals {
         emit LogSell(_tokenFrom, _tokenTo, _amountFrom, _amountTo, _orderId, _to);
     }
 
+    /**
+     * @notice Fills multiple orders partially or full.
+     * @param _tokenFrom address of token from.
+     * @param _tokenTo address of token to.
+     * @param _amountFrom amount of token from to swap.
+     * @param _minAmountTo minimum amount of token to user will accept.
+     * @param _orderIds IDs of order to fill.
+     * @param _distributions Distribution of swaps on above IDs.
+     * @param _to address to which the tokens needs to be sent after swap.
+    */
     function sell(
         address _tokenFrom,
         address _tokenTo,
@@ -201,12 +252,15 @@ contract DeFiLimitOrder is Internals {
         uint _minAmountTo,
         bytes8[] memory _orderIds,
         uint[] memory _distributions,
-        uint _units,
         address _to
     ) external payable returns (uint _amountTo) {
         require(_orderIds.length == _distributions.length, "not-equal-length");
         if (_tokenFrom != ethAddr) {
             IERC20(_tokenFrom).safeTransferFrom(msg.sender, address(this), _amountFrom);
+        }
+        uint _units;
+        for (uint i = 0; i < _distributions.length; i++) {
+            _units += _distributions[i];
         }
         for (uint i = 0; i < _distributions.length; i++) {
             uint _amountFromPerOrder = div(mul(_amountFrom, _distributions[i]), _units);
@@ -230,6 +284,12 @@ contract DeFiLimitOrder is Internals {
         );
     }
 
+    /**
+     * @notice To cancel an order. The order creator can only cancel.
+     * @param _tokenFrom address of token from.
+     * @param _tokenTo address of token to.
+     * @param _orderId order ID for which to cancel.
+    */
     function cancel(address _tokenFrom, address _tokenTo, bytes8 _orderId) public {
         bytes32 _key = encodeTokenKey(_tokenFrom, _tokenTo);
         OrderList memory _order = ordersLists[_key][_orderId];
@@ -238,7 +298,12 @@ contract DeFiLimitOrder is Internals {
         emit LogCancel(_tokenFrom, _tokenTo, _orderId);
     }
 
-    // The enabled addresses can cancel any order anytime. Doesn't result in risk to users assets
+    /**
+     * @notice To cancel an order. Enabled addresses can cancel any order.
+     * @param _tokenFrom address of token from.
+     * @param _tokenTo address of token to.
+     * @param _orderId order ID for which to cancel.
+    */
     function cancelOwner(address _tokenFrom, address _tokenTo, bytes8 _orderId) public {
         require(canCancel[msg.sender], "not-enabled-for-cancellation");
         bytes32 _key = encodeTokenKey(_tokenFrom, _tokenTo);
@@ -247,6 +312,12 @@ contract DeFiLimitOrder is Internals {
         emit LogCancelOwner(_tokenFrom, _tokenTo, _orderId);
     }
 
+    /**
+     * @notice To cancel an order. Anyone can cancel publicly if order is not valid anymore.
+     * @param _tokenFrom address of token from.
+     * @param _tokenTo address of token to.
+     * @param _orderId order ID for which to cancel.
+    */
     function cancelPublic(address _tokenFrom, address _tokenTo, bytes8 _orderId) public {
         bytes32 _key = encodeTokenKey(_tokenFrom, _tokenTo);
         OrderList memory _order = ordersLists[_key][_orderId];
