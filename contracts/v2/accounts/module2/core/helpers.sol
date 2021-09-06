@@ -10,16 +10,32 @@ import { Basic } from "../../common/basic.sol";
 contract Helpers is Variables, DSMath, Basic {
     using SafeERC20 for IERC20;
 
-
+    /**
+     * @notice encodes the key of token pair to be used in linked mapping.
+     * @param _tokenFrom address of token from.
+     * @param _tokenTo address of token to.
+     * @return _key bytes32
+    */
     function encodeTokenKey(address _tokenFrom, address _tokenTo) public pure returns (bytes32 _key) {
         _key = keccak256(abi.encode(_tokenFrom, _tokenTo));
     }
 
+    /**
+     * @notice encodes the key of DSA with route. Also, known as order ID
+     * @param _dsa address of DSA.
+     * @param _route route ID.
+     * @return _key bytes8 order ID.
+    */
     function encodeDsaKey(address _dsa, uint32 _route) public pure returns (bytes8 _key) {
         _key = bytes8(keccak256(abi.encode(_dsa, _route)));
     }
 
-    // route = 1
+    /**
+     * @notice Checks is user satisfy minimum collateral requirement.
+     * @param _dsa address of DSA.
+     * @param _route route ID.
+     * @return bool & uint. bool should be true & uint is net collateral of user is USD. $1 = 1e18.
+    */
     function checkUsersNetColCompound(address _dsa, uint _route) private view returns(bool, uint) {
         uint _netColBal; // net collateral value in USD
         OracleComp _oracleComp = OracleComp(comptroller.oracle());
@@ -37,7 +53,12 @@ contract Helpers is Variables, DSMath, Basic {
         return (minAmount < _netColBal, _netColBal);
     }
 
-    // route = 2
+    /**
+     * @notice Checks is user satisfy minimum debt requirement.
+     * @param _dsa address of DSA.
+     * @param _route route ID.
+     * @return bool & uint. bool should be true & uint is net collateral of user is USD. $1 = 1e18.
+    */
     function checkUsersNetDebtCompound(address _dsa, uint _route) private view returns(bool, uint) {
         uint _netBorrowBal;
         OracleComp _oracleComp = OracleComp(comptroller.oracle());
@@ -54,7 +75,12 @@ contract Helpers is Variables, DSMath, Basic {
         return (minAmount < _netBorrowBal, _netBorrowBal);
     }
 
-    // route = 3
+    /**
+     * @notice Checks is user satisfy minimum collateral requirement.
+     * @param _dsa address of DSA.
+     * @param _route route ID.
+     * @return bool & uint. bool should be true & uint is net collateral of user is USD. $1 = 1e18.
+    */
     function checkUsersNetColAave(address _dsa, uint _route) private view returns(bool, uint) {
         uint _netColInUsd;
         (uint totalColInEth, , , , , ) = AaveLendingPool(
@@ -66,7 +92,12 @@ contract Helpers is Variables, DSMath, Basic {
         return (minAmount < _netColInUsd, _netColInUsd);
     }
 
-    // route = 4
+    /**
+     * @notice Checks is user satisfy minimum debt requirement.
+     * @param _dsa address of DSA.
+     * @param _route route ID.
+     * @return bool & uint. bool should be true & uint is net collateral of user is USD. $1 = 1e18.
+    */
     function checkUsersNetDebtAave(address _dsa, uint _route) private view returns(bool, uint) {
         uint _netDebtInUsd;
         (, uint totalDebtInEth, , , , ) = AaveLendingPool(
@@ -78,6 +109,12 @@ contract Helpers is Variables, DSMath, Basic {
         return (minAmount < _netDebtInUsd, _netDebtInUsd);
     }
 
+    /**
+     * @notice Checks users meets requirement accorrding to route. Used in create & cancel.
+     * @param _dsa address of DSA.
+     * @param _route route ID.
+     * @return _isOk & _netPos. bool should be true & uint is net collateral of user is USD. $1 = 1e18.
+    */
     function checkUserPosition(address _dsa, uint _route) public view returns(bool _isOk, uint _netPos) {
         if (_route == 1) {
             (_isOk, _netPos) = checkUsersNetColCompound(_dsa, _route);
@@ -92,6 +129,13 @@ contract Helpers is Variables, DSMath, Basic {
         }
     }
 
+    /**
+     * @notice Find the position in linked list by looping through the linked list where the order should fit.
+     * @param _key bytes32 token pair ID.
+     * @param _prevPosCheck previous order ID.
+     * @param _nextPosCheck next order ID.
+     * @param _price price per token of the order.
+    */
     function findCreatePosLoop(bytes32 _key, bytes8 _prevPosCheck, bytes8 _nextPosCheck, uint128 _price) private view returns(bytes8 _pos) {
         bool _isOkPrev;
         bool _isOkNext;
@@ -123,6 +167,12 @@ contract Helpers is Variables, DSMath, Basic {
         }
     }
 
+    /**
+     * @notice Fetches the position at which the order should fit according to price.
+     * @param _key bytes32 token pair ID.
+     * @param _price price per token of the order.
+     * @return _pos position at which the order should go.
+    */
     function findCreatePos(bytes32 _key, uint128 _price) public view returns (bytes8 _pos) {
         OrderLink memory _link = ordersLinks[_key];
         if (_link.first == bytes8(0) && _link.last == bytes8(0) && _link.count == 0) {
@@ -132,6 +182,9 @@ contract Helpers is Variables, DSMath, Basic {
         }
     }
 
+    /**
+     * @notice checks if the caller is DSA or not.
+    */
     modifier isDSA() {
         uint64 _dsaId = instaList.accountID(msg.sender);
         uint _verion = AccountInterface(msg.sender).version();
@@ -140,6 +193,9 @@ contract Helpers is Variables, DSMath, Basic {
         _;
     }
 
+    /**
+     * @notice returns the length of array of tokens enabled for particular route.
+    */
     function getRouteTokensArrayLength(uint _route) public view returns (uint _length) {
         _length = routeTokensArray[_route].length;
     }
