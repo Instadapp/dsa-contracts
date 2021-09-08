@@ -10,6 +10,8 @@ import { Basic } from "../../common/basic.sol";
 contract Helpers is Variables, DSMath, Basic {
     using SafeERC20 for IERC20;
 
+    address constant internal wethAddr = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+
     /**
      * @notice encodes the key of token pair to be used in linked mapping.
      * @param _tokenFrom address of token from.
@@ -41,8 +43,13 @@ contract Helpers is Variables, DSMath, Basic {
         OracleComp _oracleComp = OracleComp(comptroller.oracle());
         address[] memory _ctokens = comptroller.getAssetsIn(_dsa);
         for (uint i = 0; i < _ctokens.length; i++) {
+            IERC20 _token;
             CTokenInterface _ctoken = CTokenInterface(_ctokens[i]);
-            IERC20 _token = IERC20(_ctoken.underlying());
+            if(keccak256(abi.encodePacked(_ctoken.symbol())) == keccak256(abi.encodePacked("cETH"))) {
+                _token = IERC20(wethAddr);
+            } else {
+                _token = IERC20(_ctoken.underlying());
+            }
             uint _decimals = _token.decimals();
             uint _price = div(_oracleComp.getUnderlyingPrice(_ctokens[i]), 10 ** (18 - _decimals));
             uint _ctokenBal = _ctoken.balanceOf(_dsa);
@@ -163,7 +170,12 @@ contract Helpers is Variables, DSMath, Basic {
         } else {
             _prevPosCheck = _nextPosCheck;
             _nextPosCheck = _nextOrderKey;
-            _pos = findCreatePosLoop(_key, _prevPosCheck, _nextPosCheck, _price);
+            _pos = findCreatePosLoop(
+                _key,
+                _prevPosCheck,
+                _nextPosCheck,
+                _price
+            );
         }
     }
 
@@ -175,7 +187,11 @@ contract Helpers is Variables, DSMath, Basic {
     */
     function findCreatePos(bytes32 _key, uint128 _price) public view returns (bytes8 _pos) {
         OrderLink memory _link = ordersLinks[_key];
-        if (_link.first == bytes8(0) && _link.last == bytes8(0) && _link.count == 0) {
+        if (
+            _link.first == bytes8(0) &&
+            _link.last == bytes8(0) &&
+            _link.count == 0
+        ) {
             _pos = bytes8(0);
         } else {
             _pos = findCreatePosLoop(_key, bytes8(0), _link.first, _price);
@@ -187,7 +203,7 @@ contract Helpers is Variables, DSMath, Basic {
     */
     modifier isDSA() {
         uint64 _dsaId = instaList.accountID(msg.sender);
-        uint _verion = AccountInterface(msg.sender).version();
+        uint256 _verion = AccountInterface(msg.sender).version();
         require(_dsaId != 0, "not-a-dsa");
         require(_verion == 2, "not-dsa-v2");
         _;
@@ -199,5 +215,4 @@ contract Helpers is Variables, DSMath, Basic {
     function getRouteTokensArrayLength(uint _route) public view returns (uint _length) {
         _length = routeTokensArray[_route].length;
     }
-
 }

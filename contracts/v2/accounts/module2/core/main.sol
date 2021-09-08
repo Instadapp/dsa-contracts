@@ -1,14 +1,14 @@
 pragma solidity ^0.7.0;
 
-
 import { Events } from "./events.sol";
 import { Helpers } from "./helpers.sol";
 import { AccountInterface, TokenInterface } from "../../common/interfaces.sol";
 import { IERC20, SafeERC20, CTokenInterface } from "./interface.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Admin is Helpers, Ownable, Events {
+import "hardhat/console.sol";
 
+contract Admin is Helpers, Ownable, Events {
     /**
      * @notice updates min amount needed to create an order.
      * @param _minAmount minimum amount in 18 decimals. 1e18 = 1$
@@ -18,7 +18,7 @@ contract Admin is Helpers, Ownable, Events {
         emit LogMinAmount(_minAmount);
     }
 
-    /**
+    /** 
      * @notice enable & disable routes. Initially there are 4 routes:
      * 1: collateral swap on Compound.
      * 2: debt swap on Compound.
@@ -38,7 +38,7 @@ contract Admin is Helpers, Ownable, Events {
     */
     function updateRouteTokens(uint _route, address[] memory _tokens) external onlyOwner {
         require(route[_route], "route-not-enabled");
-        for (uint i = 0; i < routeTokensArray[_route].length; i++) {
+        for (uint256 i = 0; i < routeTokensArray[_route].length; i++) {
             delete routeTokenAllowed[_route][routeTokensArray[_route][i]];
         }
         routeTokensArray[_route] = _tokens;
@@ -55,7 +55,7 @@ contract Admin is Helpers, Ownable, Events {
     */
     function updateTokenToCtokenMap(address[] memory _tokens, address[] memory _ctokens) external onlyOwner {
         require(_tokens.length == _ctokens.length, "not-equal-length");
-        for (uint i = 0; i < _tokens.length; i++) {
+        for (uint256 i = 0; i < _tokens.length; i++) {
             if (_ctokens[i] != address(0) && _tokens[i] != address(0)) {
                 tokenToCtoken[_tokens[i]] = _ctokens[i];
             } else {
@@ -92,7 +92,13 @@ contract Internals is Admin {
         OrderList memory _order = ordersLists[_key][_orderId];
         require(_order.dsa != address(0), "order-does-not-exist");
         IERC20 _tokenFromContract = IERC20(_tokenFrom);
-        _amountTo = div(mul(_amountFrom, 10 ** TokenInterface(_tokenTo).decimals()), _order.price);
+        uint _toDecimals;
+        if(_tokenTo == ethAddr) {
+            _toDecimals = 18;
+        } else {
+            _toDecimals = TokenInterface(_tokenTo).decimals();
+        }
+        _amountTo = div(mul(_amountFrom, 10 ** _toDecimals), _order.price);
 
         uint _value;
         if (_tokenFrom != ethAddr) {
@@ -132,7 +138,10 @@ contract Internals is Admin {
         }
         delete ordersLists[_key][_orderId];
     }
+}
 
+interface InstaMapping {
+    function cTokenMapping(address) external view returns (address);
 }
 
 contract DeFiLimitOrder is Internals {
@@ -160,21 +169,44 @@ contract DeFiLimitOrder is Internals {
         bytes32 _key = encodeTokenKey(_tokenFrom, _tokenTo);
         bytes8 _key2 = encodeDsaKey(msg.sender, _route);
         OrderList memory _orderExists = ordersLists[_key][_key2];
-        if (_orderExists.dsa != address(0)) { // does similar order exist (same token for same route)
+        if (_orderExists.dsa != address(0)) {
+            // does similar order exist (same token for same route)
             _cancel(_key, _orderExists, _key2);
             emit LogCancelCreate(_tokenFrom, _tokenTo, _key2);
         }
         OrderLink memory _link = ordersLinks[_key];
-        if (_pos == bytes8(0)) { // if position is first
-            if (_link.first == bytes8(0) && _link.last == bytes8(0) && _link.count == 0) { // if no previous order in the list
-                ordersLists[_key][_key2] = OrderList(bytes8(0), bytes8(0), _price, _route, _tokenFrom, _tokenTo, msg.sender);
+        if (_pos == bytes8(0)) {
+            // if position is first
+            if (
+                _link.first == bytes8(0) &&
+                _link.last == bytes8(0) &&
+                _link.count == 0
+            ) {
+                // if no previous order in the list
+                ordersLists[_key][_key2] = OrderList(
+                    bytes8(0),
+                    bytes8(0),
+                    _price,
+                    _route,
+                    _tokenFrom,
+                    _tokenTo,
+                    msg.sender
+                );
                 ordersLinks[_key].first = _key2;
                 ordersLinks[_key].last = _key2;
                 ordersLinks[_key].count++;
             } else {
                 OrderList memory _order = ordersLists[_key][_link.first];
                 require(_price <= _order.price, "wrong-pos-1");
-                ordersLists[_key][_key2] = OrderList(bytes8(0), _link.first, _price, _route, _tokenFrom, _tokenTo, msg.sender);
+                ordersLists[_key][_key2] = OrderList(
+                    bytes8(0),
+                    _link.first,
+                    _price,
+                    _route,
+                    _tokenFrom,
+                    _tokenTo,
+                    msg.sender
+                );
                 ordersLists[_key][_link.first].prev = _key2;
                 ordersLinks[_key].first = _key2;
                 ordersLinks[_key].count++;
@@ -183,14 +215,36 @@ contract DeFiLimitOrder is Internals {
             OrderList memory _posExistingOrder = ordersLists[_key][_pos];
             if (_posExistingOrder.next == bytes8(0)) {
                 require(_posExistingOrder.price <= _price, "wrong-pos-2");
-                ordersLists[_key][_key2] = OrderList(_pos, bytes8(0), _price, _route, _tokenFrom, _tokenTo, msg.sender);
+                ordersLists[_key][_key2] = OrderList(
+                    _pos,
+                    bytes8(0),
+                    _price,
+                    _route,
+                    _tokenFrom,
+                    _tokenTo,
+                    msg.sender
+                );
                 ordersLists[_key][_pos].next = _key2;
                 ordersLinks[_key].last = _key2;
                 ordersLinks[_key].count++;
             } else {
-                OrderList memory _posNextOrder = ordersLists[_key][_posExistingOrder.next];
-                require(_posExistingOrder.price <= _price && _price <= _posNextOrder.price, "wrong-pos-3");
-                ordersLists[_key][_key2] = OrderList(_pos, _posExistingOrder.next, _price, _route, _tokenFrom, _tokenTo, msg.sender);
+                OrderList memory _posNextOrder = ordersLists[_key][
+                    _posExistingOrder.next
+                ];
+                require(
+                    _posExistingOrder.price <= _price &&
+                        _price <= _posNextOrder.price,
+                    "wrong-pos-3"
+                );
+                ordersLists[_key][_key2] = OrderList(
+                    _pos,
+                    _posExistingOrder.next,
+                    _price,
+                    _route,
+                    _tokenFrom,
+                    _tokenTo,
+                    msg.sender
+                );
                 ordersLists[_key][_pos].next = _key2;
                 ordersLists[_key][_posExistingOrder.next].prev = _key2;
                 ordersLinks[_key].count++;
@@ -248,8 +302,8 @@ contract DeFiLimitOrder is Internals {
     function sell(
         address _tokenFrom,
         address _tokenTo,
-        uint _amountFrom,
-        uint _minAmountTo,
+        uint256 _amountFrom,
+        uint256 _minAmountTo,
         bytes8[] memory _orderIds,
         uint[] memory _distributions,
         address _to
@@ -321,10 +375,9 @@ contract DeFiLimitOrder is Internals {
     function cancelPublic(address _tokenFrom, address _tokenTo, bytes8 _orderId) public {
         bytes32 _key = encodeTokenKey(_tokenFrom, _tokenTo);
         OrderList memory _order = ordersLists[_key][_orderId];
-        (bool _isOk,) = checkUserPosition(_order.dsa, uint(_order.route));
+        (bool _isOk, ) = checkUserPosition(_order.dsa, uint256(_order.route));
         require(!_isOk, "order-meets-min-requirement");
         _cancel(_key, _order, _orderId);
         emit LogCancelPublic(_tokenFrom, _tokenTo, _orderId);
     }
-
 }

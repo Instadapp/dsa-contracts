@@ -1,9 +1,9 @@
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
-import { Variables } from "../variables.sol";
+import {Variables} from "../variables.sol";
 
-import { AccountInterface } from "../common/interfaces.sol";
+import {AccountInterface} from "../common/interfaces.sol";
 
 /**
  * @title InstaAccountV2.
@@ -11,7 +11,10 @@ import { AccountInterface } from "../common/interfaces.sol";
  */
 
 interface ConnectorsInterface {
-    function isConnectors(string[] calldata connectorNames) external view returns (bool, address[] memory);
+    function isConnectors(string[] calldata connectorNames)
+        external
+        view
+        returns (bool, address[] memory);
 }
 
 contract Constants is Variables {
@@ -23,15 +26,14 @@ contract Constants is Variables {
     }
 }
 
-contract InstaImplementationM2 is Constants {
-
+contract InstaImplementationM2Module is Constants {
     constructor(address _limitOrderContract) Constants(_limitOrderContract) {}
 
     event LogLimitOrderCast(
         address tokenFrom,
         address tokenTo,
-        uint amountFrom,
-        uint amountTo,
+        uint256 amountFrom,
+        uint256 amountTo,
         uint32 _route
     );
 
@@ -55,29 +57,62 @@ contract InstaImplementationM2 is Constants {
         if (_route == 1) {
             _targetNames[0] = 'COMPOUND-A';
             _targetNames[1] = 'COMPOUND-A';
-            _castData[0] = abi.encodeWithSignature('deposit(address,address,uint256,uint256,uint256)', tokenFrom, ctokenFrom, amountFrom, 0, 0);
-            _castData[1] = abi.encodeWithSignature('withdraw(address,address,uint256,uint256,uint256)', tokenTo, ctokenTo, amountTo, 0, 0);
+            _castData[0] = abi.encodeWithSignature('depositRaw(address,address,uint256,uint256,uint256)', tokenFrom, ctokenFrom, amountFrom, 0, 0);
+            _castData[1] = abi.encodeWithSignature('withdrawRaw(address,address,uint256,uint256,uint256)', tokenTo, ctokenTo, amountTo, 0, 0);
         } else if (_route == 2) {
             _targetNames[0] = 'COMPOUND-A';
             _targetNames[1] = 'COMPOUND-A';
-            _castData[0] = abi.encodeWithSignature('payback(address,address,uint256,uint256,uint256)', tokenFrom, ctokenFrom, amountFrom, 0, 0);
-            _castData[1] = abi.encodeWithSignature('borrow(address,address,uint256,uint256,uint256)', tokenTo, ctokenTo, amountTo, 0, 0);
+            _castData[0] = abi.encodeWithSignature('paybackRaw(address,address,uint256,uint256,uint256)', tokenFrom, ctokenFrom, amountFrom, 0, 0);
+            _castData[1] = abi.encodeWithSignature('borrowRaw(address,address,uint256,uint256,uint256)', tokenTo, ctokenTo, amountTo, 0, 0);
         } else if (_route == 3) {
-            _targetNames[0] = 'AAVE-V2-A';
-            _targetNames[1] = 'AAVE-V2-A';
-            _castData[0] = abi.encodeWithSignature('deposit(address,uint256,uint256,uint256)', tokenFrom, amountFrom, 0, 0);
-            _castData[1] = abi.encodeWithSignature('withdraw(address,uint256,uint256,uint256)', tokenTo, amountTo, 0, 0);
+            _targetNames[0] = "AAVE-V2-A";
+            _targetNames[1] = "AAVE-V2-A";
+            _castData[0] = abi.encodeWithSignature(
+                "deposit(address,uint256,uint256,uint256)",
+                tokenFrom,
+                amountFrom,
+                0,
+                0
+            );
+            _castData[1] = abi.encodeWithSignature(
+                "withdraw(address,uint256,uint256,uint256)",
+                tokenTo,
+                amountTo,
+                0,
+                0
+            );
         } else if (_route == 4) {
             // only allowing variable borrowing
-            _targetNames[0] = 'AAVE-V2-A';
-            _targetNames[1] = 'AAVE-V2-A';
-            _castData[0] = abi.encodeWithSignature('payback(address,uint256,uint256,uint256,uint256)', tokenFrom, amountFrom, 2, 0, 0);
-            _castData[1] = abi.encodeWithSignature('borrow(address,uint256,uint256,uint256,uint256)', tokenTo, amountTo, 2, 0, 0);
+            _targetNames[0] = "AAVE-V2-A";
+            _targetNames[1] = "AAVE-V2-A";
+            _castData[0] = abi.encodeWithSignature(
+                "payback(address,uint256,uint256,uint256,uint256)",
+                tokenFrom,
+                amountFrom,
+                2,
+                0,
+                0
+            );
+            _castData[1] = abi.encodeWithSignature(
+                "borrow(address,uint256,uint256,uint256,uint256)",
+                tokenTo,
+                amountTo,
+                2,
+                0,
+                0
+            );
         } else {
             require(false, "wrong-route");
         }
-        _targetNames[2] = 'BASIC-A';
-        _castData[2] = abi.encodeWithSignature('withdraw(address,uint256,address,uint256,uint256)', tokenTo, amountTo, limitOrderContract, 0, 0);
+        _targetNames[2] = "BASIC-A";
+        _castData[2] = abi.encodeWithSignature(
+            "withdraw(address,uint256,address,uint256,uint256)",
+            tokenTo,
+            amountTo,
+            limitOrderContract,
+            0,
+            0
+        );
     }
 
     /**
@@ -85,7 +120,7 @@ contract InstaImplementationM2 is Constants {
      * from Smart Account.
      * @param tokenFrom token to sell
      * @param tokenTo token to buy
-    */
+     */
     function castLimitOrder(
         address tokenFrom,
         address tokenTo,
@@ -106,5 +141,4 @@ contract InstaImplementationM2 is Constants {
 
         emit LogLimitOrderCast(tokenFrom, tokenTo, amountFrom, amountTo, _route);
     }
-
 }
