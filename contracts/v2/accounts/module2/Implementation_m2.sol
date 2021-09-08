@@ -57,13 +57,13 @@ contract InstaImplementationM2Module is Constants {
         if (_route == 1) {
             _targetNames[0] = 'COMPOUND-A';
             _targetNames[1] = 'COMPOUND-A';
-            _castData[0] = abi.encodeWithSignature('depositRaw(address,address,uint256,uint256,uint256)', tokenFrom, ctokenFrom, amountFrom, 0, 0);
-            _castData[1] = abi.encodeWithSignature('withdrawRaw(address,address,uint256,uint256,uint256)', tokenTo, ctokenTo, amountTo, 0, 0);
+            _castData[0] = abi.encodeWithSignature('deposit(address,uint256,uint256,uint256)', tokenFrom, ctokenFrom, amountFrom, 0, 0);
+            _castData[1] = abi.encodeWithSignature('withdraw(address,uint256,uint256,uint256)', tokenTo, ctokenTo, amountTo, 0, 0);
         } else if (_route == 2) {
             _targetNames[0] = 'COMPOUND-A';
             _targetNames[1] = 'COMPOUND-A';
-            _castData[0] = abi.encodeWithSignature('paybackRaw(address,address,uint256,uint256,uint256)', tokenFrom, ctokenFrom, amountFrom, 0, 0);
-            _castData[1] = abi.encodeWithSignature('borrowRaw(address,address,uint256,uint256,uint256)', tokenTo, ctokenTo, amountTo, 0, 0);
+            _castData[0] = abi.encodeWithSignature('payback(address,address,uint256,uint256,uint256)', tokenFrom, ctokenFrom, amountFrom, 0, 0);
+            _castData[1] = abi.encodeWithSignature('borrow(address,address,uint256,uint256,uint256)', tokenTo, ctokenTo, amountTo, 0, 0);
         } else if (_route == 3) {
             _targetNames[0] = "AAVE-V2-A";
             _targetNames[1] = "AAVE-V2-A";
