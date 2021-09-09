@@ -156,7 +156,37 @@ async function main() {
     console.log("###########\n\n")
 
 
-    if (hre.network.name === "mainnet" || hre.network.name === "kovan") {
+    if (hre.network.name != "hardhat") {
+      await hre.run("verify:verify", {
+        address: instaIndex.address,
+        constructorArguments: []
+      })
+
+      await hre.run("verify:verify", {
+        address: instaList.address,
+        constructorArguments: [instaIndexAddress]
+      })
+
+      await hre.run("verify:verify", {
+        address: instaAccount.address,
+        constructorArguments: [instaIndexAddress]
+      })
+
+      await hre.run("verify:verify", {
+        address: instaConnectors.address,
+        constructorArguments: [instaIndexAddress]
+      })
+
+      await hre.run("verify:verify", {
+        address: instaEvent.address,
+        constructorArguments: [instaList.address]
+      })
+
+      await hre.run("verify:verify", {
+        address: instaMemory.address,
+        constructorArguments: []
+      })
+
       await hre.run("verify:verify", {
           address: instaConnectorsV2Impl.address,
           constructorArguments: [],
@@ -172,25 +202,25 @@ async function main() {
 
       await hre.run("verify:verify", {
           address: instaConnectorsV2.address,
-          constructorArguments: []
+          constructorArguments: [instaIndexAddress]
         }
       )
 
       await hre.run("verify:verify", {
-          address: implementationsMapping.address,
-          constructorArguments: []
+        address: implementationsMapping.address,
+          constructorArguments: [instaIndexAddress]
         }
       )
 
       await hre.run("verify:verify", {
           address: instaAccountV2DefaultImpl.address,
-          constructorArguments: []
+          constructorArguments: [instaIndexAddress]
         }
       )
 
       await hre.run("verify:verify", {
           address: instaAccountV2ImplM1.address,
-          constructorArguments: [instaConnectorsV2.address]
+          constructorArguments: [instaIndexAddress, instaConnectorsV2.address]
         }
       )
 
@@ -202,6 +232,31 @@ async function main() {
     } else {
       console.log("Contracts deployed to", hre.network.name)
     }
+
+    const deployedContracts =  {
+      [hre.network.name]: {
+      "InstaIndex": instaIndex.address,
+      "InstaList": instaList.address,
+      "versions": {
+          "v1": {
+              "InstaAccount": instaAccount.address,
+              "InstaConnectors": instaConnectors.address,
+              "InstaEvent": instaEvent.address,
+              "InstaMemory": instaMemory.address
+          },
+          "v2": {
+              "InstaAccountV2": instaAccountV2Proxy.address,
+              "InstaConnectorsV2Proxy": instaConnectorsV2Proxy.address,
+              "InstaConnectorsV2": instaConnectorsV2.address,
+              "InstaImplementations": implementationsMapping.address,
+              "InstaDefaultImplementation": instaAccountV2DefaultImpl.address,
+              "InstaImplementationM1": instaAccountV2ImplM1.address,
+          }
+      }
+    }
+  }
+
+  console.log(JSON.stringify(deployedContracts, null, 4));
 }
 
 main()

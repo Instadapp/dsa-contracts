@@ -55,7 +55,7 @@ module.exports = {
       url: `https://eth.alchemyapi.io/v2/${ALCHEMY_ID}`,
       accounts: [`0x${PRIVATE_KEY}`],
       timeout: 150000,
-      gasPrice: parseInt(utils.parseUnits("160", "gwei"))
+      gasPrice: parseInt(utils.parseUnits("170", "gwei"))
     },
     matic: {
       // url: `https://eth.alchemyapi.io/v2/${ALCHEMY_ID}`,
@@ -63,6 +63,13 @@ module.exports = {
       accounts: [`0x${PRIVATE_KEY}`],
       timeout: 150000,
       gasPrice: parseInt(utils.parseUnits("1", "gwei"))
+    },
+    arbitrum: {
+      chainId: 42161,
+      url: `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_ID}`,
+      accounts: [`0x${PRIVATE_KEY}`],
+      timeout: 150000,
+      gasPrice: parseInt(utils.parseUnits("2", "gwei"))
     }
   },
   solidity: {

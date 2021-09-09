@@ -40,5 +40,25 @@
                 "InstaImplementationM2": "0x2638c8950e04ef002d083f62aeaa10ee32f1ae60"
             }
         }
+    },
+    "arbitrum": {
+        "InstaIndex": "0x1eE00C305C51Ff3bE60162456A9B533C07cD9288",
+        "InstaList": "0x3565F6057b7fFE36984779A507fC87b31EFb0f09",
+        "versions": {
+            "v1": {
+                "InstaAccount": "0xeD06918EEA2C241D51230aB9e226276dE939C979",
+                "InstaConnectors": "0xE1594fd3603EDe6502A1cbC73489a26587Dc68BF",
+                "InstaEvent": "0xDF64FCfe45Df50db726bBB90c9Aff84879586D1C",
+                "InstaMemory": "0xc109f7Ef06152c3a63dc7254fD861E612d3Ac571"
+            },
+            "v2": {
+                "InstaAccountV2": "0x857f3b524317C0C403EC40e01837F1B160F9E7Ab",
+                "InstaConnectorsV2Proxy": "0xFD48Bef7F198B561D5198bE19c14142a0574b859",
+                "InstaConnectorsV2": "0x67fCE99Dd6d8d659eea2a1ac1b8881c57eb6592B",
+                "InstaImplementations": "0xF3Bb2FbdCDa1B8B6d19f513D69462eA548d0eF12",
+                "InstaDefaultImplementation": "0x0C25490d97594D513Fd8a80C51e4900252fA18bF",
+                "InstaImplementationM1": "0x3d464f9762493a7Cecb59119a8eCdd54e46b969F"
+            }
+        }
     }
 }
