@@ -3,7 +3,7 @@ const hre = require("hardhat");
 const { web3, deployments, waffle } = hre;
 const { provider, deployContract } = waffle
 
-const deployContracts = require("../scripts/deployContracts")
+const deployContracts = require("../scripts/getAndDeployContracts")
 const deployConnector = require("../scripts/deployConnector")
 
 const encodeSpells = require("../scripts/encodeSpells.js")
@@ -77,6 +77,11 @@ describe("LimitOrder", function () {
 
         masterSigner = await getMasterSigner()
 
+        await network.provider.send("hardhat_setBalance", [
+            masterSigner._address,
+            "0x1000000000000000",
+        ]);
+
         instaAccountV2DefaultImplV2 = await deployContract(masterSigner, defaultTest2, [])
 
         const LimitOrderContract = await ethers.getContractFactory("DeFiLimitOrder")
@@ -90,7 +95,7 @@ describe("LimitOrder", function () {
         const InstaImplementationM2 = await ethers.getContractFactory("InstaImplementationM2Module");
         instaImplementationM2 = await InstaImplementationM2.deploy(limitOrderContract.address);
         await instaImplementationM2.deployed();
-        console.log("Implementation contract deployed to:", adminContract.address);
+        console.log("Implementation contract deployed to:", instaImplementationM2.address);
     })
 
     it("Should have contracts deployed.", async function () {
@@ -109,15 +114,6 @@ describe("LimitOrder", function () {
             expect(await implementationsMapping.defaultImplementation()).to.be.equal(instaAccountV2DefaultImpl.address);
         });
 
-        it("Should add instaAccountV2ImplM1 sigs to mapping.", async function () {
-            const tx = await implementationsMapping.connect(masterSigner).addImplementation(instaAccountV2ImplM1.address, instaAccountV2ImplM1Sigs);
-            await tx.wait()
-            expect(await implementationsMapping.getSigImplementation(instaAccountV2ImplM1Sigs[0])).to.be.equal(instaAccountV2ImplM1.address);
-            (await implementationsMapping.getImplementationSigs(instaAccountV2ImplM1.address)).forEach((a, i) => {
-                expect(a).to.be.eq(instaAccountV2ImplM1Sigs[i])
-            })
-        });
-
         it("Should add instaAccountV2ImplModule sigs to mapping.", async function () {
             const tx = await implementationsMapping.connect(masterSigner).addImplementation(instaImplementationM2.address, instaAccountV2ImplModuleSigs);
             await tx.wait()
@@ -125,12 +121,6 @@ describe("LimitOrder", function () {
             (await implementationsMapping.getImplementationSigs(instaImplementationM2.address)).forEach((a, i) => {
                 expect(a).to.be.eq(instaAccountV2ImplModuleSigs[i])
             })
-        });
-
-        it("Should add InstaAccountV2 in Index.sol", async function () {
-            const tx = await instaIndex.connect(masterSigner).addNewAccount(instaAccountV2Proxy.address, address_zero, address_zero)
-            await tx.wait()
-            expect(await instaIndex.account(2)).to.be.equal(instaAccountV2Proxy.address);
         });
 
         it("Should return default imp.", async function () {
@@ -150,7 +140,7 @@ describe("LimitOrder", function () {
             const tx = await instaIndex.connect(wallet0).build(wallet0.address, 2, wallet0.address)
             const receipt = await tx.wait();
             const events = receipt.events
-            const dsaWalletAddress = "0xC13920c134d38408871E7AF5C102894CB5180B92"
+            const dsaWalletAddress = "0x91F9F2509270AfB3fF443d62E1498e755198117f"
             expect((await tx.wait()).events[1].args.account).to.be.equal(dsaWalletAddress);
             acountV2DsaM1Wallet0 = await ethers.getContractAt("InstaImplementationM1", dsaWalletAddress);
             acountV2DsaM2Wallet0 = await ethers.getContractAt("InstaImplementationM2", dsaWalletAddress);
@@ -179,9 +169,9 @@ describe("LimitOrder", function () {
             const spells = {
                 connector: "authV2",
                 method: "add",
-                args: [accountV2DsaM2ModuleWallet0.address]
+                args: [acountV2DsaM1Wallet0.address]
             }
-            const tx = await acountV2DsaM1Wallet0.connect(wallet0).cast(...encodeSpells([spells]), accountV2DsaM2ModuleWallet0.address)
+            const tx = await acountV2DsaM1Wallet0.connect(wallet0).cast(...encodeSpells([spells]), acountV2DsaM1Wallet0.address)
             const receipt = await tx.wait()
         });
 
@@ -196,24 +186,9 @@ describe("LimitOrder", function () {
         before(async function () {
             compound = await deployConnector({
                 connectorName,
-                contract: "ConnectCompound",
-                abi: (await deployments.getArtifact("ConnectCompound")).abi
+                contract: "ConnectV2Compound",
+                abi: (await deployments.getArtifact("ConnectV2Compound")).abi
             });
-            basic = await deployConnector({
-                connectorName: "BASIC-A",
-                contract: "ConnectV2Basic",
-                abi: (await deployments.getArtifact("ConnectV2Basic")).abi
-            });
-        });
-
-        it("Connector adding should work", async function () {
-            const connectorsArray = [connectorName, "BASIC-A"]
-            const addressesArray = [compound.address, basic.address]
-            let [isOk, addresses] = await instaConnectorsV2.isConnectors(connectorsArray)
-            expect(isOk).to.be.false;
-
-            const tx = await instaConnectorsV2.connect(masterSigner).addConnectors(connectorsArray, addressesArray);
-            const receipt = await tx.wait()
         });
 
         it("Deposit ETH into DSA wallet", async function () {
@@ -229,12 +204,12 @@ describe("LimitOrder", function () {
                 {
                     connector: connectorName,
                     method: "deposit",
-                    args: [ethAddr, ethers.utils.parseEther("1"), 0, 0]
+                    args: ["ETH-A", ethers.utils.parseEther("1"), 0, 0]
                 },
                 {
                     connector: connectorName,
                     method: "deposit",
-                    args: [daiAddr, ethers.utils.parseEther("1"), 0, 0]
+                    args: ["DAI-A", ethers.utils.parseEther("1"), 0, 0]
                 }
             ]
 
@@ -245,7 +220,7 @@ describe("LimitOrder", function () {
 
     describe("Create order and swap successfully", function () {
         it("Should create Order successfully", async function () {
-            const dsaWalletAddress = "0xC13920c134d38408871E7AF5C102894CB5180B92"
+            const dsaWalletAddress = "0x91F9F2509270AfB3fF443d62E1498e755198117f"
             await hre.network.provider.request({
                 method: "hardhat_impersonateAccount",
                 params: [dsaWalletAddress],
@@ -272,7 +247,7 @@ describe("LimitOrder", function () {
         })
 
         it("Should sell successfully", async function () {
-            const dsaWalletAddress = "0xC13920c134d38408871E7AF5C102894CB5180B92"
+            const dsaWalletAddress = "0x91F9F2509270AfB3fF443d62E1498e755198117f"
             const dsaWallet = await ethers.getSigner(
                 dsaWalletAddress
             );
@@ -283,7 +258,7 @@ describe("LimitOrder", function () {
 
             const orderId = await limitOrderContract.connect(dsaWallet).encodeDsaKey(dsaWallet.address, 1);
 
-            const castTx = await limitOrderContract.connect(dsaWallet)['sell(address,address,uint256,uint256,bytes8,address)'](daiAddr, ethAddr, ethers.utils.parseEther("330"), ethers.utils.parseEther("0.1"), orderId, dsaWallet.address);
+            const castTx = await limitOrderContract.connect(dsaWallet)['sell(address,address,uint256,uint256,bytes8,address)'](daiAddr, ethAddr, "3300", "1", orderId, dsaWallet.address);
             await castTx.wait()
         });
     });

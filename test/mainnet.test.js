@@ -12,7 +12,7 @@ const getMasterSigner = require("../scripts/getMasterSigner")
 
 const addresses = require("../scripts/constant/addresses")
 
-const compoundArtifact = require("../artifacts/contracts/v2/connectors/test/compound.test.sol/ConnectCompound.json");
+const compoundArtifact = require("../artifacts/contracts/v2/connectors/test/compound.test.sol/ConnectV2Compound.json");
 const connectAuth = require("../artifacts/contracts/v2/connectors/test/auth.test.sol/ConnectV2Auth.json");
 const defaultTest2 = require("../artifacts/contracts/v2/accounts/test/implementation_default.v2.test.sol/InstaDefaultImplementationV2.json");
 const m2Test = require("../artifacts/contracts/v2/accounts/test/Implementation_m2.test.sol/InstaImplementationM2.json")
