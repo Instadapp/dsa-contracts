@@ -10,7 +10,7 @@ import { Basic } from "../../common/basic.sol";
 contract Helpers is Variables, DSMath, Basic {
     using SafeERC20 for IERC20;
 
-    address constant internal wethAddr = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address constant internal cethAddr = 0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5;
 
     /**
      * @notice encodes the key of token pair to be used in linked mapping.
@@ -43,14 +43,13 @@ contract Helpers is Variables, DSMath, Basic {
         OracleComp _oracleComp = OracleComp(comptroller.oracle());
         address[] memory _ctokens = comptroller.getAssetsIn(_dsa);
         for (uint i = 0; i < _ctokens.length; i++) {
-            IERC20 _token;
             CTokenInterface _ctoken = CTokenInterface(_ctokens[i]);
-            if(keccak256(abi.encodePacked(_ctoken.symbol())) == keccak256(abi.encodePacked("cETH"))) {
-                _token = IERC20(wethAddr);
+            uint _decimals;
+            if(_ctokens[i] == cethAddr) {
+                _decimals = 18;
             } else {
-                _token = IERC20(_ctoken.underlying());
+                _decimals = IERC20(_ctoken.underlying()).decimals();
             }
-            uint _decimals = _token.decimals();
             uint _price = div(_oracleComp.getUnderlyingPrice(_ctokens[i]), 10 ** (18 - _decimals));
             uint _ctokenBal = _ctoken.balanceOf(_dsa);
             uint _ctokenExchangeRate = _ctoken.exchangeRateStored();
@@ -72,8 +71,12 @@ contract Helpers is Variables, DSMath, Basic {
         address[] memory _ctokens = comptroller.getAssetsIn(_dsa);
         for (uint i = 0; i < _ctokens.length; i++) {
             CTokenInterface _ctoken = CTokenInterface(_ctokens[i]);
-            IERC20 _token = IERC20(_ctoken.underlying());
-            uint _decimals = _token.decimals();
+            uint _decimals;
+            if(_ctokens[i] == cethAddr) {
+                _decimals = 18;
+            } else {
+                _decimals = IERC20(_ctoken.underlying()).decimals();
+            }
             uint _price = div(_oracleComp.getUnderlyingPrice(_ctokens[i]), 10 ** (18 - _decimals));
             uint _borrowBal = _ctoken.borrowBalanceStored(_dsa);
             uint _tknBal = mul(_borrowBal, 10 ** (18 - _decimals));
