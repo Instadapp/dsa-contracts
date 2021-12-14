@@ -1,27 +1,47 @@
 // Buidler
-require("@nomiclabs/hardhat-ethers");
-require("@nomiclabs/hardhat-waffle");
-require("@nomiclabs/hardhat-web3")
-require("hardhat-deploy");
-require("hardhat-deploy-ethers");
+import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-waffle";
+import "@nomiclabs/hardhat-web3";
+import "hardhat-deploy";
+import "hardhat-deploy-ethers";
+import "@openzeppelin/hardhat-upgrades";
+import "@tenderly/hardhat-tenderly";
+import "hardhat-gas-reporter";
+import "solidity-coverage";
+import "@nomiclabs/hardhat-etherscan";
 
-require('@openzeppelin/hardhat-upgrades');
-require("@tenderly/hardhat-tenderly");
+import { resolve } from "path";
+import { config as dotenvConfig } from "dotenv";
+import { HardhatUserConfig } from "hardhat/config";
+import { NetworkUserConfig } from "hardhat/types";
+import { utils } from "ethers";
+import Web3 from "web3";
 
-require("hardhat-gas-reporter");
-require("solidity-coverage");
-
-require("@nomiclabs/hardhat-etherscan");
-
-require("dotenv").config();
-
-const { utils } = require("ethers");
+dotenvConfig({ path: resolve(__dirname, "./.env") });
 
 // const INFURA_ID = process.env.INFURA_ID;
 // assert.ok(INFURA_ID, "no Infura ID in process.env");
 const ALCHEMY_ID = process.env.ALCHEMY_ID;
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
+
 // assert.ok(ALCHEMY_ID, "no Alchemy ID in process.env");
+
+const chainIds = {
+  ganache: 1337,
+  hardhat: 31337,
+  mainnet: 1,
+  avalanche: 43114,
+  polygon: 137,
+  arbitrum: 42161,
+};
+
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const ETHERSCAN_API = process.env.ETHERSCAN_API_KEY;
+const POLYGONSCAN_API = process.env.POLYGON_API_KEY;
+const ARBISCAN_API = process.env.ARBISCAN_API_KEY;
+const SNOWTRACE_API = process.env.SNOWTRACE_API_KEY;
+const mnemonic =
+  process.env.MNEMONIC ??
+  "test test test test test test test test test test test junk";
 
 const INSTA_MASTER = "0xb1DC62EC38E6E3857a887210C38418E4A17Da5B2";
 
@@ -33,7 +53,7 @@ module.exports = {
   tenderly: {
     project: "team-development",
     username: "InstaDApp",
-    forkNetwork: "1"
+    forkNetwork: "1",
   },
   networks: {
     hardhat: {
@@ -45,25 +65,25 @@ module.exports = {
       blockGasLimit: 12000000,
 
       masterAddress: INSTA_MASTER,
-      instaIndexAddress: INSTA_INDEX
+      instaIndexAddress: INSTA_INDEX,
     },
     kovan: {
       url: `https://eth-kovan.alchemyapi.io/v2/${ALCHEMY_ID}`,
-      accounts: [`0x${PRIVATE_KEY}`]
+      accounts: [`0x${PRIVATE_KEY}`],
     },
     mainnet: {
       url: `https://eth.alchemyapi.io/v2/${ALCHEMY_ID}`,
       accounts: [`0x${PRIVATE_KEY}`],
       timeout: 150000,
-      gasPrice: parseInt(utils.parseUnits("160", "gwei"))
+      // gasPrice: parseInt(utils.parseUnits("160", "gwei")),
     },
     matic: {
       // url: `https://eth.alchemyapi.io/v2/${ALCHEMY_ID}`,
       url: "https://rpc-mainnet.maticvigil.com/",
       accounts: [`0x${PRIVATE_KEY}`],
       timeout: 150000,
-      gasPrice: parseInt(utils.parseUnits("1", "gwei"))
-    }
+      // gasPrice: parseInt(utils.parseUnits("1", "gwei")),
+    },
   },
   solidity: {
     compilers: [
@@ -84,12 +104,10 @@ module.exports = {
         settings: {
           optimizer: { enabled: false },
         },
-      }
-    ]
+      },
+    ],
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN
-  }
-
+    apiKey: process.env.ETHERSCAN,
+  },
 };
-

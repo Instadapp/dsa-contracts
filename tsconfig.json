@@ -1,0 +1,35 @@
+// tsconfig.json
+{
+    "compilerOptions": {
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "lib": [
+            "es5",
+            "es6"
+        ],
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "outDir": "dist",
+        "resolveJsonModule": true,
+        "noImplicitAny": false,
+        "sourceMap": true,
+        "strict": true,
+        "target": "es5",
+    },
+    "exclude": [
+        "artifacts",
+        "node_modules"
+    ],
+    "files": [
+        "./hardhat.config.ts"
+    ],
+    "include": [
+        "artifacts/**/*",
+        "artifacts/**/*.json",
+        "scripts/**/*",
+        "tasks/**/*",
+        "test/**/*",
+        "typechain/**/*",
+        "types/**/*"
+    ]
+}

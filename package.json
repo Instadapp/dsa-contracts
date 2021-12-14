@@ -27,7 +27,6 @@
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/contracts": "^3.4.1-solc-0.7",
     "@openzeppelin/upgrades": "^2.8.0",
-    "chai": "^4.2.0",
     "dotenv": "^7.0.0",
     "ethereum-waffle": "^3.2.1",
     "ethereumjs-abi": "^0.6.8",
@@ -45,11 +44,16 @@
     "@openzeppelin/hardhat-upgrades": "^1.6.0",
     "@openzeppelin/test-helpers": "^0.5.10",
     "@tenderly/hardhat-tenderly": "^1.1.0-beta.4",
-    "chai": "^4.2.0",
+    "@types/chai": "^4.3.0",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^16.11.12",
+    "chai": "^4.3.4",
     "ethereum-waffle": "^3.2.1",
     "ethers": "^5.0.26",
     "hardhat": "^2.0.8",
     "hardhat-gas-reporter": "^1.0.4",
-    "solidity-coverage": "^0.7.14"
+    "solidity-coverage": "^0.7.14",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4"
   }
 }
