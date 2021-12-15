@@ -1,14 +1,15 @@
-// Buidler
+// // Buidler
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-web3";
+import "@nomiclabs/hardhat-etherscan";
+import "@tenderly/hardhat-tenderly";
 import "hardhat-deploy";
 import "hardhat-deploy-ethers";
 import "@openzeppelin/hardhat-upgrades";
-import "@tenderly/hardhat-tenderly";
+import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
-import "@nomiclabs/hardhat-etherscan";
 
 import { resolve } from "path";
 import { config as dotenvConfig } from "dotenv";
@@ -19,12 +20,6 @@ import Web3 from "web3";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
-// const INFURA_ID = process.env.INFURA_ID;
-// assert.ok(INFURA_ID, "no Infura ID in process.env");
-const ALCHEMY_ID = process.env.ALCHEMY_ID;
-
-// assert.ok(ALCHEMY_ID, "no Alchemy ID in process.env");
-
 const chainIds = {
   ganache: 1337,
   hardhat: 31337,
@@ -33,7 +28,7 @@ const chainIds = {
   polygon: 137,
   arbitrum: 42161,
 };
-
+const ALCHEMY_ID = process.env.ALCHEMY_ID;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const ETHERSCAN_API = process.env.ETHERSCAN_API_KEY;
 const POLYGONSCAN_API = process.env.POLYGON_API_KEY;
@@ -48,7 +43,7 @@ const INSTA_MASTER = "0xb1DC62EC38E6E3857a887210C38418E4A17Da5B2";
 const INSTA_INDEX = "0x2971AdFa57b20E5a416aE5a708A8655A9c74f723";
 
 // ================================= CONFIG =========================================
-module.exports = {
+const config = {
   defaultNetwork: "hardhat",
   tenderly: {
     project: "team-development",
@@ -107,7 +102,21 @@ module.exports = {
       },
     ],
   },
+  paths: {
+    artifacts: "./artifacts",
+    cache: "./cache",
+    sources: "./contracts",
+    tests: "./test",
+  },
   etherscan: {
     apiKey: process.env.ETHERSCAN,
   },
+  typechain: {
+    outDir: "typechain",
+    target: "ethers-v5",
+  },
+  mocha: {
+    timeout: 10000 * 1000, // 10,000 seconds
+  },
 };
+export default config;
