@@ -1,32 +1,28 @@
 import { expect } from "chai";
 import hre from "hardhat";
-const { web3, deployments, waffle } = hre;
-const { provider, deployContract } = waffle;
-
 import deployContracts from "../scripts/deployContracts";
 import deployConnector from "../scripts/deployConnector";
-
 import encodeSpells from "../scripts/encodeSpells.js";
-
 import getMasterSigner from "../scripts/getMasterSigner";
-
 import addresses from "../scripts/constant/addresses";
-
-import defaultTest2 = require("../artifacts/contracts/v2/accounts/test/implementation_default.v2.test.sol/InstaDefaultImplementationV2.json");
-const { ethers } = hre;
+import { InstaDefaultImplementationV2__factory } from "../typechain";
+const { ethers, web3, deployments, waffle } = hre;
+const { provider, deployContract } = waffle;
+import type { Signer, Contract } from "ethers";
+// import defaultTest2 = require("../artifacts/contracts/v2/accounts/test/implementation_default.v2.test.sol/InstaDefaultImplementationV2.json");
 
 describe("Betamode", function () {
   const address_zero = "0x0000000000000000000000000000000000000000";
 
-  let instaConnectorsV2,
-    implementationsMapping,
-    instaAccountV2Proxy,
-    instaAccountV2ImplM1,
-    instaAccountV2ImplM2,
-    instaAccountV2DefaultImpl,
-    instaAccountV2DefaultImplV2,
-    instaIndex,
-    instaAccountV2ImplBeta;
+  let instaConnectorsV2: Contract,
+    implementationsMapping: any,
+    instaAccountV2Proxy: any,
+    instaAccountV2ImplM1: any,
+    instaAccountV2ImplM2: any,
+    instaAccountV2DefaultImpl: any,
+    instaAccountV2DefaultImplV2: any,
+    instaIndex: any,
+    instaAccountV2ImplBeta: any;
 
   const instaAccountV2DefaultImplSigsV2 = [
     "enable(address)",
@@ -46,11 +42,11 @@ describe("Betamode", function () {
     "castBeta(string[],bytes[],address)",
   ].map((a) => web3.utils.keccak256(a).slice(0, 10));
 
-  let masterSigner;
+  let masterSigner: any;
 
-  let acountV2DsaM1Wallet0;
-  let acountV2DsaDefaultWallet0;
-  let acountV2DsaBetaWallet0;
+  let acountV2DsaM1Wallet0: any;
+  let acountV2DsaDefaultWallet0: any;
+  let acountV2DsaBetaWallet0: any;
 
   const wallets = provider.getWallets();
   let [wallet0] = wallets;
@@ -76,7 +72,7 @@ describe("Betamode", function () {
 
     instaAccountV2DefaultImplV2 = await deployContract(
       masterSigner,
-      defaultTest2,
+      InstaDefaultImplementationV2__factory,
       []
     );
   });
@@ -117,7 +113,7 @@ describe("Betamode", function () {
         await implementationsMapping.getImplementationSigs(
           instaAccountV2ImplM1.address
         )
-      ).forEach((a, i) => {
+      ).forEach((a: any, i: any) => {
         expect(a).to.be.eq(instaAccountV2ImplM1Sigs[i]);
       });
     });
