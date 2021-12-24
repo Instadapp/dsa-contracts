@@ -5,23 +5,31 @@ const { web3, deployments, waffle } = hre;
 const { provider, deployContract } = waffle;
 
 import deployConnector from "../scripts/deployConnector";
-import encodeSpells from "../scripts/encodeSpells.js";
+import encodeSpells from "../scripts/encodeSpells";
 import expectEvent from "../scripts/expectEvent";
 import getMasterSigner from "../scripts/getMasterSigner";
 import addresses from "../scripts/constant/addresses";
 
-import { ConnectV2Auth__factory } from "../typechain";
+import {
+  ConnectV2Auth__factory,
+  InstaAccountV2,
+  InstaConnectorsV2,
+  InstaImplementationM1,
+  InstaDefaultImplementation,
+  InstaImplementationM2,
+  InstaDefaultImplementationV2,
+  InstaImplementations,
+  InstaIndex,
+} from "../typechain";
+
 import { ConnectCompound__factory } from "../typechain";
 import { InstaDefaultImplementationV2__factory } from "../typechain";
 import { InstaImplementationM2__factory } from "../typechain";
-
-// const compoundArtifact = require("../artifacts/contracts/v2/connectors/test/compound.test.sol/ConnectCompound.json");
-// const connectAuth = require("../artifacts/contracts/v2/connectors/test/auth.test.sol/ConnectV2Auth.json");
-// const defaultTest2 = require("../artifacts/contracts/v2/accounts/test/implementation_default.v2.test.sol/InstaDefaultImplementationV2.json");
-// const m2Test = require("../artifacts/contracts/v2/accounts/test/Implementation_m2.test.sol/InstaImplementationM2.json");
+import type { Contract, Signer } from "ethers";
+import { Provider } from "@ethersproject/abstract-provider";
 
 describe("Mainnet", function () {
-  const address_zero = "0x0000000000000000000000000000000000000000";
+  const address_zero = ethers.constants.AddressZero;
   const ethAddr = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
   const daiAddr = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
   const usdcAddr = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
@@ -37,15 +45,16 @@ describe("Mainnet", function () {
     "0x28aDcDC02Ca7B3EDf11924102726066AA0fA7010";
   const M1_IMPLEMENTATION_ADDRESS =
     "0x77a34e599dA1e37215445c5740D57b63E5Bb98FD";
+  const INSTA_INDEX = "0x2971AdFa57b20E5a416aE5a708A8655A9c74f723";
 
-  let instaConnectorsV2,
-    implementationsMapping,
-    instaAccountV2Proxy,
-    instaAccountV2ImplM1,
-    instaAccountV2ImplM2,
-    instaAccountV2DefaultImpl,
-    instaAccountV2DefaultImplV2,
-    instaIndex;
+  let instaConnectorsV2: Contract,
+    implementationsMapping: Contract,
+    instaAccountV2Proxy: Contract,
+    instaAccountV2ImplM1: Contract,
+    instaAccountV2ImplM2: Contract,
+    instaAccountV2DefaultImpl: Contract,
+    instaAccountV2DefaultImplV2: Contract,
+    instaIndex: Contract;
 
   const instaAccountV2DefaultImplSigsV2 = [
     "enable(address)",
@@ -63,14 +72,17 @@ describe("Mainnet", function () {
     "castWithFlashloan(string[],bytes[],address)",
   ].map((a) => web3.utils.keccak256(a).slice(0, 10));
 
-  let masterSigner;
+  let masterSigner: Signer;
 
-  let acountV2DsaM1Wallet0;
-  let acountV2DsaM2Wallet0;
-  let acountV2DsaDefaultWallet0;
-  let acountV2DsaDefaultWalletM2;
+  let acountV2DsaM1Wallet0: InstaImplementationM1;
+  let acountV2DsaM2Wallet0: InstaImplementationM2;
+  let acountV2DsaDefaultWallet0: InstaDefaultImplementation;
+  let acountV2DsaDefaultWalletM2: InstaDefaultImplementationV2;
 
-  let authV3, authV4, compound, compound2;
+  let authV3: Contract,
+    authV4: Contract,
+    compound: Contract,
+    compound2: Contract;
 
   const wallets = provider.getWallets();
   let [wallet0, wallet1, wallet2, wallet3] = wallets;
@@ -80,10 +92,7 @@ describe("Mainnet", function () {
       "InstaDefaultImplementation",
       DEFAULT_IMPLEMENTATION_ADDRESS
     );
-    instaIndex = await ethers.getContractAt(
-      "InstaIndex",
-      hre.network.config.instaIndexAddress
-    );
+    instaIndex = await ethers.getContractAt("InstaIndex", INSTA_INDEX);
     instaConnectorsV2 = await ethers.getContractAt(
       "InstaConnectorsV2",
       CONNECTORS_V2_ADDRESS
@@ -106,7 +115,7 @@ describe("Mainnet", function () {
     instaAccountV2ImplM2 = await deployContract(
       masterSigner,
       InstaImplementationM2__factory,
-      []
+      [instaIndex.address, instaConnectorsV2.address]
     );
     instaAccountV2DefaultImplV2 = await deployContract(
       masterSigner,
@@ -266,7 +275,7 @@ describe("Mainnet", function () {
       await deployConnector({
         connectorName: "authV2",
         contract: "ConnectV2Auth",
-        abi: (await deployments.getArtifact("ConnectV2Auth")).abi,
+        abi: ConnectV2Auth__factory.abi,
       });
       expect(!!addresses.connectors["authV2"]).to.be.true;
       await instaConnectorsV2
@@ -292,9 +301,10 @@ describe("Mainnet", function () {
         method: "add",
         args: [wallet1.address],
       };
+      const encodedSpells = encodeSpells([spells]);
       const tx = await acountV2DsaM1Wallet0
         .connect(wallet0)
-        .cast(...encodeSpells([spells]), wallet1.address);
+        .cast(encodedSpells[0], encodedSpells[1], wallet1.address);
       const receipt = await tx.wait();
       const logCastEvent = expectEvent(
         receipt,
@@ -314,9 +324,10 @@ describe("Mainnet", function () {
         method: "add",
         args: [wallet2.address],
       };
+      const encodedSpells = encodeSpells([spells]);
       const tx = await acountV2DsaM2Wallet0
         .connect(wallet1)
-        .castWithFlashloan(...encodeSpells([spells]), wallet1.address);
+        .castWithFlashloan(encodedSpells[0], encodedSpells[1], wallet1.address);
       const receipt = await tx.wait();
       const logCastEvent = expectEvent(
         receipt,
@@ -336,9 +347,10 @@ describe("Mainnet", function () {
         method: "remove",
         args: [wallet1.address],
       };
+      const encodedSpells = encodeSpells([spells]);
       const tx = await acountV2DsaM1Wallet0
         .connect(wallet2)
-        .cast(...encodeSpells([spells]), wallet2.address);
+        .cast(encodedSpells[0], encodedSpells[1], wallet2.address);
       const receipt = await tx.wait();
       expectEvent(
         receipt,
@@ -449,9 +461,10 @@ describe("Mainnet", function () {
         method: "add",
         args: [wallet3.address],
       };
+      const encodedSpells = encodeSpells([spells]);
       const tx = await acountV2DsaM1Wallet0
         .connect(wallet1)
-        .cast(...encodeSpells([spells]), wallet3.address);
+        .cast(encodedSpells[0], encodedSpells[1], wallet3.address);
       const receipt = await tx.wait();
       expectEvent(
         receipt,
@@ -471,9 +484,11 @@ describe("Mainnet", function () {
         method: "emitEvent",
         args: [],
       };
+      const encodedSpells = encodeSpells([spells]);
+
       const tx = await acountV2DsaM1Wallet0
         .connect(wallet1)
-        .cast(...encodeSpells([spells]), wallet3.address);
+        .cast(encodedSpells[0], encodedSpells[1], wallet3.address);
       const receipt = await tx.wait();
 
       const eventAbi = (await deployments.getArtifact("ConnectV2EmitEvent"))
@@ -753,7 +768,7 @@ describe("Mainnet", function () {
 
     it("Should be a deployed connector", async function () {
       const connectorsArray = ["compound"];
-      [isOk, addresses_] = await instaConnectorsV2.isConnectors(
+      let [isOk, addresses_] = await instaConnectorsV2.isConnectors(
         connectorsArray
       );
       expect(isOk).to.be.true;
@@ -765,9 +780,10 @@ describe("Mainnet", function () {
         method: "deposit",
         args: [ethAddr, ethers.utils.parseEther("1.0"), 0, 0],
       };
+      const encodedSpells = encodeSpells([spells]);
       const tx = await acountV2DsaM1Wallet0
         .connect(wallet1)
-        .cast(...encodeSpells([spells]), wallet3.address, {
+        .cast(encodedSpells[0], encodedSpells[1], wallet3.address, {
           value: ethers.utils.parseEther("1.0"),
         });
       const receipt = await tx.wait();
@@ -784,10 +800,11 @@ describe("Mainnet", function () {
         method: "deposit",
         args: [ethAddr, ethers.utils.parseEther("0.5"), 0, 0],
       };
+      const encodedSpells = encodeSpells([spells]);
 
       const tx = await acountV2DsaM1Wallet0
         .connect(wallet1)
-        .cast(...encodeSpells([spells]), wallet3.address);
+        .cast(encodedSpells[0], encodedSpells[1], wallet3.address);
       const receipt = await tx.wait();
 
       const compoundAbi = (await deployments.getArtifact("ConnectCompound"))
@@ -823,10 +840,11 @@ describe("Mainnet", function () {
         method: "deposit",
         args: [ethAddr, maxValue, 0, 0],
       };
+      const encodedSpells = encodeSpells([spells]);
 
       const tx = await acountV2DsaM1Wallet0
         .connect(wallet1)
-        .cast(...encodeSpells([spells]), wallet3.address);
+        .cast(encodedSpells[0], encodedSpells[1], wallet3.address);
       const receipt = await tx.wait();
       expectEvent(
         receipt,
@@ -848,10 +866,11 @@ describe("Mainnet", function () {
           args: [daiAddr, 0, 123, 0],
         },
       ];
+      const encodedSpells = encodeSpells([spells]);
 
       const tx = await acountV2DsaM1Wallet0
         .connect(wallet1)
-        .cast(...encodeSpells(spells), wallet3.address);
+        .cast(encodedSpells[0], encodedSpells[1], wallet3.address);
       const receipt = await tx.wait();
 
       const compoundAbi = (await deployments.getArtifact("ConnectCompound"))
@@ -899,10 +918,11 @@ describe("Mainnet", function () {
         method: "withdraw",
         args: [ethAddr, ethers.utils.parseEther("0.5"), 0, 0],
       };
+      const encodedSpells = encodeSpells([spells]);
 
       const tx = await acountV2DsaM1Wallet0
         .connect(wallet1)
-        .cast(...encodeSpells([spells]), wallet3.address);
+        .cast(encodedSpells[0], encodedSpells[1], wallet3.address);
       const receipt = await tx.wait();
 
       const compoundAbi = (await deployments.getArtifact("ConnectCompound"))
@@ -958,9 +978,10 @@ describe("Mainnet", function () {
         method: "deposit",
         args: [ethAddr, ethers.utils.parseEther("5.0"), 0, 0],
       };
+      const encodedSpells = encodeSpells([spells]);
       const tx = await acountV2DsaM1Wallet0
         .connect(wallet1)
-        .cast(...encodeSpells([spells]), wallet3.address, {
+        .cast(encodedSpells[0], encodedSpells[1], wallet3.address, {
           value: ethers.utils.parseEther("5.0"),
         });
       const receipt = await tx.wait();
@@ -977,6 +998,7 @@ describe("Mainnet", function () {
         method: "sell",
         args: [daiAddr, ethAddr, ethers.utils.parseEther("0.5"), 0, 0, 0],
       };
+      const encodedSpells = encodeSpells([spells]);
 
       const abi = (await deployments.getArtifact("TokenInterface")).abi;
       const daiContract = new ethers.Contract(daiAddr, abi, provider);
@@ -987,7 +1009,7 @@ describe("Mainnet", function () {
 
       const tx = await acountV2DsaM1Wallet0
         .connect(wallet1)
-        .cast(...encodeSpells([spells]), wallet3.address);
+        .cast(encodedSpells[0], encodedSpells[1], wallet3.address);
       const receipt = await tx.wait();
       expectEvent(
         receipt,
@@ -1017,6 +1039,7 @@ describe("Mainnet", function () {
           0,
         ],
       };
+      const encodedSpells = encodeSpells([spells]);
 
       expect(
         await daiContract.balanceOf(acountV2DsaM1Wallet0.address)
@@ -1027,7 +1050,7 @@ describe("Mainnet", function () {
 
       const tx = await acountV2DsaM1Wallet0
         .connect(wallet1)
-        .cast(...encodeSpells([spells]), wallet3.address);
+        .cast(encodedSpells[0], encodedSpells[1], wallet3.address);
       const receipt = await tx.wait();
       expectEvent(
         receipt,
@@ -1049,6 +1072,7 @@ describe("Mainnet", function () {
         method: "sell",
         args: [daiAddr, ethAddr, ethers.utils.parseEther("0.5"), 0, 0, 0],
       };
+      const encodedSpells = encodeSpells([spells]);
 
       const abi = (await deployments.getArtifact("TokenInterface")).abi;
       const daiContract = new ethers.Contract(daiAddr, abi, provider);
@@ -1059,7 +1083,7 @@ describe("Mainnet", function () {
 
       const tx = await acountV2DsaM1Wallet0
         .connect(wallet1)
-        .cast(...encodeSpells([spells]), wallet3.address);
+        .cast(encodedSpells[0], encodedSpells[1], wallet3.address);
       const receipt = await tx.wait();
       expectEvent(
         receipt,
@@ -1088,9 +1112,11 @@ describe("Mainnet", function () {
         method: "withdraw",
         args: [usdcAddr, withdrawAmt, wallet1.address, 0, 0],
       };
+      const encodedSpells = encodeSpells([spells]);
+
       const tx = await acountV2DsaM1Wallet0
         .connect(wallet1)
-        .cast(...encodeSpells([spells]), wallet3.address);
+        .cast(encodedSpells[0], encodedSpells[1], wallet3.address);
       const receipt = await tx.wait();
       expectEvent(
         receipt,
@@ -1117,9 +1143,11 @@ describe("Mainnet", function () {
         method: "deposit",
         args: [usdcAddr, maxValue, 0, 0],
       };
+      const encodedSpells = encodeSpells([spells]);
+
       tx = await acountV2DsaM1Wallet0
         .connect(wallet1)
-        .cast(...encodeSpells([spells]), wallet3.address);
+        .cast(encodedSpells[0], encodedSpells[1], wallet3.address);
       const receipt = await tx.wait();
       expectEvent(
         receipt,
@@ -1138,10 +1166,11 @@ describe("Mainnet", function () {
         method: "deposit",
         args: [usdcAddr, maxValue, 0, 0],
       };
+      const encodedSpells = encodeSpells([spells]);
 
       const tx = await acountV2DsaM1Wallet0
         .connect(wallet1)
-        .cast(...encodeSpells([spells]), wallet3.address);
+        .cast(encodedSpells[0], encodedSpells[1], wallet3.address);
       const receipt = await tx.wait();
 
       const compoundAbi = (await deployments.getArtifact("ConnectCompound"))
@@ -1177,10 +1206,10 @@ describe("Mainnet", function () {
           args: [ethAddr, 0, 1235, 0],
         },
       ];
-
+      const encodedSpells = encodeSpells(spells);
       const tx = await acountV2DsaM1Wallet0
         .connect(wallet1)
-        .cast(...encodeSpells(spells), wallet3.address);
+        .cast(encodedSpells[0], encodedSpells[1], wallet3.address);
       const receipt = await tx.wait();
 
       const compoundAbi = (await deployments.getArtifact("ConnectCompound"))
@@ -1228,10 +1257,11 @@ describe("Mainnet", function () {
         method: "withdraw",
         args: [usdcAddr, maxValue, 0, 0],
       };
+      const encodedSpells = encodeSpells([spells]);
 
       const tx = await acountV2DsaM1Wallet0
         .connect(wallet1)
-        .cast(...encodeSpells([spells]), wallet3.address);
+        .cast(encodedSpells[0], encodedSpells[1], wallet3.address);
       const receipt = await tx.wait();
 
       const compoundAbi = (await deployments.getArtifact("ConnectCompound"))
@@ -1267,9 +1297,10 @@ describe("Mainnet", function () {
           0,
         ],
       };
+      const encodedSpells = encodeSpells([spells]);
       const tx = await acountV2DsaM1Wallet0
         .connect(wallet1)
-        .cast(...encodeSpells([spells]), wallet3.address);
+        .cast(encodedSpells[0], encodedSpells[1], wallet3.address);
       const receipt = await tx.wait();
       expectEvent(
         receipt,
