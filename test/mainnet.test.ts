@@ -866,7 +866,7 @@ describe("Mainnet", function () {
           args: [daiAddr, 0, 123, 0],
         },
       ];
-      const encodedSpells = encodeSpells([spells]);
+      const encodedSpells = encodeSpells(spells);
 
       const tx = await acountV2DsaM1Wallet0
         .connect(wallet1)
