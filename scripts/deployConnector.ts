@@ -3,15 +3,16 @@ import addresses from "./constant/addresses";
 
 import hre from "hardhat";
 const { ethers } = hre;
-import fs from "fs";
 
-export default async function ({ connectorName, contract, abi }) {
-  const ConnectorInstance = await ethers.getContractFactory(contract);
+export default async function ({ connectorName, contract, factory }) {
+  const ConnectorInstance = <typeof factory>(
+    await ethers.getContractFactory(contract)
+  );
   const connectorInstance = await ConnectorInstance.deploy();
   await connectorInstance.deployed();
 
   addresses.connectors[connectorName] = connectorInstance.address;
-  abis.connectors[connectorName] = abi;
+  abis.connectors[connectorName] = factory.abi;
 
   return connectorInstance;
 }

@@ -20,13 +20,13 @@ import {
   InstaDefaultImplementationV2,
   InstaImplementations,
   InstaIndex,
+  ConnectCompound__factory,
+  InstaDefaultImplementationV2__factory,
+  InstaImplementationM2__factory,
+  ConnectV2EmitEvent__factory,
 } from "../typechain";
 
-import { ConnectCompound__factory } from "../typechain";
-import { InstaDefaultImplementationV2__factory } from "../typechain";
-import { InstaImplementationM2__factory } from "../typechain";
 import type { Contract, Signer } from "ethers";
-import { Provider } from "@ethersproject/abstract-provider";
 
 describe("Mainnet", function () {
   const address_zero = ethers.constants.AddressZero;
@@ -150,7 +150,7 @@ describe("Mainnet", function () {
         await implementationsMapping.getImplementationSigs(
           instaAccountV2ImplM2.address
         )
-      ).forEach((a, i) => {
+      ).forEach((a: any, i: string | number) => {
         expect(a).to.be.eq(instaAccountV2ImplM2Sigs[i]);
       });
     });
@@ -201,7 +201,7 @@ describe("Mainnet", function () {
         await implementationsMapping.getImplementationSigs(
           instaAccountV2DefaultImplV2.address
         )
-      ).forEach((a, i) => {
+      ).forEach((a: any, i: string | number) => {
         expect(a).to.be.eq(instaAccountV2DefaultImplSigsV2[i]);
       });
     });
@@ -275,7 +275,7 @@ describe("Mainnet", function () {
       await deployConnector({
         connectorName: "authV2",
         contract: "ConnectV2Auth",
-        abi: ConnectV2Auth__factory.abi,
+        factory: ConnectV2Auth__factory,
       });
       expect(!!addresses.connectors["authV2"]).to.be.true;
       await instaConnectorsV2
@@ -287,7 +287,7 @@ describe("Mainnet", function () {
       await deployConnector({
         connectorName: "emitEvent",
         contract: "ConnectV2EmitEvent",
-        abi: (await deployments.getArtifact("ConnectV2EmitEvent")).abi,
+        factory: ConnectV2EmitEvent__factory,
       });
       expect(!!addresses.connectors["emitEvent"]).to.be.true;
       await instaConnectorsV2
@@ -447,7 +447,7 @@ describe("Mainnet", function () {
       await deployConnector({
         connectorName: "authV1",
         contract: "ConnectV2Auth",
-        abi: (await deployments.getArtifact("ConnectV2Auth")).abi,
+        factory: ConnectV2Auth__factory,
       });
       expect(!!addresses.connectors["authV1"]).to.be.true;
       await instaConnectorsV2
