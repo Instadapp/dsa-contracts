@@ -38,10 +38,7 @@ bower_components
 #Hardhat files
 cache
 artifacts
-typechain
 
 .openzeppelin
 flatten
-
-
 

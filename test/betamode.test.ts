@@ -2,10 +2,13 @@ import { expect } from "chai";
 import hre from "hardhat";
 import deployContracts from "../scripts/deployContracts";
 import deployConnector from "../scripts/deployConnector";
-import encodeSpells from "../scripts/encodeSpells.js";
+import encodeSpells from "../scripts/encodeSpells";
 import getMasterSigner from "../scripts/getMasterSigner";
 import addresses from "../scripts/constant/addresses";
-import { InstaDefaultImplementationV2__factory } from "../typechain";
+import {
+  InstaDefaultImplementationV2__factory,
+  ConnectV2Beta__factory,
+} from "../typechain";
 const { ethers, web3, deployments, waffle } = hre;
 const { provider, deployContract } = waffle;
 import type { Signer, Contract } from "ethers";
@@ -201,7 +204,7 @@ describe("Betamode", function () {
       await deployConnector({
         connectorName,
         contract: "ConnectV2Beta",
-        abi: (await deployments.getArtifact("ConnectV2Beta")).abi,
+        factory: ConnectV2Beta__factory,
       });
       expect(!!addresses.connectors["betaV2"]).to.be.true;
       const tx = await instaConnectorsV2

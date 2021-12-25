@@ -6,16 +6,18 @@ const { provider, deployContract } = waffle;
 
 import deployContracts from "../scripts/deployContracts";
 import deployConnector from "../scripts/deployConnector";
-import enableConnector from "../scripts/enableConnector";
-import encodeSpells from "../scripts/encodeSpells.js";
+import encodeSpells from "../scripts/encodeSpells";
 import expectEvent from "../scripts/expectEvent";
 import getMasterSigner from "../scripts/getMasterSigner";
 import addresses from "../scripts/constant/addresses";
-import abis from "../scripts/constant/abis";
 
-import { ConnectCompound__factory } from "../typechain";
+import {
+  ConnectCompound__factory,
+  ConnectV2EmitEvent__factory,
+} from "../typechain";
 import { ConnectV2Auth__factory } from "../typechain";
 import { InstaDefaultImplementationV2__factory } from "../typechain";
+import { Contract, Signer } from "ethers";
 
 // const compoundArtifact = require("../artifacts/contracts/v2/connectors/test/compound.test.sol/ConnectCompound.json");
 // const connectAuth = require("../artifacts/contracts/v2/connectors/test/auth.test.sol/ConnectV2Auth.json");
@@ -32,14 +34,14 @@ describe("Core", function () {
   const maxValue =
     "115792089237316195423570985008687907853269984665640564039457584007913129639935";
 
-  let instaConnectorsV2,
-    implementationsMapping,
-    instaAccountV2Proxy,
-    instaAccountV2ImplM1,
-    instaAccountV2ImplM2,
-    instaAccountV2DefaultImpl,
-    instaAccountV2DefaultImplV2,
-    instaIndex;
+  let instaConnectorsV2: Contract,
+    implementationsMapping: Contract,
+    instaAccountV2Proxy: Contract,
+    instaAccountV2ImplM1: Contract,
+    instaAccountV2ImplM2: Contract,
+    instaAccountV2DefaultImpl: Contract,
+    instaAccountV2DefaultImplV2: Contract,
+    instaIndex: Contract;
 
   const instaAccountV2DefaultImplSigs = [
     "enable(address)",
@@ -63,14 +65,17 @@ describe("Core", function () {
     "castWithFlashloan(string[],bytes[],address)",
   ].map((a) => web3.utils.keccak256(a).slice(0, 10));
 
-  let masterSigner;
+  let masterSigner: Signer;
 
-  let acountV2DsaM1Wallet0;
-  let acountV2DsaM2Wallet0;
-  let acountV2DsaDefaultWallet0;
-  let acountV2DsaDefaultWalletM2;
+  let acountV2DsaM1Wallet0: Contract;
+  let acountV2DsaM2Wallet0: Contract;
+  let acountV2DsaDefaultWallet0: Contract;
+  let acountV2DsaDefaultWalletM2: Contract;
 
-  let authV3, authV4, compound, compound2;
+  let authV3: Contract,
+    authV4: Contract,
+    compound: Contract,
+    compound2: Contract;
 
   const wallets = provider.getWallets();
   let [wallet0, wallet1, wallet2, wallet3] = wallets;
@@ -129,7 +134,7 @@ describe("Core", function () {
         await implementationsMapping.getImplementationSigs(
           instaAccountV2ImplM1.address
         )
-      ).forEach((a, i) => {
+      ).forEach((a: any, i: string | number) => {
         expect(a).to.be.eq(instaAccountV2ImplM1Sigs[i]);
       });
     });
@@ -151,7 +156,7 @@ describe("Core", function () {
         await implementationsMapping.getImplementationSigs(
           instaAccountV2ImplM2.address
         )
-      ).forEach((a, i) => {
+      ).forEach((a: any, i: string | number) => {
         expect(a).to.be.eq(instaAccountV2ImplM2Sigs[i]);
       });
     });
@@ -202,7 +207,7 @@ describe("Core", function () {
         await implementationsMapping.getImplementationSigs(
           instaAccountV2DefaultImplV2.address
         )
-      ).forEach((a, i) => {
+      ).forEach((a: any, i: string | number) => {
         expect(a).to.be.eq(instaAccountV2DefaultImplSigsV2[i]);
       });
     });
@@ -277,7 +282,7 @@ describe("Core", function () {
       await deployConnector({
         connectorName,
         contract: "ConnectV2Auth",
-        abi: (await deployments.getArtifact("ConnectV2Auth")).abi,
+        factory: ConnectV2Auth__factory,
       });
       expect(!!addresses.connectors["authV2"]).to.be.true;
       const tx = await instaConnectorsV2
@@ -296,7 +301,7 @@ describe("Core", function () {
       await deployConnector({
         connectorName,
         contract: "ConnectV2EmitEvent",
-        abi: (await deployments.getArtifact("ConnectV2EmitEvent")).abi,
+        factory: ConnectV2EmitEvent__factory,
       });
       expect(!!addresses.connectors["emitEvent"]).to.be.true;
       const tx = await instaConnectorsV2
@@ -460,7 +465,7 @@ describe("Core", function () {
       await deployConnector({
         connectorName,
         contract: "ConnectV2Auth",
-        abi: (await deployments.getArtifact("ConnectV2Auth")).abi,
+        factory: ConnectV2Auth__factory,
       });
       expect(!!addresses.connectors["authV1"]).to.be.true;
       const tx = await instaConnectorsV2
@@ -601,12 +606,17 @@ describe("Core", function () {
         .addConnectors(connectorsArray, addressesArray);
       const receipt = await tx.wait();
       const events = receipt.events;
-      events.forEach((event, i) => {
-        expect(event.args.connectorNameHash).to.be.eq(
-          web3.utils.keccak256(connectorsArray[i])
-        );
-        expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
-      });
+      events.forEach(
+        (
+          event: { args: { connectorNameHash: any; connectorName: any } },
+          i: string | number
+        ) => {
+          expect(event.args.connectorNameHash).to.be.eq(
+            web3.utils.keccak256(connectorsArray[i])
+          );
+          expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
+        }
+      );
       const [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(
         connectorsArray
       );
@@ -626,12 +636,17 @@ describe("Core", function () {
         .removeConnectors(connectorsArray);
       const receipt = await tx.wait();
       const events = receipt.events;
-      events.forEach((event, i) => {
-        expect(event.args.connectorNameHash).to.be.eq(
-          web3.utils.keccak256(connectorsArray[i])
-        );
-        expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
-      });
+      events.forEach(
+        (
+          event: { args: { connectorNameHash: any; connectorName: any } },
+          i: string | number
+        ) => {
+          expect(event.args.connectorNameHash).to.be.eq(
+            web3.utils.keccak256(connectorsArray[i])
+          );
+          expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
+        }
+      );
       const [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(
         connectorsArray
       );
@@ -651,12 +666,17 @@ describe("Core", function () {
         .removeConnectors(connectorsArray);
       const receipt = await tx.wait();
       const events = receipt.events;
-      events.forEach((event, i) => {
-        expect(event.args.connectorNameHash).to.be.eq(
-          web3.utils.keccak256(connectorsArray[i])
-        );
-        expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
-      });
+      events.forEach(
+        (
+          event: { args: { connectorNameHash: any; connectorName: any } },
+          i: string | number
+        ) => {
+          expect(event.args.connectorNameHash).to.be.eq(
+            web3.utils.keccak256(connectorsArray[i])
+          );
+          expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
+        }
+      );
       const [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(
         connectorsArray
       );
@@ -677,12 +697,17 @@ describe("Core", function () {
         .addConnectors(connectorsArray, addressesArray);
       const receipt = await tx.wait();
       const events = receipt.events;
-      events.forEach((event, i) => {
-        expect(event.args.connectorNameHash).to.be.eq(
-          web3.utils.keccak256(connectorsArray[i])
-        );
-        expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
-      });
+      events.forEach(
+        (
+          event: { args: { connectorNameHash: any; connectorName: any } },
+          i: string | number
+        ) => {
+          expect(event.args.connectorNameHash).to.be.eq(
+            web3.utils.keccak256(connectorsArray[i])
+          );
+          expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
+        }
+      );
       const [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(
         connectorsArray
       );
@@ -720,12 +745,17 @@ describe("Core", function () {
         .addConnectors(connectorsArray, addressesArray);
       const receipt = await tx.wait();
       const events = receipt.events;
-      events.forEach((event, i) => {
-        expect(event.args.connectorNameHash).to.be.eq(
-          web3.utils.keccak256(connectorsArray[i])
-        );
-        expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
-      });
+      events.forEach(
+        (
+          event: { args: { connectorNameHash: any; connectorName: any } },
+          i: string | number
+        ) => {
+          expect(event.args.connectorNameHash).to.be.eq(
+            web3.utils.keccak256(connectorsArray[i])
+          );
+          expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
+        }
+      );
       const [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(
         connectorsArray
       );
@@ -837,12 +867,17 @@ describe("Core", function () {
         .addConnectors(connectorsArray, addressesArray);
       const receipt = await tx.wait();
       const events = receipt.events;
-      events.forEach((event, i) => {
-        expect(event.args.connectorNameHash).to.be.eq(
-          web3.utils.keccak256(connectorsArray[i])
-        );
-        expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
-      });
+      events.forEach(
+        (
+          event: { args: { connectorNameHash: any; connectorName: any } },
+          i: string | number
+        ) => {
+          expect(event.args.connectorNameHash).to.be.eq(
+            web3.utils.keccak256(connectorsArray[i])
+          );
+          expect(event.args.connectorName).to.be.eq(connectorsArray[i]);
+        }
+      );
       const [isOkEnd, addressesEnd] = await instaConnectorsV2.isConnectors(
         connectorsArray
       );
@@ -850,7 +885,7 @@ describe("Core", function () {
     });
 
     it("Should be a deployed connector", async function () {
-      let isOk, addresses_;
+      let isOk: any, addresses_: any;
       const connectorsArray = ["compound"];
       [isOk, addresses_] = await instaConnectorsV2.isConnectors(
         connectorsArray
