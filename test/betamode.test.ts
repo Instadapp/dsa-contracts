@@ -8,24 +8,26 @@ import addresses from "../scripts/constant/addresses";
 import {
   InstaDefaultImplementationV2__factory,
   ConnectV2Beta__factory,
+  InstaImplementationM2,
+  InstaImplementationM1,
+  InstaDefaultImplementation,
+  InstaImplementationBetaTest,
 } from "../typechain";
 const { ethers, web3, deployments, waffle } = hre;
 const { provider, deployContract } = waffle;
 import type { Signer, Contract } from "ethers";
-// import defaultTest2 = require("../artifacts/contracts/v2/accounts/test/implementation_default.v2.test.sol/InstaDefaultImplementationV2.json");
-
 describe("Betamode", function () {
   const address_zero = "0x0000000000000000000000000000000000000000";
 
   let instaConnectorsV2: Contract,
-    implementationsMapping: any,
-    instaAccountV2Proxy: any,
-    instaAccountV2ImplM1: any,
-    instaAccountV2ImplM2: any,
-    instaAccountV2DefaultImpl: any,
-    instaAccountV2DefaultImplV2: any,
-    instaIndex: any,
-    instaAccountV2ImplBeta: any;
+    implementationsMapping: Contract,
+    instaAccountV2Proxy: Contract,
+    instaAccountV2ImplM1: Contract,
+    instaAccountV2ImplM2: Contract,
+    instaAccountV2DefaultImpl: Contract,
+    instaAccountV2DefaultImplV2: Contract,
+    instaIndex: Contract,
+    instaAccountV2ImplBeta: Contract;
 
   const instaAccountV2DefaultImplSigsV2 = [
     "enable(address)",
@@ -45,11 +47,11 @@ describe("Betamode", function () {
     "castBeta(string[],bytes[],address)",
   ].map((a) => web3.utils.keccak256(a).slice(0, 10));
 
-  let masterSigner: any;
+  let masterSigner: Signer;
 
-  let acountV2DsaM1Wallet0: any;
-  let acountV2DsaDefaultWallet0: any;
-  let acountV2DsaBetaWallet0: any;
+  let acountV2DsaM1Wallet0: InstaImplementationM1;
+  let acountV2DsaDefaultWallet0: InstaDefaultImplementation;
+  let acountV2DsaBetaWallet0: InstaImplementationBetaTest;
 
   const wallets = provider.getWallets();
   let [wallet0] = wallets;
@@ -224,9 +226,10 @@ describe("Betamode", function () {
         method: "enable",
         args: [],
       };
+      const encodedSpells = encodeSpells([spell0]);
       const tx0 = await acountV2DsaM1Wallet0
         .connect(wallet0)
-        .cast(...encodeSpells([spell0]), wallet0.address);
+        .cast(encodedSpells[0], encodedSpells[1], wallet0.address);
       const receipt0 = await tx0.wait();
 
       let enabled = await acountV2DsaDefaultWallet0.connect(wallet0).isBeta();
@@ -237,9 +240,10 @@ describe("Betamode", function () {
         method: "disable",
         args: [],
       };
+      const encodedSpell1 = encodeSpells([spell1]);
       const tx1 = await acountV2DsaBetaWallet0
         .connect(wallet0)
-        .castBeta(...encodeSpells([spell1]), wallet0.address);
+        .castBeta(encodedSpell1[0], encodedSpell1[1], wallet0.address);
       const receipt1 = await tx1.wait();
 
       enabled = await acountV2DsaDefaultWallet0.connect(wallet0).isBeta();

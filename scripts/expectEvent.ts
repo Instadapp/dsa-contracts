@@ -1,3 +1,4 @@
+import hre from "hardhat";
 const { web3 } = hre;
 import { expect } from "chai";
 

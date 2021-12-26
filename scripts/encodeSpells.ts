@@ -1,5 +1,6 @@
 import abis from "./constant/abis";
 import addresses from "./constant/addresses";
+import hre from "hardhat";
 const { web3 } = hre;
 
 export default function (spells: any[]) {

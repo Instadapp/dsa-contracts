@@ -1,4 +1,5 @@
-const hre = require("hardhat");
+import { BytesLike } from "ethers";
+import hre from "hardhat";
 const { web3, ethers } = hre;
 
 async function main() {
@@ -130,7 +131,7 @@ async function main() {
   console.log("InstaImplementationM1 deployed: ", instaAccountV2ImplM1.address);
 
   console.log("\n\n########### setBasics ########");
-  const setBasicsArgs = [
+  const setBasicsArgs: [string, string, string, string] = [
     deployerAddress,
     instaList.address,
     instaAccount.address,
@@ -150,7 +151,7 @@ async function main() {
   );
   let txSetDefaultImplementationDetails = await txSetDefaultImplementation.wait();
 
-  const implementationV1Args = [
+  const implementationV1Args: [string, BytesLike[]] = [
     instaAccountV2ImplM1.address,
     ["cast(string[],bytes[],address)"].map((a) =>
       web3.utils.keccak256(a).slice(0, 10)
@@ -167,7 +168,7 @@ async function main() {
   console.log("###########\n\n");
 
   console.log("\n\n########### Add DSAv2 ########");
-  const addNewAccountArgs = [
+  const addNewAccountArgs: [string, string, string] = [
     instaAccountV2Proxy.address,
     instaConnectorsV2Proxy.address,
     "0x0000000000000000000000000000000000000000",
