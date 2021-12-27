@@ -13,4 +13,10 @@ export default {
     maker: "0x0A7008B38E7015F8C36A49eEbc32513ECA8801E5",
     uniswap: "0x492e5f3f01d20513fc0d53ca0215b6499faec8a0",
   },
+  InstaIndex: {
+    mainnet: "0x2971adfa57b20e5a416ae5a708a8655a9c74f723",
+    polygon: "0xA9B99766E6C676Cf1975c0D3166F96C0848fF5ad",
+    arbitrum: "0x1eE00C305C51Ff3bE60162456A9B533C07cD9288",
+    avalanche: "0x6CE3e607C808b4f4C26B7F6aDAeB619e49CAbb25",
+  },
 };

@@ -28,6 +28,7 @@ const chainIds = {
   polygon: 137,
   arbitrum: 42161,
 };
+
 const ALCHEMY_ID = process.env.ALCHEMY_ID;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const ETHERSCAN_API = process.env.ETHERSCAN_API_KEY;
@@ -39,8 +40,6 @@ const mnemonic =
   "test test test test test test test test test test test junk";
 
 const INSTA_MASTER = "0xb1DC62EC38E6E3857a887210C38418E4A17Da5B2";
-
-const INSTA_INDEX = "0x2971AdFa57b20E5a416aE5a708A8655A9c74f723";
 
 // ================================= CONFIG =========================================
 const config = {
@@ -58,9 +57,7 @@ const config = {
         blockNumber: 12068005,
       },
       blockGasLimit: 12000000,
-
       masterAddress: INSTA_MASTER,
-      instaIndexAddress: INSTA_INDEX,
     },
     kovan: {
       url: `https://eth-kovan.alchemyapi.io/v2/${ALCHEMY_ID}`,
@@ -73,8 +70,7 @@ const config = {
       // gasPrice: parseInt(utils.parseUnits("160", "gwei")),
     },
     matic: {
-      // url: `https://eth.alchemyapi.io/v2/${ALCHEMY_ID}`,
-      url: "https://rpc-mainnet.maticvigil.com/",
+      url: `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_ID}`,
       accounts: [`0x${PRIVATE_KEY}`],
       timeout: 150000,
       // gasPrice: parseInt(utils.parseUnits("1", "gwei")),
