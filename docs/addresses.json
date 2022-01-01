@@ -40,7 +40,7 @@
         "InstaImplementationM2": "0x2638c8950e04ef002d083f62aeaa10ee32f1ae60"
       }
     }
-  }
+  },
   "arbitrum": {
       "InstaIndex": "0x1eE00C305C51Ff3bE60162456A9B533C07cD9288",
       "InstaList": "0x3565F6057b7fFE36984779A507fC87b31EFb0f09",
@@ -80,5 +80,5 @@
               "InstaImplementationM1": "0x28846f4051EB05594B3fF9dE76b7B5bf00431155"
           }
       }
-  },
+  }
 }
