@@ -1,84 +1,84 @@
 {
-    "mainnet": {
-        "InstaIndex": "0x2971AdFa57b20E5a416aE5a708A8655A9c74f723",
-        "InstaList": "0x4c8a1BEb8a87765788946D6B19C6C6355194AbEb",
-        "versions": {
-            "v1": {
-                "InstaAccount": "0x939Daad09fC4A9B8f8A9352A485DAb2df4F4B3F8",
-                "InstaConnectors": "0xD6A602C01a023B98Ecfb29Df02FBA380d3B21E0c",
-                "InstaEvent": "0x2af7ea6Cb911035f3eb1ED895Cb6692C39ecbA97",
-                "InstaMemory": "0x8a5419CfC711B2343c17a6ABf4B2bAFaBb06957F"
-            },
-            "v2": {
-                "InstaAccountV2": "0xFE02a32Cbe0CB9ad9A945576A5bb53A3C123A3A3",
-                "InstaConnectorsV2Proxy": "0x7D53E606308A2E0A1D396F30dc305cc7f8483436",
-                "InstaConnectorsV2": "0x97b0B3A8bDeFE8cB9563a3c610019Ad10DB8aD11",
-                "InstaImplementations": "0xCBA828153d3a85b30B5b912e1f2daCac5816aE9D",
-                "InstaDefaultImplementation": "0x28aDcDC02Ca7B3EDf11924102726066AA0fA7010",
-                "InstaImplementationM1": "0x8a3462A50e1a9Fe8c9e7d9023CAcbD9a98D90021",
-                "InstaChiefTimelockContract": "0xb3e586BCE929312e8B0685E2c12c1d6dbbcdc370"
-            }
-        }
-    },
-    "polygon": {
-        "InstaIndex": "0xA9B99766E6C676Cf1975c0D3166F96C0848fF5ad",
-        "InstaList": "0x839c2D3aDe63DF5b0b8F3E57D5e145057Ab41556",
-        "versions": {
-            "v1": {
-                "InstaAccount": "0xA7c805e4ad4E7B51d2a1eB442B2014a9B63D3703",
-                "InstaConnectors": "0x3254Ce8f5b1c82431B8f21Df01918342215825C2",
-                "InstaEvent": "0xA4BF319968986D2352FA1c550D781bBFCCE3FcaB",
-                "InstaMemory": "0x6C7256cf7C003dD85683339F75DdE9971f98f2FD"
-            },
-            "v2": {
-                "InstaAccountV2": "0x28846f4051EB05594B3fF9dE76b7B5bf00431155",
-                "InstaConnectorsV2Proxy": "0x01fEF4d2B513C9F69E34b2f93Ef707FA9Ff60109",
-                "InstaConnectorsV2": "0x2A00684bFAb9717C21271E0751BCcb7d2D763c88",
-                "InstaImplementations": "0x39d3d5e7c11D61E072511485878dd84711c19d4A",
-                "InstaDefaultImplementation": "0x2240770bEc8cB22ed716F2DCcC4F24980A904bC5",
-                "InstaImplementationM1": "0x4aec8c5b1cf3498bef061e13d8e7f646feeb7029",
-                "InstaImplementationM2": "0x2638c8950e04ef002d083f62aeaa10ee32f1ae60"
-            }
-        }
-    },
-    "arbitrum": {
-        "InstaIndex": "0x1eE00C305C51Ff3bE60162456A9B533C07cD9288",
-        "InstaList": "0x3565F6057b7fFE36984779A507fC87b31EFb0f09",
-        "versions": {
-            "v1": {
-                "InstaAccount": "0xeD06918EEA2C241D51230aB9e226276dE939C979",
-                "InstaConnectors": "0xE1594fd3603EDe6502A1cbC73489a26587Dc68BF",
-                "InstaEvent": "0xDF64FCfe45Df50db726bBB90c9Aff84879586D1C",
-                "InstaMemory": "0xc109f7Ef06152c3a63dc7254fD861E612d3Ac571"
-            },
-            "v2": {
-                "InstaAccountV2": "0x857f3b524317C0C403EC40e01837F1B160F9E7Ab",
-                "InstaConnectorsV2Proxy": "0xFD48Bef7F198B561D5198bE19c14142a0574b859",
-                "InstaConnectorsV2": "0x67fCE99Dd6d8d659eea2a1ac1b8881c57eb6592B",
-                "InstaImplementations": "0xF3Bb2FbdCDa1B8B6d19f513D69462eA548d0eF12",
-                "InstaDefaultImplementation": "0x0C25490d97594D513Fd8a80C51e4900252fA18bF",
-                "InstaImplementationM1": "0x3d464f9762493a7Cecb59119a8eCdd54e46b969F"
-            }
-        }
-    },
-    "avax": {
-        "InstaIndex": "0x6CE3e607C808b4f4C26B7F6aDAeB619e49CAbb25",
-        "InstaList": "0x9926955e0Dd681Dc303370C52f4Ad0a4dd061687",
-        "versions": {
-            "v1": {
-                "InstaAccount": "0xA9B99766E6C676Cf1975c0D3166F96C0848fF5ad",
-                "InstaConnectors": "0x839c2D3aDe63DF5b0b8F3E57D5e145057Ab41556",
-                "InstaEvent": "0xA7c805e4ad4E7B51d2a1eB442B2014a9B63D3703",
-                "InstaMemory": "0x3254Ce8f5b1c82431B8f21Df01918342215825C2"
-            },
-            "v2": {
-                "InstaAccountV2": "0x0a0a82D2F86b9E46AE60E22FCE4e8b916F858Ddc",
-                "InstaConnectorsV2Proxy": "0x6C7256cf7C003dD85683339F75DdE9971f98f2FD",
-                "InstaConnectorsV2": "0x127d8cD0E2b2E0366D522DeA53A787bfE9002C14",
-                "InstaImplementations": "0x01fEF4d2B513C9F69E34b2f93Ef707FA9Ff60109",
-                "InstaDefaultImplementation": "0x39d3d5e7c11D61E072511485878dd84711c19d4A",
-                "InstaImplementationM1": "0x28846f4051EB05594B3fF9dE76b7B5bf00431155"
-            }
-        }
+  "mainnet": {
+    "InstaIndex": "0x2971AdFa57b20E5a416aE5a708A8655A9c74f723",
+    "InstaList": "0x4c8a1BEb8a87765788946D6B19C6C6355194AbEb",
+    "versions": {
+      "v1": {
+        "InstaAccount": "0x939Daad09fC4A9B8f8A9352A485DAb2df4F4B3F8",
+        "InstaConnectors": "0xD6A602C01a023B98Ecfb29Df02FBA380d3B21E0c",
+        "InstaEvent": "0x2af7ea6Cb911035f3eb1ED895Cb6692C39ecbA97",
+        "InstaMemory": "0x8a5419CfC711B2343c17a6ABf4B2bAFaBb06957F"
+      },
+      "v2": {
+        "InstaAccountV2": "0xFE02a32Cbe0CB9ad9A945576A5bb53A3C123A3A3",
+        "InstaConnectorsV2Proxy": "0x7D53E606308A2E0A1D396F30dc305cc7f8483436",
+        "InstaConnectorsV2": "0x97b0B3A8bDeFE8cB9563a3c610019Ad10DB8aD11",
+        "InstaImplementations": "0xCBA828153d3a85b30B5b912e1f2daCac5816aE9D",
+        "InstaDefaultImplementation": "0x28aDcDC02Ca7B3EDf11924102726066AA0fA7010",
+        "InstaImplementationM1": "0x8a3462A50e1a9Fe8c9e7d9023CAcbD9a98D90021",
+        "InstaChiefTimelockContract": "0xb3e586BCE929312e8B0685E2c12c1d6dbbcdc370"
+      }
     }
+  },
+  "polygon": {
+    "InstaIndex": "0xA9B99766E6C676Cf1975c0D3166F96C0848fF5ad",
+    "InstaList": "0x839c2D3aDe63DF5b0b8F3E57D5e145057Ab41556",
+    "versions": {
+      "v1": {
+        "InstaAccount": "0xA7c805e4ad4E7B51d2a1eB442B2014a9B63D3703",
+        "InstaConnectors": "0x3254Ce8f5b1c82431B8f21Df01918342215825C2",
+        "InstaEvent": "0xA4BF319968986D2352FA1c550D781bBFCCE3FcaB",
+        "InstaMemory": "0x6C7256cf7C003dD85683339F75DdE9971f98f2FD"
+      },
+      "v2": {
+        "InstaAccountV2": "0x28846f4051EB05594B3fF9dE76b7B5bf00431155",
+        "InstaConnectorsV2Proxy": "0x01fEF4d2B513C9F69E34b2f93Ef707FA9Ff60109",
+        "InstaConnectorsV2": "0x2A00684bFAb9717C21271E0751BCcb7d2D763c88",
+        "InstaImplementations": "0x39d3d5e7c11D61E072511485878dd84711c19d4A",
+        "InstaDefaultImplementation": "0xFc8CcEFeB8bD4e637C787c70F7bf7c2E7Ba9aDdf",
+        "InstaImplementationM1": "0x4aec8c5b1cf3498bef061e13d8e7f646feeb7029",
+        "InstaImplementationM2": "0x2638c8950e04ef002d083f62aeaa10ee32f1ae60"
+      }
+    }
+  },
+  "arbitrum": {
+      "InstaIndex": "0x1eE00C305C51Ff3bE60162456A9B533C07cD9288",
+      "InstaList": "0x3565F6057b7fFE36984779A507fC87b31EFb0f09",
+      "versions": {
+          "v1": {
+              "InstaAccount": "0xeD06918EEA2C241D51230aB9e226276dE939C979",
+              "InstaConnectors": "0xE1594fd3603EDe6502A1cbC73489a26587Dc68BF",
+              "InstaEvent": "0xDF64FCfe45Df50db726bBB90c9Aff84879586D1C",
+              "InstaMemory": "0xc109f7Ef06152c3a63dc7254fD861E612d3Ac571"
+          },
+          "v2": {
+              "InstaAccountV2": "0x857f3b524317C0C403EC40e01837F1B160F9E7Ab",
+              "InstaConnectorsV2Proxy": "0xFD48Bef7F198B561D5198bE19c14142a0574b859",
+              "InstaConnectorsV2": "0x67fCE99Dd6d8d659eea2a1ac1b8881c57eb6592B",
+              "InstaImplementations": "0xF3Bb2FbdCDa1B8B6d19f513D69462eA548d0eF12",
+              "InstaDefaultImplementation": "0x0C25490d97594D513Fd8a80C51e4900252fA18bF",
+              "InstaImplementationM1": "0x3d464f9762493a7Cecb59119a8eCdd54e46b969F"
+          }
+      }
+  },
+  "avax": {
+      "InstaIndex": "0x6CE3e607C808b4f4C26B7F6aDAeB619e49CAbb25",
+      "InstaList": "0x9926955e0Dd681Dc303370C52f4Ad0a4dd061687",
+      "versions": {
+          "v1": {
+              "InstaAccount": "0xA9B99766E6C676Cf1975c0D3166F96C0848fF5ad",
+              "InstaConnectors": "0x839c2D3aDe63DF5b0b8F3E57D5e145057Ab41556",
+              "InstaEvent": "0xA7c805e4ad4E7B51d2a1eB442B2014a9B63D3703",
+              "InstaMemory": "0x3254Ce8f5b1c82431B8f21Df01918342215825C2"
+          },
+          "v2": {
+              "InstaAccountV2": "0x0a0a82D2F86b9E46AE60E22FCE4e8b916F858Ddc",
+              "InstaConnectorsV2Proxy": "0x6C7256cf7C003dD85683339F75DdE9971f98f2FD",
+              "InstaConnectorsV2": "0x127d8cD0E2b2E0366D522DeA53A787bfE9002C14",
+              "InstaImplementations": "0x01fEF4d2B513C9F69E34b2f93Ef707FA9Ff60109",
+              "InstaDefaultImplementation": "0x39d3d5e7c11D61E072511485878dd84711c19d4A",
+              "InstaImplementationM1": "0x28846f4051EB05594B3fF9dE76b7B5bf00431155"
+          }
+      }
+  }
 }
