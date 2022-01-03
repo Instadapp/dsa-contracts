@@ -11,6 +11,8 @@ export default async function ({ connectorName, contract, factory }) {
   const connectorInstance = await ConnectorInstance.deploy();
   await connectorInstance.deployed();
 
+  console.log(`${connectorName} Deployed: ${connectorInstance.address}`);
+
   addresses.connectors[connectorName] = connectorInstance.address;
   abis.connectors[connectorName] = factory.abi;
 

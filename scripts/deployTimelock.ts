@@ -8,7 +8,7 @@ async function main() {
     console.log("\n\n Deploying Contracts to kovan...");
   }
 
-  const masterSig = "0xb1DC62EC38E6E3857a887210C38418E4A17Da5B2";
+  const masterSig = "0xa8c31E39e40E6765BEdBd83D92D6AA0B33f1CCC5";
 
   const InstaTimelockContract = await ethers.getContractFactory(
     "InstaTimelockContract"

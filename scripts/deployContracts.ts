@@ -1,6 +1,9 @@
 import hre from "hardhat";
 const { ethers } = hre;
-const INSTA_INDEX = "0x2971AdFa57b20E5a416aE5a708A8655A9c74f723";
+import addresses from "./constant/addresses";
+
+const INSTA_INDEX = addresses.InstaIndex[String(process.env.networkType)];
+
 export default async function () {
   const instaIndex = await ethers.getContractAt("InstaIndex", INSTA_INDEX);
 
