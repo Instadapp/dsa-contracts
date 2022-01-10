@@ -39,6 +39,23 @@ const mnemonic =
   process.env.MNEMONIC ??
   "test test test test test test test test test test test junk";
 
+function createConfig(network: string) {
+  return {
+    url: getNetworkUrl(network),
+    accounts: !!PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : { mnemonic },
+    timeout: 150000,
+  };
+}
+
+function getNetworkUrl(networkType: string) {
+  if (networkType === "avalanche")
+    return "https://api.avax.network/ext/bc/C/rpc";
+  else if (networkType === "polygon")
+    return `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_ID}`;
+  else if (networkType === "arbitrum")
+    return `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_ID}`;
+  else return `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_ID}`;
+}
 const INSTA_MASTER = "0xb1DC62EC38E6E3857a887210C38418E4A17Da5B2";
 
 // ================================= CONFIG =========================================
@@ -52,7 +69,7 @@ const config = {
   networks: {
     hardhat: {
       forking: {
-        url: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_ID}`,
+        url: String(getNetworkUrl(String(process.env.networkType))),
         // blockNumber: 11739260,
         blockNumber: 12068005,
       },
@@ -63,18 +80,10 @@ const config = {
       url: `https://eth-kovan.alchemyapi.io/v2/${ALCHEMY_ID}`,
       accounts: [`0x${PRIVATE_KEY}`],
     },
-    mainnet: {
-      url: `https://eth.alchemyapi.io/v2/${ALCHEMY_ID}`,
-      accounts: [`0x${PRIVATE_KEY}`],
-      timeout: 150000,
-      // gasPrice: parseInt(utils.parseUnits("160", "gwei")),
-    },
-    matic: {
-      url: `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_ID}`,
-      accounts: [`0x${PRIVATE_KEY}`],
-      timeout: 150000,
-      // gasPrice: parseInt(utils.parseUnits("1", "gwei")),
-    },
+    mainnet: createConfig("mainnet"),
+    matic: createConfig("polygon"),
+    avax: createConfig("avalanche"),
+    arbitrum: createConfig("arbitrum"),
   },
   solidity: {
     compilers: [
