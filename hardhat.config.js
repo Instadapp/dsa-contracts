@@ -1,4 +1,3 @@
-// Buidler
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-web3")
@@ -58,8 +57,8 @@ module.exports = {
       gasPrice: parseInt(utils.parseUnits("170", "gwei"))
     },
     matic: {
-      // url: `https://eth.alchemyapi.io/v2/${ALCHEMY_ID}`,
-      url: "https://rpc-mainnet.maticvigil.com/",
+      // url: `https://polygon-mainnet.g.alchemyapi.io/v2/${ALCHEMY_ID}`,
+      url: "https://polygon-rpc.com/",
       accounts: [`0x${PRIVATE_KEY}`],
       timeout: 150000,
       gasPrice: parseInt(utils.parseUnits("1", "gwei"))
@@ -70,6 +69,13 @@ module.exports = {
       accounts: [`0x${PRIVATE_KEY}`],
       timeout: 150000,
       gasPrice: parseInt(utils.parseUnits("2", "gwei"))
+    },
+    avax: {
+      url: 'https://api.avax.network/ext/bc/C/rpc',
+      chainId: 43114,
+      accounts: [`0x${PRIVATE_KEY}`],
+      timeout: 150000,
+      gasPrice: parseInt(utils.parseUnits("225", "gwei"))
     },
     fantom: {
       chainId: 250,
