@@ -1,29 +1,15 @@
 import { BytesLike } from "ethers";
 import hre from "hardhat";
 const { web3, ethers } = hre;
-
-async function instaDeployContract(
-  factoryName: string,
-  constructorArguments: Array<string>
-) {
-  const contractInstance = await ethers.getContractFactory(factoryName);
-  const contract = await contractInstance.deploy([...constructorArguments]);
-  await contract.deployed();
-
-  console.log(
-    `Contract ${factoryName} deployed at ${contract.address} on ${hre.network.name}`
-  );
-
-  return contract;
-}
+import instaDeployContract from "./deployContract";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
   const deployerAddress = deployer.address;
 
-  console.log(`\n\n\n Deployer Address: ${deployerAddress} \n\n\n`);
+  console.log(`Deployer Address: ${deployerAddress}`);
 
-  console.log("\n\n Deploying Contracts to", hre.network.name, "...");
+  console.log(" Deploying Contracts to", hre.network.name, "...");
 
   const instaIndex = await instaDeployContract("InstaIndex", []);
 
@@ -82,7 +68,7 @@ async function main() {
     [instaIndex.address, instaConnectorsV2.address]
   );
 
-  console.log("\n\n########### setBasics ########");
+  console.log("\n########### setBasics ########");
 
   const setBasicsArgs: [string, string, string, string] = [
     deployerAddress,
@@ -97,9 +83,9 @@ async function main() {
           status: ${txDetails.status == 1},
           tx: ${txDetails.transactionHash},
         `);
-  console.log("###########\n\n");
+  console.log("###########");
 
-  console.log("\n\n########### Add DSAv2 Implementations ########");
+  console.log("\n########### Add DSAv2 Implementations ########");
   let txSetDefaultImplementation = await implementationsMapping.setDefaultImplementation(
     instaAccountV2DefaultImpl.address
   );
@@ -119,7 +105,7 @@ async function main() {
         status: ${txAddImplementationDetails.status == 1},
         tx: ${txAddImplementationDetails.transactionHash},
       `);
-  console.log("###########\n\n");
+  console.log("###########\n");
 
   console.log("\n\n########### Add DSAv2 ########");
   const addNewAccountArgs: [string, string, string] = [
@@ -134,7 +120,7 @@ async function main() {
           status: ${txDetailsAddNewAccount.status == 1},
           tx: ${txDetailsAddNewAccount.transactionHash},
       `);
-  console.log("###########\n\n");
+  console.log("###########\n");
 
   if (hre.network.name === "mainnet" || hre.network.name === "kovan") {
     await hre.run("verify:verify", {

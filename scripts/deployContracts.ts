@@ -1,24 +1,10 @@
 import hre from "hardhat";
 const { ethers } = hre;
 import addresses from "./constant/addresses";
+import instaDeployContract from "./deployContract";
 
 const networkType = String(process.env.networkType) ?? "mainnet";
 const INSTA_INDEX = addresses.InstaIndex[networkType];
-
-async function instaDeployContract(
-  factoryName: string,
-  constructorArguments: Array<string>
-) {
-  const contractInstance = await ethers.getContractFactory(factoryName);
-  const contract = await contractInstance.deploy([...constructorArguments]);
-  await contract.deployed();
-
-  console.log(
-    `Contract ${factoryName} deployed at ${contract.address} on ${hre.network.name}`
-  );
-
-  return contract.address;
-}
 
 export default async function () {
   const instaIndex = await ethers.getContractAt("InstaIndex", INSTA_INDEX);
@@ -33,7 +19,7 @@ export default async function () {
   );
 
   const instaAccountV2Proxy = await instaDeployContract("InstaAccountV2", [
-    implementationsMapping,
+    implementationsMapping.address,
   ]);
 
   const instaAccountV2DefaultImpl = await instaDeployContract(
@@ -43,12 +29,12 @@ export default async function () {
 
   const instaAccountV2ImplM1 = await instaDeployContract(
     "InstaImplementationM1",
-    [instaIndex.address, instaConnectorsV2]
+    [instaIndex.address, instaConnectorsV2.address]
   );
 
   const instaAccountV2ImplM2 = await instaDeployContract(
     "InstaImplementationM2",
-    [instaIndex.address, instaConnectorsV2]
+    [instaIndex.address, instaConnectorsV2.address]
   );
 
   return {

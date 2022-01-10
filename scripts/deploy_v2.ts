@@ -1,92 +1,48 @@
 import hre from "hardhat";
 const { ethers } = hre;
 import addresses from "./constant/addresses";
+import instaDeployContract from "./deployContract";
 
-const INSTA_INDEX = addresses.InstaIndex[String(process.env.networkType)];
+const networkType = String(process.env.networkType) ?? "mainnet";
+const INSTA_INDEX = addresses.InstaIndex[networkType];
 
 async function main() {
-  if (hre.network.name === "mainnet") {
-    console.log("\n\n Deploying Contracts to mainnet. Hit ctrl + c to abort");
-  } else if (hre.network.name === "kovan") {
-    console.log("\n\n Deploying Contracts to kovan...");
-  }
-
-  const InstaConnectorsV2Impl = await ethers.getContractFactory(
-    "InstaConnectorsV2Impl"
-  );
-  const instaConnectorsV2Impl = await InstaConnectorsV2Impl.deploy();
-  await instaConnectorsV2Impl.deployed();
-
-  console.log(
-    "InstaConnectorsV2 Impl deployed: ",
-    instaConnectorsV2Impl.address
+  const instaConnectorsV2Impl = await instaDeployContract(
+    "InstaConnectorsV2Impl",
+    []
   );
 
-  const InstaConnectorsV2Proxy = await ethers.getContractFactory(
-    "InstaConnectorsV2Proxy"
-  );
-  const instaConnectorsV2Proxy = await InstaConnectorsV2Proxy.deploy(
-    instaConnectorsV2Impl.address,
-    "0x9800020b610194dBa52CF606E8Aa142F9F256166",
-    "0x"
-  );
-  await instaConnectorsV2Proxy.deployed();
-
-  console.log(
-    "InstaConnectorsV2 Proxy deployed: ",
-    instaConnectorsV2Proxy.address
+  const instaConnectorsV2Proxy = await instaDeployContract(
+    "InstaConnectorsV2Proxy",
+    [
+      instaConnectorsV2Impl.address,
+      "0x9800020b610194dBa52CF606E8Aa142F9F256166",
+      "0x",
+    ]
   );
 
-  const InstaConnectorsV2 = await ethers.getContractFactory(
-    "InstaConnectorsV2"
-  );
-  const instaConnectorsV2 = await InstaConnectorsV2.deploy(INSTA_INDEX);
-  await instaConnectorsV2.deployed();
-
-  console.log("InstaConnectorsV2 deployed: ", instaConnectorsV2.address);
-
-  const InstaImplementations = await ethers.getContractFactory(
-    "InstaImplementations"
-  );
-  const implementationsMapping = await InstaImplementations.deploy(INSTA_INDEX);
-  await implementationsMapping.deployed();
-
-  console.log(
-    "InstaImplementations deployed: ",
-    implementationsMapping.address
-  );
-
-  const InstaAccountV2 = await ethers.getContractFactory("InstaAccountV2");
-  const instaAccountV2Proxy = await InstaAccountV2.deploy(
-    implementationsMapping.address
-  );
-  await instaAccountV2Proxy.deployed();
-
-  console.log("InstaAccountV2 deployed: ", instaAccountV2Proxy.address);
-
-  const InstaDefaultImplementation = await ethers.getContractFactory(
-    "InstaDefaultImplementation"
-  );
-  const instaAccountV2DefaultImpl = await InstaDefaultImplementation.deploy(
-    INSTA_INDEX
-  );
-  await instaAccountV2DefaultImpl.deployed();
-
-  console.log(
-    "InstaDefaultImplementation deployed: ",
-    instaAccountV2DefaultImpl.address
-  );
-
-  const InstaImplementationM1 = await ethers.getContractFactory(
-    "InstaImplementationM1"
-  );
-  const instaAccountV2ImplM1 = await InstaImplementationM1.deploy(
+  const instaConnectorsV2 = await instaDeployContract("InstaConnectorsV2", [
     INSTA_INDEX,
-    instaConnectorsV2.address
-  );
-  await instaAccountV2ImplM1.deployed();
+  ]);
 
-  console.log("InstaImplementationM1 deployed: ", instaAccountV2ImplM1.address);
+  const implementationsMapping = await instaDeployContract(
+    "InstaImplementations",
+    [INSTA_INDEX]
+  );
+
+  const instaAccountV2Proxy = await instaDeployContract("InstaAccountV2", [
+    implementationsMapping.address,
+  ]);
+
+  const instaAccountV2DefaultImpl = await instaDeployContract(
+    "InstaDefaultImplementation",
+    [INSTA_INDEX]
+  );
+
+  const instaAccountV2ImplM1 = await instaDeployContract(
+    "InstaImplementationM1",
+    [INSTA_INDEX, instaConnectorsV2.address]
+  );
 
   if (hre.network.name === "mainnet" || hre.network.name === "kovan") {
     await hre.run("verify:verify", {
@@ -130,7 +86,7 @@ async function main() {
       constructorArguments: [implementationsMapping.address],
     });
   } else {
-    console.log("Contracts deployed to hardhat");
+    console.log(`Contracts deployed to ${hre.network.name}`);
   }
 }
 

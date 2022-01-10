@@ -1,26 +1,13 @@
 import hre from "hardhat";
 const { ethers } = hre;
+import instaDeployContract from "./deployContract";
 
 async function main() {
-  if (hre.network.name === "mainnet") {
-    console.log("\n\n Deploying Contracts to mainnet. Hit ctrl + c to abort");
-  } else if (hre.network.name === "kovan") {
-    console.log("\n\n Deploying Contracts to kovan...");
-  }
-
   const chiefMultiSig = "0xa8c31E39e40E6765BEdBd83D92D6AA0B33f1CCC5";
 
-  const InstaTimelockContract = await ethers.getContractFactory(
-    "InstaChiefTimelockContract"
-  );
-  const instaTimelockContract = await InstaTimelockContract.deploy([
-    chiefMultiSig,
-  ]);
-  await instaTimelockContract.deployed();
-
-  console.log(
-    "InstaChiefTimelockContract deployed: ",
-    instaTimelockContract.address
+  const instaTimelockContract = await instaDeployContract(
+    "InstaChiefTimelockContract",
+    [[chiefMultiSig]]
   );
 
   if (hre.network.name === "mainnet" || hre.network.name === "kovan") {
@@ -29,7 +16,7 @@ async function main() {
       constructorArguments: [[chiefMultiSig]],
     });
   } else {
-    console.log("Contracts deployed to hardhat");
+    console.log(`Contracts deployed to ${hre.network.name}`);
   }
 }
 
