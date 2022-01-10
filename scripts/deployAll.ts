@@ -2,141 +2,95 @@ import { BytesLike } from "ethers";
 import hre from "hardhat";
 const { web3, ethers } = hre;
 
+async function instaDeployContract(
+  factoryName: string,
+  constructorArguments: Array<string>
+) {
+  const contractInstance = await ethers.getContractFactory(factoryName);
+  const contract = await contractInstance.deploy([...constructorArguments]);
+  await contract.deployed();
+
+  console.log(
+    `Contract ${factoryName} deployed at ${contract.address} on ${hre.network.name}`
+  );
+
+  return contract;
+}
+
 async function main() {
   const [deployer] = await ethers.getSigners();
   const deployerAddress = deployer.address;
+
   console.log(`\n\n\n Deployer Address: ${deployerAddress} \n\n\n`);
 
-  if (hre.network.name === "mainnet") {
-    console.log("\n\n Deploying Contracts to mainnet. Hit ctrl + c to abort");
-  } else if (hre.network.name === "kovan") {
-    console.log("\n\n Deploying Contracts to kovan...");
-  } else {
-    console.log("\n\n Deploying Contracts to", hre.network.name, "...");
-  }
+  console.log("\n\n Deploying Contracts to", hre.network.name, "...");
 
-  const InstaIndex = await ethers.getContractFactory("InstaIndex");
-  const instaIndex = await InstaIndex.deploy();
-  await instaIndex.deployed();
+  const instaIndex = await instaDeployContract("InstaIndex", []);
 
-  const instaIndexAddress = instaIndex.address;
-  console.log("instaIndex deployed: ", instaIndexAddress);
+  const instaList = await instaDeployContract("InstaList", [
+    instaIndex.address,
+  ]);
 
-  const InstaList = await ethers.getContractFactory("InstaList");
-  const instaList = await InstaList.deploy(instaIndexAddress);
-  await instaList.deployed();
+  const instaAccount = await instaDeployContract("InstaAccount", [
+    instaIndex.address,
+  ]);
 
-  console.log("instaList deployed: ", instaList.address);
+  const instaConnectors = await instaDeployContract("InstaConnectors", [
+    instaIndex.address,
+  ]);
 
-  const InstaAccount = await ethers.getContractFactory("InstaAccount");
-  const instaAccount = await InstaAccount.deploy(instaIndexAddress);
-  await instaAccount.deployed();
+  const instaEvent = await instaDeployContract("InstaEvent", [
+    instaList.address,
+  ]);
 
-  console.log("instaAccount deployed: ", instaAccount.address);
+  const instaMemory = await instaDeployContract("InstaMemory", []);
 
-  const InstaConnectors = await ethers.getContractFactory("InstaConnectors");
-  const instaConnectors = await InstaConnectors.deploy(instaIndexAddress);
-  await instaConnectors.deployed();
-  console.log("instaConnectors deployed: ", instaConnectors.address);
-
-  const InstaEvent = await ethers.getContractFactory("InstaEvent");
-  const instaEvent = await InstaEvent.deploy(instaList.address);
-  await instaEvent.deployed();
-
-  console.log("instaEvent deployed: ", instaEvent.address);
-
-  const InstaMemory = await ethers.getContractFactory("InstaMemory");
-  const instaMemory = await InstaMemory.deploy();
-  await instaMemory.deployed();
-
-  console.log("instaMemory deployed: ", instaMemory.address);
-
-  const InstaConnectorsV2Impl = await ethers.getContractFactory(
-    "InstaConnectorsV2Impl"
-  );
-  const instaConnectorsV2Impl = await InstaConnectorsV2Impl.deploy();
-  await instaConnectorsV2Impl.deployed();
-
-  console.log(
-    "InstaConnectorsV2 Impl deployed: ",
-    instaConnectorsV2Impl.address
+  const instaConnectorsV2Impl = await instaDeployContract(
+    "InstaConnectorsV2Impl",
+    []
   );
 
-  const InstaConnectorsV2Proxy = await ethers.getContractFactory(
-    "InstaConnectorsV2Proxy"
-  );
-  const instaConnectorsV2Proxy = await InstaConnectorsV2Proxy.deploy(
-    instaConnectorsV2Impl.address,
-    "0x9800020b610194dBa52CF606E8Aa142F9F256166",
-    "0x"
-  );
-  await instaConnectorsV2Proxy.deployed();
-
-  console.log(
-    "InstaConnectorsV2 Proxy deployed: ",
-    instaConnectorsV2Proxy.address
+  const instaConnectorsV2Proxy = await instaDeployContract(
+    "InstaConnectorsV2Proxy",
+    [
+      instaConnectorsV2Impl.address,
+      "0x9800020b610194dBa52CF606E8Aa142F9F256166",
+      "0x",
+    ]
   );
 
-  const InstaConnectorsV2 = await ethers.getContractFactory(
-    "InstaConnectorsV2"
-  );
-  const instaConnectorsV2 = await InstaConnectorsV2.deploy(instaIndexAddress);
-  await instaConnectorsV2.deployed();
+  const instaConnectorsV2 = await instaDeployContract("InstaConnectorsV2", [
+    instaIndex.address,
+  ]);
 
-  console.log("InstaConnectorsV2 deployed: ", instaConnectorsV2.address);
-
-  const InstaImplementations = await ethers.getContractFactory(
-    "InstaImplementations"
-  );
-  const implementationsMapping = await InstaImplementations.deploy(
-    instaIndexAddress
-  );
-  await implementationsMapping.deployed();
-
-  console.log(
-    "InstaImplementations deployed: ",
-    implementationsMapping.address
+  const implementationsMapping = await instaDeployContract(
+    "InstaImplementations",
+    [instaIndex.address]
   );
 
-  const InstaAccountV2 = await ethers.getContractFactory("InstaAccountV2");
-  const instaAccountV2Proxy = await InstaAccountV2.deploy(
-    implementationsMapping.address
-  );
-  await instaAccountV2Proxy.deployed();
+  const instaAccountV2Proxy = await instaDeployContract("InstaAccountV2", [
+    implementationsMapping.address,
+  ]);
 
-  console.log("InstaAccountV2 deployed: ", instaAccountV2Proxy.address);
-
-  const InstaDefaultImplementation = await ethers.getContractFactory(
-    "InstaDefaultImplementation"
-  );
-  const instaAccountV2DefaultImpl = await InstaDefaultImplementation.deploy(
-    instaIndexAddress
-  );
-  await instaAccountV2DefaultImpl.deployed();
-
-  console.log(
-    "InstaDefaultImplementation deployed: ",
-    instaAccountV2DefaultImpl.address
+  const instaAccountV2DefaultImpl = await instaDeployContract(
+    "InstaDefaultImplementation",
+    [instaIndex.address]
   );
 
-  const InstaImplementationM1 = await ethers.getContractFactory(
-    "InstaImplementationM1"
+  const instaAccountV2ImplM1 = await instaDeployContract(
+    "InstaImplementationM1",
+    [instaIndex.address, instaConnectorsV2.address]
   );
-  const instaAccountV2ImplM1 = await InstaImplementationM1.deploy(
-    instaIndexAddress,
-    instaConnectorsV2.address
-  );
-  await instaAccountV2ImplM1.deployed();
-
-  console.log("InstaImplementationM1 deployed: ", instaAccountV2ImplM1.address);
 
   console.log("\n\n########### setBasics ########");
+
   const setBasicsArgs: [string, string, string, string] = [
     deployerAddress,
     instaList.address,
     instaAccount.address,
     instaConnectors.address,
   ];
+
   const tx = await instaIndex.setBasics(...setBasicsArgs);
   const txDetails = await tx.wait();
   console.log(`
@@ -171,7 +125,7 @@ async function main() {
   const addNewAccountArgs: [string, string, string] = [
     instaAccountV2Proxy.address,
     instaConnectorsV2Proxy.address,
-    "0x0000000000000000000000000000000000000000",
+    ethers.constants.AddressZero,
   ];
   const txAddNewAccount = await instaIndex.addNewAccount(...addNewAccountArgs);
   const txDetailsAddNewAccount = await txAddNewAccount.wait();
