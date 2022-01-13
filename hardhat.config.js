@@ -71,6 +71,13 @@ module.exports = {
       timeout: 150000,
       gasPrice: parseInt(utils.parseUnits("2", "gwei"))
     },
+    optimism: {
+      chainId: 10,
+      url: `https://opt-mainnet.g.alchemy.com/v2/${ALCHEMY_ID}`,
+      accounts: [`0x${PRIVATE_KEY}`],
+      timeout: 150000,
+      gasPrice: parseInt(utils.parseUnits("1", "gwei"))
+    },
     avax: {
       url: 'https://api.avax.network/ext/bc/C/rpc',
       chainId: 43114,
