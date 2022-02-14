@@ -1,17 +1,26 @@
+import hre from "hardhat";
 const { web3 } = hre;
-const { expect } = require("chai");
+import { expect } from "chai";
 
-module.exports = function (receipt, abi, eventName, eventArgs, castEvents) {
+export default function (
+  receipt: any,
+  abi: any[],
+  eventName?: any,
+  eventArgs?: any,
+  castEvents?: string | any[]
+) {
   const requiredEventABI = abi
     .filter((a) => a.type === "event")
     .find((a) => a.name === eventName);
   if (!requiredEventABI) throw new Error(`${eventName} not found`);
   const eventHash = web3.utils.keccak256(
     `${requiredEventABI.name}(${requiredEventABI.inputs
-      .map((a) => a.type)
+      .map((a: { type: any }) => a.type)
       .toString()})`
   );
-  const requiredEvent = receipt.events.find((a) => a.topics[0] === eventHash);
+  const requiredEvent = receipt.events.find(
+    (a: { topics: any[] }) => a.topics[0] === eventHash
+  );
   expect(!!requiredEvent).to.be.true;
   const decodedEvent = web3.eth.abi.decodeLog(
     requiredEventABI.inputs,
@@ -35,12 +44,12 @@ module.exports = function (receipt, abi, eventName, eventArgs, castEvents) {
       expect(!!eventArgs).to.be.true;
 
       const ABI = abi
-        .filter((a) => a.type === "event")
-        .find((a) => a.name === eventName);
+        .filter((a: { type: string }) => a.type === "event")
+        .find((a: { name: any }) => a.name === eventName);
 
       if (eventName) {
         const eventSignature = `${ABI.name}(${ABI.inputs
-          .map((a) => a.type)
+          .map((a: { type: any }) => a.type)
           .toString()})`;
         expect(eventArgs.eventNames).to.include(eventSignature);
       }
@@ -55,4 +64,4 @@ module.exports = function (receipt, abi, eventName, eventArgs, castEvents) {
     }
   }
   return requiredEvent;
-};
+}

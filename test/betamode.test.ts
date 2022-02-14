@@ -1,32 +1,33 @@
-const { expect } = require("chai");
-const hre = require("hardhat");
-const { web3, deployments, waffle } = hre;
+import { expect } from "chai";
+import hre from "hardhat";
+import deployContracts from "../scripts/deployContracts";
+import deployConnector from "../scripts/deployConnector";
+import encodeSpells from "../scripts/encodeSpells";
+import getMasterSigner from "../scripts/getMasterSigner";
+import addresses from "../scripts/constant/addresses";
+import {
+  InstaDefaultImplementationV2__factory,
+  ConnectV2Beta__factory,
+  InstaImplementationM2,
+  InstaImplementationM1,
+  InstaDefaultImplementation,
+  InstaImplementationBetaTest,
+} from "../typechain";
+const { ethers, web3, deployments, waffle } = hre;
 const { provider, deployContract } = waffle;
-
-const deployContracts = require("../scripts/deployContracts");
-const deployConnector = require("../scripts/deployConnector");
-
-const encodeSpells = require("../scripts/encodeSpells.js");
-
-const getMasterSigner = require("../scripts/getMasterSigner");
-
-const addresses = require("../scripts/constant/addresses");
-
-const defaultTest2 = require("../artifacts/contracts/v2/accounts/test/implementation_default.v2.test.sol/InstaDefaultImplementationV2.json");
-const { ethers } = require("hardhat");
-
+import type { Signer, Contract } from "ethers";
 describe("Betamode", function () {
   const address_zero = "0x0000000000000000000000000000000000000000";
 
-  let instaConnectorsV2,
-    implementationsMapping,
-    instaAccountV2Proxy,
-    instaAccountV2ImplM1,
-    instaAccountV2ImplM2,
-    instaAccountV2DefaultImpl,
-    instaAccountV2DefaultImplV2,
-    instaIndex,
-    instaAccountV2ImplBeta;
+  let instaConnectorsV2: Contract,
+    implementationsMapping: Contract,
+    instaAccountV2Proxy: Contract,
+    instaAccountV2ImplM1: Contract,
+    instaAccountV2ImplM2: Contract,
+    instaAccountV2DefaultImpl: Contract,
+    instaAccountV2DefaultImplV2: Contract,
+    instaIndex: Contract,
+    instaAccountV2ImplBeta: Contract;
 
   const instaAccountV2DefaultImplSigsV2 = [
     "enable(address)",
@@ -46,11 +47,11 @@ describe("Betamode", function () {
     "castBeta(string[],bytes[],address)",
   ].map((a) => web3.utils.keccak256(a).slice(0, 10));
 
-  let masterSigner;
+  let masterSigner: Signer;
 
-  let acountV2DsaM1Wallet0;
-  let acountV2DsaDefaultWallet0;
-  let acountV2DsaBetaWallet0;
+  let acountV2DsaM1Wallet0: InstaImplementationM1;
+  let acountV2DsaDefaultWallet0: InstaDefaultImplementation;
+  let acountV2DsaBetaWallet0: InstaImplementationBetaTest;
 
   const wallets = provider.getWallets();
   let [wallet0] = wallets;
@@ -76,7 +77,7 @@ describe("Betamode", function () {
 
     instaAccountV2DefaultImplV2 = await deployContract(
       masterSigner,
-      defaultTest2,
+      InstaDefaultImplementationV2__factory,
       []
     );
   });
@@ -117,7 +118,7 @@ describe("Betamode", function () {
         await implementationsMapping.getImplementationSigs(
           instaAccountV2ImplM1.address
         )
-      ).forEach((a, i) => {
+      ).forEach((a: any, i: any) => {
         expect(a).to.be.eq(instaAccountV2ImplM1Sigs[i]);
       });
     });
@@ -205,7 +206,7 @@ describe("Betamode", function () {
       await deployConnector({
         connectorName,
         contract: "ConnectV2Beta",
-        abi: (await deployments.getArtifact("ConnectV2Beta")).abi,
+        factory: ConnectV2Beta__factory,
       });
       expect(!!addresses.connectors["betaV2"]).to.be.true;
       const tx = await instaConnectorsV2
@@ -225,9 +226,10 @@ describe("Betamode", function () {
         method: "enable",
         args: [],
       };
+      const encodedSpells = encodeSpells([spell0]);
       const tx0 = await acountV2DsaM1Wallet0
         .connect(wallet0)
-        .cast(...encodeSpells([spell0]), wallet0.address);
+        .cast(encodedSpells[0], encodedSpells[1], wallet0.address);
       const receipt0 = await tx0.wait();
 
       let enabled = await acountV2DsaDefaultWallet0.connect(wallet0).isBeta();
@@ -238,9 +240,10 @@ describe("Betamode", function () {
         method: "disable",
         args: [],
       };
+      const encodedSpell1 = encodeSpells([spell1]);
       const tx1 = await acountV2DsaBetaWallet0
         .connect(wallet0)
-        .castBeta(...encodeSpells([spell1]), wallet0.address);
+        .castBeta(encodedSpell1[0], encodedSpell1[1], wallet0.address);
       const receipt1 = await tx1.wait();
 
       enabled = await acountV2DsaDefaultWallet0.connect(wallet0).isBeta();

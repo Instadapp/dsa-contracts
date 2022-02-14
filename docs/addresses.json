@@ -79,7 +79,8 @@
         "InstaDefaultImplementation": "0x39d3d5e7c11D61E072511485878dd84711c19d4A",
         "InstaImplementationM1": "0x28846f4051EB05594B3fF9dE76b7B5bf00431155"
       }
-  },
+  }
+},
   "optimism": {
     "InstaIndex": "0x6CE3e607C808b4f4C26B7F6aDAeB619e49CAbb25",
     "InstaList": "0x9926955e0Dd681Dc303370C52f4Ad0a4dd061687",
@@ -99,6 +100,7 @@
         "InstaImplementationM1": "0x28846f4051EB05594B3fF9dE76b7B5bf00431155"
     }
   }
+},
   "fantom": {
     "InstaIndex": "0x2fa042BEEB7A40A7078EaA5aC755e3842248292b",
     "InstaList": "0x10e166c3FAF887D8a61dE6c25039231eE694E926",
@@ -119,4 +121,4 @@
       }
     }
   }
-}
+  }
