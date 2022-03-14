@@ -74,10 +74,10 @@ describe("Mainnet", function () {
 
   let masterSigner: Signer;
 
-  let acountV2DsaM1Wallet0: InstaImplementationM1;
-  let acountV2DsaM2Wallet0: InstaImplementationM2;
-  let acountV2DsaDefaultWallet0: InstaDefaultImplementation;
-  let acountV2DsaDefaultWalletM2: InstaDefaultImplementationV2;
+  let acountV2DsaM1Wallet0: Contract;
+  let acountV2DsaM2Wallet0: Contract;
+  let acountV2DsaDefaultWallet0: Contract;
+  let acountV2DsaDefaultWalletM2: Contract;
 
   let authV3: Contract,
     authV4: Contract,
