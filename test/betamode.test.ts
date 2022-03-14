@@ -53,6 +53,18 @@ describe("Betamode", function () {
   const wallets = provider.getWallets();
   let [wallet0] = wallets;
   before(async () => {
+    await hre.network.provider.request({
+      method: "hardhat_reset",
+      params: [
+        {
+          forking: {
+            // @ts-ignore
+            jsonRpcUrl: hre.config.networks.hardhat.forking.url,
+            blockNumber: 12068005,
+          },
+        },
+      ],
+    });
     const result = await deployContracts();
     instaAccountV2DefaultImpl = result.instaAccountV2DefaultImpl;
     instaIndex = result.instaIndex;
