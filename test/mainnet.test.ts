@@ -74,10 +74,10 @@ describe("Mainnet", function () {
 
   let masterSigner: Signer;
 
-  let acountV2DsaM1Wallet0: InstaImplementationM1;
-  let acountV2DsaM2Wallet0: InstaImplementationM2;
-  let acountV2DsaDefaultWallet0: InstaDefaultImplementation;
-  let acountV2DsaDefaultWalletM2: InstaDefaultImplementationV2;
+  let acountV2DsaM1Wallet0: Contract;
+  let acountV2DsaM2Wallet0: Contract;
+  let acountV2DsaDefaultWallet0: Contract;
+  let acountV2DsaDefaultWalletM2: Contract;
 
   let authV3: Contract,
     authV4: Contract,
@@ -88,6 +88,18 @@ describe("Mainnet", function () {
   let [wallet0, wallet1, wallet2, wallet3] = wallets;
 
   before(async () => {
+    await hre.network.provider.request({
+      method: "hardhat_reset",
+      params: [
+        {
+          forking: {
+            // @ts-ignore
+            jsonRpcUrl: hre.config.networks.hardhat.forking.url,
+            blockNumber: 12068005,
+          },
+        },
+      ],
+    });
     instaAccountV2DefaultImpl = await ethers.getContractAt(
       "InstaDefaultImplementation",
       DEFAULT_IMPLEMENTATION_ADDRESS

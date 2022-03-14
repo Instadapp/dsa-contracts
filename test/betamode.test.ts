@@ -8,14 +8,11 @@ import addresses from "../scripts/constant/addresses";
 import {
   InstaDefaultImplementationV2__factory,
   ConnectV2Beta__factory,
-  InstaImplementationM2,
-  InstaImplementationM1,
-  InstaDefaultImplementation,
-  InstaImplementationBetaTest,
 } from "../typechain";
 const { ethers, web3, deployments, waffle } = hre;
 const { provider, deployContract } = waffle;
 import type { Signer, Contract } from "ethers";
+
 describe("Betamode", function () {
   const address_zero = "0x0000000000000000000000000000000000000000";
 
@@ -43,19 +40,31 @@ describe("Betamode", function () {
     web3.utils.keccak256(a).slice(0, 10)
   );
 
-  const instaAccountV2ImplBetaSigs = [
-    "castBeta(string[],bytes[],address)",
-  ].map((a) => web3.utils.keccak256(a).slice(0, 10));
+  const instaAccountV2ImplBetaSigs = ["castBeta(string[],bytes[],address)"].map(
+    (a) => web3.utils.keccak256(a).slice(0, 10)
+  );
 
   let masterSigner: Signer;
 
-  let acountV2DsaM1Wallet0: InstaImplementationM1;
-  let acountV2DsaDefaultWallet0: InstaDefaultImplementation;
-  let acountV2DsaBetaWallet0: InstaImplementationBetaTest;
+  let acountV2DsaM1Wallet0: Contract;
+  let acountV2DsaDefaultWallet0: Contract;
+  let acountV2DsaBetaWallet0: Contract;
 
   const wallets = provider.getWallets();
   let [wallet0] = wallets;
   before(async () => {
+    await hre.network.provider.request({
+      method: "hardhat_reset",
+      params: [
+        {
+          forking: {
+            // @ts-ignore
+            jsonRpcUrl: hre.config.networks.hardhat.forking.url,
+            blockNumber: 12068005,
+          },
+        },
+      ],
+    });
     const result = await deployContracts();
     instaAccountV2DefaultImpl = result.instaAccountV2DefaultImpl;
     instaIndex = result.instaIndex;
@@ -72,9 +81,7 @@ describe("Betamode", function () {
       instaIndex.address,
       instaConnectorsV2.address
     );
-
     masterSigner = await getMasterSigner();
-
     instaAccountV2DefaultImplV2 = await deployContract(
       masterSigner,
       InstaDefaultImplementationV2__factory,
@@ -191,6 +198,7 @@ describe("Betamode", function () {
         "InstaImplementationM1",
         dsaWalletAddress
       );
+
       acountV2DsaDefaultWallet0 = await ethers.getContractAt(
         "InstaDefaultImplementation",
         dsaWalletAddress

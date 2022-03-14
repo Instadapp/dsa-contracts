@@ -2,7 +2,7 @@ import hre from "hardhat";
 const { ethers } = hre;
 import addresses from "./constant/addresses";
 
-const networkType = String(process.env.networkType) ?? "mainnet";
+const networkType = process.env.networkType ?? "mainnet";
 const INSTA_INDEX = addresses.InstaIndex[networkType];
 
 export default async function () {
