@@ -3,6 +3,10 @@ import hre from "hardhat";
 import { ethers } from "hardhat";
 const { web3, deployments, waffle } = hre;
 const { provider, deployContract } = waffle;
+import chai from "chai";
+import { solidity } from "ethereum-waffle";
+
+chai.use(solidity);
 
 import expectEvent from "../scripts/expectEvent";
 import instaDeployContract from "../scripts/deployContract";
@@ -162,9 +166,9 @@ describe("InstaIndex", function () {
       instaAccount.address,
       instaConnectors.address,
     ];
-    await expect(
-      await instaIndex.setBasics(...setBasicsArgs)
-    ).to.be.revertedWith("already-defined");
+    await expect(instaIndex.setBasics(...setBasicsArgs)).to.be.revertedWith(
+      "already-defined"
+    );
   });
 
   it("should check the state", async function () {
@@ -191,19 +195,19 @@ describe("InstaIndex", function () {
     describe("Change Master", function () {
       it("should revert if calling method with non-master signer", async function () {
         await expect(
-          await instaIndex.connect(signer).changeMaster(newMaster.address)
+          instaIndex.connect(signer).changeMaster(newMaster.address)
         ).to.be.revertedWith("not-master");
       });
 
       it("should revert if new master is same as master", async function () {
         await expect(
-          await instaIndex.connect(masterSigner).changeMaster(masterAddress)
+          instaIndex.connect(masterSigner).changeMaster(masterAddress)
         ).to.be.revertedWith("already-a-master");
       });
 
       it("should revert if new master is zero address", async function () {
         await expect(
-          await instaIndex.connect(masterSigner).changeMaster(addr_zero)
+          instaIndex.connect(masterSigner).changeMaster(addr_zero)
         ).to.be.revertedWith("not-valid-address");
       });
 
@@ -219,15 +223,16 @@ describe("InstaIndex", function () {
           "LogNewMaster",
           newMaster.address
         );
+        console.log("\tLogNewMaster event fired...");
         expect(await instaIndex.master()).to.be.equal(masterAddress);
-        expect(
-          await instaIndex.connect(newMaster).changeMaster(masterAddress)
+        await expect(
+          instaIndex.connect(newMaster).changeMaster(masterAddress)
         ).to.be.revertedWith("not-master");
       });
 
       it("should revert setting the newMaster to already newMaster address", async function () {
         await expect(
-          await instaIndex.connect(masterSigner).changeMaster(newMaster.address)
+          instaIndex.connect(masterSigner).changeMaster(newMaster.address)
         ).to.be.revertedWith("already-a-new-master");
       });
     });
@@ -235,7 +240,7 @@ describe("InstaIndex", function () {
     describe("Update Master", function () {
       it("should revert calling with non-new-master", async function () {
         await expect(
-          await instaIndex.connect(masterSigner).updateMaster()
+          instaIndex.connect(masterSigner).updateMaster()
         ).to.be.revertedWith("not-master");
       });
 
@@ -254,7 +259,7 @@ describe("InstaIndex", function () {
 
       it("should revert updating master without changing", async function () {
         await expect(
-          await instaIndex.connect(newMaster).updateMaster()
+          instaIndex.connect(newMaster).updateMaster()
         ).to.be.revertedWith("not-valid-address");
       });
     });
@@ -262,7 +267,7 @@ describe("InstaIndex", function () {
     describe("Add new account module", function () {
       it("should revert if calling method with non-master signer", async function () {
         await expect(
-          await instaIndex
+          instaIndex
             .connect(signer)
             .addNewAccount(
               instaDefaultAccountV2.address,
@@ -274,7 +279,7 @@ describe("InstaIndex", function () {
 
       it("should revert when adding zero-address-account", async function () {
         await expect(
-          await instaIndex
+          instaIndex
             .connect(newMaster)
             .addNewAccount(addr_zero, instaConnectorsV2.address, addr_zero)
         ).to.be.revertedWith("not-valid-address");
@@ -282,7 +287,7 @@ describe("InstaIndex", function () {
 
       it("should revert when adding existing module (incorrect version)", async function () {
         await expect(
-          await instaIndex
+          instaIndex
             .connect(newMaster)
             .addNewAccount(
               instaAccount.address,
@@ -322,9 +327,9 @@ describe("InstaIndex", function () {
 
       it("should revert on re-adding same check module to same version", async function () {
         let check_addr = await instaIndex.check(1); //check module address for version 1
-        await expect(
-          await instaIndex.changeCheck(1, check_addr)
-        ).to.be.revertedWith("already-a-check");
+        await expect(instaIndex.changeCheck(1, check_addr)).to.be.revertedWith(
+          "already-a-check"
+        );
       });
 
       it("should change check module address", async function () {
@@ -361,10 +366,10 @@ describe("InstaIndex", function () {
 
       it("should revert with incorrect account version", async function () {
         await expect(
-          await instaIndex.connect(wallet0).build(wallet0.address, 0, addr_zero)
+          instaIndex.connect(wallet0).build(wallet0.address, 0, addr_zero)
         ).to.be.revertedWith("not-valid-account");
         await expect(
-          await instaIndex
+          instaIndex
             .connect(wallet0)
             .build(wallet0.address, versionCount + 1, addr_zero)
         ).to.be.revertedWith("not-valid-account");
