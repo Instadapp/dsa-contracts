@@ -356,20 +356,25 @@ describe("InstaIndex", function () {
         accounts_before = await instaList.accounts();
         console.log("\tPrevious Account ID: ", accounts_before);
         userLink_before = await instaList.userLink(wallet0.address);
-        expect(userLink_before.first).to.be.equal(new BigNumber(0));
-        expect(userLink_before.last).to.be.equal(new BigNumber(0));
-        expect(userLink_before.count).to.be.equal(new BigNumber(0));
-        userList_before = await instaList.userList(wallet0.address, "0");
-        expect(userList_before.prev).to.be.equal(new BigNumber(0));
-        expect(userList_before.next).to.be.equal(new BigNumber(0));
+        expect(userLink_before.first).to.be.equal(new BigNumber(0).toString());
+        expect(userLink_before.last).to.be.equal(new BigNumber(0).toString());
+        expect(userLink_before.count).to.be.equal(new BigNumber(0).toString());
+        userList_before = await instaList.userList(
+          wallet0.address,
+          new BigNumber(accounts_before.toString()).plus(1).toString()
+        );
+        expect(userList_before.prev).to.be.equal(new BigNumber(0).toString());
+        expect(userList_before.next).to.be.equal(new BigNumber(0).toString());
         accountLink_before = await instaList.accountLink(
-          new BigNumber(accounts_before).plus(1).toString()
+          new BigNumber(accounts_before.toString()).plus(1).toString()
         );
         expect(accountLink_before.first).to.be.equal(addr_zero);
         expect(accountLink_before.last).to.be.equal(addr_zero);
-        expect(accountLink_before.count).to.be.equal(new BigNumber(0));
+        expect(accountLink_before.count).to.be.equal(
+          new BigNumber(0).toString()
+        );
         accountList_before = await instaList.accountList(
-          new BigNumber(accounts_before).plus(1).toFixed(0),
+          new BigNumber(accounts_before.toString()).plus(1).toString(),
           wallet0.address
         );
         expect(accountList_before.prev).to.be.equal(addr_zero);
@@ -386,9 +391,8 @@ describe("InstaIndex", function () {
           (
             await deployments.getArtifact("InstaAccount")
           ).abi,
-          txDetails.events[1].account
+          txDetails.events[1].args.account
         );
-
         expectEvent(
           txDetails,
           (await deployments.getArtifact("InstaAccount")).abi,
@@ -415,7 +419,7 @@ describe("InstaIndex", function () {
       it("should increment the account ID", async function () {
         accounts_after = await instaList.accounts();
         expect(accounts_after).to.be.equal(
-          new BigNumber(accounts_before).plus(1).toString()
+          new BigNumber(accounts_before.toString()).plus(1).toString()
         );
       });
 
@@ -437,24 +441,29 @@ describe("InstaIndex", function () {
       it("should update account links in list registry", async function () {
         userLink_after = await instaList.userLink(wallet0.address);
         expect(userLink_after.first).to.be.equal(accounts_after);
-        expect(userLink_after.last).to.be.equal(addr_zero);
-        expect(userLink_after.count).to.be.equal(new BigNumber(1));
+        expect(userLink_after.last).to.be.equal(accounts_after);
+        expect(userLink_after.count).to.be.equal(new BigNumber(1).toString());
         console.log("\tUserLink updated...");
-        userList_after = await instaList.userList(wallet0.address, "0");
-        expect(userList_after.prev).to.be.equal(addr_zero);
-        expect(userList_after.next).to.be.equal(accounts_after);
+        userList_after = await instaList.userList(
+          wallet0.address,
+          new BigNumber(accounts_after.toString()).toString()
+        );
+        expect(userList_after.prev).to.be.equal(new BigNumber(0).toString());
+        expect(userList_after.next).to.be.equal(new BigNumber(0).toString());
         console.log("\tUserList updated...");
         accountLink_after = await instaList.accountLink(accounts_after);
         expect(accountLink_after.first).to.be.equal(wallet0.address);
-        expect(accountLink_after.last).to.be.equal(addr_zero);
-        expect(accountLink_after.count).to.be.equal(new BigNumber(1));
+        expect(accountLink_after.last).to.be.equal(wallet0.address);
+        expect(accountLink_after.count).to.be.equal(
+          new BigNumber(1).toString()
+        );
         console.log("\tAccountLink updated...");
         accountList_after = await instaList.accountList(
           accounts_after,
-          addr_zero
+          wallet0.address
         );
         expect(accountList_after.prev).to.be.equal(addr_zero);
-        expect(accountList_after.next).to.be.equal(wallet0.address);
+        expect(accountList_after.next).to.be.equal(addr_zero);
         console.log("\tAccountList updated...");
       });
 
@@ -472,7 +481,7 @@ describe("InstaIndex", function () {
           (
             await deployments.getArtifact("InstaAccount")
           ).abi,
-          txDetails.events[1].account
+          txDetails.events[1].args.account
         );
 
         expectEvent(
@@ -491,7 +500,7 @@ describe("InstaIndex", function () {
           {
             sender: wallet1.address,
             owner: wallet0.address,
-            account: dsaWallet0.address,
+            account: dsaWallet1.address,
             origin: wallet0.address,
           }
         );
@@ -505,5 +514,5 @@ describe("InstaIndex", function () {
  * TODOS
  * - Configure hardhat gas reporter for gas estimate, gas reporter currently showing - USD
  * - Configure solcover to include contracts calls which are used from artifacts --> including coverage_artifacts
- * - Including time taken for each test --> check constraints due to solcover
+ * - Including time taken for test --> check constraints due to solcover
  */
