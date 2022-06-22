@@ -11,44 +11,12 @@ chai.use(solidity);
 import expectEvent from "../scripts/expectEvent";
 import instaDeployContract from "../scripts/deployContract";
 
-import {
-  ConnectV2Auth__factory,
-  InstaAccountV2,
-  InstaConnectorsV2,
-  InstaImplementationM1,
-  InstaDefaultImplementation,
-  InstaImplementationM2,
-  InstaDefaultImplementationV2,
-  InstaImplementations,
-  InstaIndex,
-  InstaList,
-  ConnectCompound__factory,
-  InstaDefaultImplementationV2__factory,
-  InstaImplementationM2__factory,
-  ConnectV2EmitEvent__factory,
-} from "../typechain";
-
 import type { Contract, Signer } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Address } from "hardhat-deploy/dist/types";
 
 describe("InstaIndex", function () {
   const addr_zero = ethers.constants.AddressZero;
-  const ethAddr = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
-  const daiAddr = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
-  const usdcAddr = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-  const cEthAddr = "0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5";
-  const cDaiAddr = "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643";
-  const maxValue =
-    "115792089237316195423570985008687907853269984665640564039457584007913129639935";
-
-  const CONNECTORS_V2_ADDRESS = "0xFE2390DAD597594439f218190fC2De40f9Cf1179";
-  const IMPLEMENTATIONS_ADDRESS = "0xCBA828153d3a85b30B5b912e1f2daCac5816aE9D";
-  const ACCOUNT_V2_ADDRESS = "0xFE02a32Cbe0CB9ad9A945576A5bb53A3C123A3A3";
-  const DEFAULT_IMPLEMENTATION_ADDRESS =
-    "0x28aDcDC02Ca7B3EDf11924102726066AA0fA7010";
-  const M1_IMPLEMENTATION_ADDRESS =
-    "0x77a34e599dA1e37215445c5740D57b63E5Bb98FD";
 
   let instaIndex: Contract,
     instaList: Contract,
@@ -56,22 +24,6 @@ describe("InstaIndex", function () {
     instaAccount: Contract,
     instaDefaultAccountV2: Contract,
     instaConnectorsV2: Contract;
-
-  const instaAccountV2DefaultImplSigsV2 = [
-    "enable(address)",
-    "disable(address)",
-    "isAuth(address)",
-    "switchShield(bool",
-    "shield()",
-  ].map((a) => web3.utils.keccak256(a).slice(0, 10));
-
-  const instaAccountV2ImplM1Sigs = ["cast(string[],bytes[],address)"].map((a) =>
-    web3.utils.keccak256(a).slice(0, 10)
-  );
-
-  const instaAccountV2ImplM2Sigs = [
-    "castWithFlashloan(string[],bytes[],address)",
-  ].map((a) => web3.utils.keccak256(a).slice(0, 10));
 
   let masterSigner: Signer;
   let deployer: SignerWithAddress,
@@ -143,13 +95,9 @@ describe("InstaIndex", function () {
 
   it("should have the contracts deployed", async function () {
     expect(!!instaIndex.address).to.be.true;
-    console.log("\tinstaIndex deployed to: ", instaIndex.address);
     expect(!!instaList.address).to.be.true;
-    console.log("\tinstaList deployed to: ", instaIndex.address);
     expect(!!instaAccount.address).to.be.true;
-    console.log("\tinstaAccount deployed to: ", instaIndex.address);
     expect(!!instaConnectors.address).to.be.true;
-    console.log("\tinstaConnectors deployed to: ", instaIndex.address);
   });
 
   it("should set the basics", async function () {
@@ -217,11 +165,14 @@ describe("InstaIndex", function () {
           .changeMaster(newMaster.address);
         const txDetails = await tx.wait();
         expect(!!txDetails.status).to.be.true;
+        let args = {
+          master: newMaster.address,
+        };
         expectEvent(
           txDetails,
           (await deployments.getArtifact("InstaIndex")).abi,
           "LogNewMaster",
-          newMaster.address
+          args
         );
         console.log("\tLogNewMaster event fired...");
         expect(await instaIndex.master()).to.be.equal(masterAddress);
@@ -248,12 +199,16 @@ describe("InstaIndex", function () {
         const tx = await instaIndex.connect(newMaster).updateMaster();
         let txDetails = await tx.wait();
         expect(!!txDetails.status).to.be.true;
+        let args = {
+          master: newMaster.address,
+        };
         expectEvent(
           txDetails,
           (await deployments.getArtifact("InstaIndex")).abi,
           "LogUpdateMaster",
-          newMaster.address
+          args
         );
+        console.log("\tLogUpdateMaster event fired...");
         expect(await instaIndex.master()).to.be.equal(newMaster.address);
       });
 
@@ -308,17 +263,18 @@ describe("InstaIndex", function () {
         let txDetails = await tx.wait();
         expect(!!txDetails.status).to.be.true;
         versionCount++;
-        let accountArgs = [
-          instaDefaultAccountV2.address,
-          instaConnectorsV2.address,
-          addr_zero,
-        ];
+        let accountArgs = {
+          _newAccount: instaDefaultAccountV2.address,
+          _connectors: instaConnectorsV2.address,
+          _check: addr_zero,
+        };
         expectEvent(
           txDetails,
           (await deployments.getArtifact("InstaIndex")).abi,
           "LogNewAccount",
           accountArgs
         );
+        console.log("\tLogNewAccount event fired...");
       });
 
       it("should check the versionCount for new module", async function () {
@@ -327,9 +283,9 @@ describe("InstaIndex", function () {
 
       it("should revert on re-adding same check module to same version", async function () {
         let check_addr = await instaIndex.check(1); //check module address for version 1
-        await expect(instaIndex.changeCheck(1, check_addr)).to.be.revertedWith(
-          "already-a-check"
-        );
+        await expect(
+          instaIndex.connect(newMaster).changeCheck(1, check_addr)
+        ).to.be.revertedWith("already-a-check");
       });
 
       it("should change check module address", async function () {
@@ -337,12 +293,17 @@ describe("InstaIndex", function () {
         let tx = await instaIndex.connect(newMaster).changeCheck(1, check_addr);
         let txDetails = await tx.wait();
         expect(!!txDetails.status).to.be.true;
+        let args = {
+          accountVersion: "1",
+          check: check_addr,
+        };
         expectEvent(
           txDetails,
           (await deployments.getArtifact("InstaIndex")).abi,
           "LogNewCheck",
-          [1, check_addr]
+          args
         );
+        console.log("\tLogNewCheck event fired...");
       });
 
       it("can add same check module to multiple versions", async function () {
@@ -354,8 +315,12 @@ describe("InstaIndex", function () {
           txDetails,
           (await deployments.getArtifact("InstaIndex")).abi,
           "LogNewCheck",
-          [2, check_addr]
+          {
+            accountVersion: "2",
+            check: check_addr,
+          }
         );
+        console.log("\tLogNewCheck event fired...");
       });
     });
 
