@@ -1,0 +1,384 @@
+import { expect } from "chai";
+import hre from "hardhat";
+import { ethers } from "hardhat";
+const { web3, deployments, waffle } = hre;
+const { provider, deployContract } = waffle;
+import chai from "chai";
+import { solidity } from "ethereum-waffle";
+
+chai.use(solidity);
+
+import expectEvent from "../scripts/expectEvent";
+import instaDeployContract from "../scripts/deployContract";
+
+import { Contract, Signer } from "ethers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { Address } from "hardhat-deploy/dist/types";
+import BigNumber from "bignumber.js";
+
+describe("InstaList", function () {
+  const addr_zero = ethers.constants.AddressZero;
+
+  let instaIndex: Contract,
+    instaList: Contract,
+    instaConnectors: Contract,
+    instaAccount: Contract,
+    instaAccountV2: Contract,
+    instaConnectorsV2: Contract;
+
+  let masterSigner: Signer, dsaV1: Signer, dsaV2: Signer;
+  let deployer: SignerWithAddress, signer: SignerWithAddress;
+
+  const wallets = provider.getWallets();
+  let [wallet0, wallet1, wallet2, wallet3] = wallets;
+  let setBasicsArgs: [string, string, string, string];
+  let masterAddress: Address;
+  let dsaWalletv1: Contract, dsaWalletv2: Contract;
+
+  let accounts: any;
+
+  before(async () => {
+    await hre.network.provider.request({
+      method: "hardhat_reset",
+      params: [
+        {
+          forking: {
+            // @ts-ignore
+            jsonRpcUrl: hre.config.networks.hardhat.forking.url,
+            blockNumber: 12065000,
+          },
+        },
+      ],
+    });
+
+    [deployer, signer] = await ethers.getSigners();
+    const deployerAddress = deployer.address;
+    masterAddress = deployerAddress;
+
+    console.log(`\tDeployer Address: ${deployerAddress}`);
+
+    instaIndex = await instaDeployContract("InstaIndex", []);
+
+    instaList = await instaDeployContract("InstaList", [instaIndex.address]);
+
+    instaAccount = await instaDeployContract("InstaAccount", [
+      instaIndex.address,
+    ]);
+
+    instaConnectors = await instaDeployContract("InstaConnectors", [
+      instaIndex.address,
+    ]);
+
+    instaAccountV2 = await instaDeployContract("InstaImplementationM1", [
+      instaIndex.address,
+    ]);
+
+    instaConnectorsV2 = await instaDeployContract("InstaConnectorsV2", [
+      instaIndex.address,
+    ]);
+
+    setBasicsArgs = [
+      deployerAddress,
+      instaList.address,
+      instaAccount.address,
+      instaConnectors.address,
+    ];
+
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [masterAddress],
+    });
+
+    masterSigner = ethers.provider.getSigner(masterAddress);
+  });
+
+  it("should have the contracts deployed", async function () {
+    expect(!!instaIndex.address).to.be.true;
+    expect(!!instaList.address).to.be.true;
+    expect(!!instaAccount.address).to.be.true;
+    expect(!!instaConnectors.address).to.be.true;
+  });
+
+  it("should set the basics", async function () {
+    const tx = await instaIndex.setBasics(...setBasicsArgs);
+    const txDetails = await tx.wait();
+    expect(!!txDetails.status).to.be.true;
+  });
+
+  async function getVersionAbi(version: any) {
+    if (version === 1)
+      return (await deployments.getArtifact("InstaAccount")).abi;
+    else return (await deployments.getArtifact("InstaImplementationM1")).abi;
+  }
+
+  async function buildDSA(owner: any, version: any) {
+    const tx = await instaIndex.build(owner, version, owner);
+    const receipt = await tx.wait();
+    const event = receipt.events.find(
+      (a: { event: string }) => a.event === "LogAccountCreated"
+    );
+    return await ethers.getContractAt(
+      await getVersionAbi(version),
+      event.args.account
+    );
+  }
+
+  it("should check state", async function () {
+    expect(await instaList.instaIndex()).to.be.equal(instaIndex.address);
+    accounts = await instaList.accounts();
+    expect(accounts.toString()).to.be.equal(new BigNumber(0).toString());
+  });
+
+  it("Should build DSAs", async () => {
+    dsaWalletv1 = await buildDSA(wallet0.address, 1);
+    expect(!!dsaWalletv1.address).to.be.true;
+    dsaWalletv2 = await buildDSA(wallet0.address, 2);
+    expect(!!dsaWalletv2.address).to.be.true;
+  });
+
+  describe("List init", function () {
+    it("should have accounts added on build", async function () {
+      accounts = await instaList.accounts();
+      expect(accounts.toString()).to.be.equal(new BigNumber(2).toString());
+      expect(await instaList.accountID(dsaWalletv1.address)).to.be.equal(
+        new BigNumber(1).toString()
+      );
+      expect(await instaList.accountID(dsaWalletv2.address)).to.be.equal(
+        new BigNumber(2).toString()
+      );
+      expect(
+        await instaList.accountAddr(new BigNumber(1).toString())
+      ).to.be.equal(dsaWalletv1.address);
+      expect(
+        await instaList.accountID(new BigNumber(2).toString())
+      ).to.be.equal(dsaWalletv2.address);
+    });
+
+    it("should revert on list init with non-index sender", async function () {
+      await expect(
+        instaList.connect(signer).init(wallet1.address)
+      ).to.be.revertedWith("not-index");
+      await expect(
+        instaList.connect(signer).init(dsaWalletv1.address)
+      ).to.be.revertedWith("not-index");
+    });
+  });
+
+  describe("DSA Auths", async function () {
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [dsaWalletv1.address],
+    });
+
+    dsaV1 = ethers.provider.getSigner(dsaWalletv1.address);
+
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [dsaWalletv2.address],
+    });
+
+    dsaV2 = ethers.provider.getSigner(dsaWalletv2.address);
+
+    it("should revert on adding auth to non-dsa i.e sender is EOA", async function () {
+      await expect(
+        instaList.connect(wallet1).addAuth(wallet0.address)
+      ).to.be.revertedWith("not-account");
+    });
+
+    it("should revert on adding non-owner account as auth: must be enabled via DSA first", async function () {
+      expect(dsaWalletv1.isAuth(wallet1.address)).to.be.false;
+      await expect(
+        instaList.connect(dsaV1).addAuth(wallet1.address)
+      ).to.be.revertedWith("not-owner");
+    });
+
+    describe("Enable and add auths", function () {
+      let userList1: any,
+        userLink1: any,
+        userList2: any,
+        userLink2: any,
+        accountLink1: any,
+        accountList1: any,
+        accountLink2: any,
+        accountList2: any,
+        dsaV1Id: any,
+        dsaV2Id: any;
+
+      // addAccount
+      // if (userLink[_owner].first == 0) ---> covered with buildDSA v1
+      // if (userLink[_owner].last != 0) ---> covered with buildDSA v2
+
+      // addUser
+      // if (accountLink[_account].first == address(0)) ---> covered with buildDSA v1,v2
+      // if (accountLink[_account].last != address(0)) ---> cover with enabling wallet1 to dsaWalletv1
+
+      it("should check previous user lists and links", async function () {
+        dsaV1Id = await instaList.accountID(dsaWalletv1.address);
+        dsaV2Id = await instaList.accountID(dsaWalletv2.address);
+        userList1 = await instaList.userList(wallet0.address, dsaV1Id);
+        userList2 = await instaList.userList(wallet0.address, dsaV2Id);
+        userLink1 = await instaList.userLink(wallet0.address);
+        userLink1 = await instaList.userLink(wallet1.address);
+        expect(userLink1.first).to.be.equal(dsaV1Id);
+        expect(userLink1.last).to.be.equal(dsaV2Id);
+        expect(userLink1.count).to.be.equal(new BigNumber(2).toString());
+        expect(userLink2.first).to.be.equal(new BigNumber(0).toString());
+        expect(userLink2.last).to.be.equal(new BigNumber(0).toString());
+        expect(userLink2.count).to.be.equal(new BigNumber(0).toString());
+        expect(userList1.prev).to.be.equal(new BigNumber(0).toString());
+        expect(userList1.next).to.be.equal(dsaV2Id);
+        expect(userList2.prev).to.be.equal(dsaV1Id);
+        expect(userList2.next).to.be.equal(new BigNumber(0).toString());
+      });
+
+      it("should check previous account lists and links", async function () {
+        accountList1 = await instaList.accountList(dsaV1Id, wallet0.address);
+        accountList2 = await instaList.accountList(dsaV2Id, wallet0.address);
+        accountLink1 = await instaList.accountLink(dsaV1Id);
+        accountLink2 = await instaList.accountLink(dsaV2Id);
+        expect(accountLink1.first).to.be.equal(wallet0.address);
+        expect(accountLink1.last).to.be.equal(wallet0.address);
+        expect(accountLink1.count).to.be.equal(new BigNumber(1).toString());
+        expect(accountLink2.first).to.be.equal(wallet0.address);
+        expect(accountLink2.last).to.be.equal(wallet0.address);
+        expect(accountLink2.count).to.be.equal(new BigNumber(1).toString());
+        expect(accountList1.prev).to.be.equal(addr_zero);
+        expect(accountList1.next).to.be.equal(addr_zero);
+        expect(accountList2.prev).to.be.equal(addr_zero);
+        expect(accountList2.next).to.be.equal(addr_zero);
+      });
+
+      it("should enable the EOA as owner via DSA and add auth", async function () {
+        expect(await dsaWalletv1.isAuth(wallet1.address)).to.be.false;
+        //tests for instaAccount.enable in v1 tests
+        let tx = await dsaWalletv1.connect(dsaV1).enable(wallet1.address);
+        let txDetails = await tx.wait();
+        expect(!!txDetails.status).to.be.true;
+        expectEvent(
+          txDetails,
+          (await deployments.getArtifact("InstaAccount")).abi,
+          "LogEnable",
+          {
+            user: wallet1.address,
+          }
+        );
+      });
+
+      it("should have updated user lists and links", async function () {
+        userList1 = await instaList.userList(wallet0.address, dsaV1Id);
+        userList2 = await instaList.userList(wallet0.address, dsaV2Id);
+        userLink1 = await instaList.userLink(wallet0.address);
+        userLink2 = await instaList.userLink(wallet1.address);
+        expect(userLink1.first).to.be.equal(dsaV1Id);
+        expect(userLink1.last).to.be.equal(dsaV2Id);
+        expect(userLink1.count).to.be.equal(new BigNumber(2).toString());
+        expect(userLink2.first).to.be.equal(dsaV1Id);
+        expect(userLink2.last).to.be.equal(dsaV1Id);
+        expect(userLink2.count).to.be.equal(new BigNumber(1).toString());
+        expect(userList1.prev).to.be.equal(new BigNumber(0).toString());
+        expect(userList1.next).to.be.equal(dsaV2Id);
+        expect(userList2.prev).to.be.equal(dsaV1Id);
+        expect(userList2.next).to.be.equal(new BigNumber(0).toString());
+        userList1 = await instaList.userList(wallet1.address, dsaV1Id);
+        expect(userList1.prev).to.be.equal(new BigNumber(0).toString());
+        expect(userList1.next).to.be.equal(new BigNumber(0).toString());
+      });
+
+      it("should have updated account lists and links", async function () {
+        accountList1 = await instaList.accountList(dsaV1Id, wallet0.address);
+        accountList2 = await instaList.accountList(dsaV2Id, wallet0.address);
+        accountLink1 = await instaList.accountLink(dsaV1Id);
+        accountLink2 = await instaList.accountLink(dsaV2Id);
+        expect(accountLink1.first).to.be.equal(wallet0.address);
+        expect(accountLink1.last).to.be.equal(wallet1.address);
+        expect(accountLink1.count).to.be.equal(new BigNumber(2).toString());
+        expect(accountLink2.first).to.be.equal(wallet0.address);
+        expect(accountLink2.last).to.be.equal(wallet0.address);
+        expect(accountLink2.count).to.be.equal(new BigNumber(1).toString());
+        expect(accountList1.prev).to.be.equal(addr_zero);
+        expect(accountList1.next).to.be.equal(wallet1.address);
+        expect(accountList2.prev).to.be.equal(addr_zero);
+        expect(accountList2.next).to.be.equal(addr_zero);
+        accountList1 = await instaList.accountList(dsaV1Id, wallet1.address);
+        expect(accountList1.prev).to.be.equal(addr_zero);
+        expect(accountList1.next).to.be.equal(addr_zero);
+      });
+
+      it("should enable a DSA as owner of DSA and add auth", async function () {
+        expect(await dsaWalletv1.isAuth(dsaWalletv2.address)).to.be.false;
+        //tests for instaAccount.enable in v1 tests
+        let tx = await dsaWalletv1.connect(dsaV1).enable(dsaWalletv2.address);
+        let txDetails = await tx.wait();
+        expect(!!txDetails.status).to.be.true;
+        expectEvent(
+          txDetails,
+          (await deployments.getArtifact("InstaAccount")).abi,
+          "LogEnable",
+          {
+            user: dsaWalletv2.address,
+          }
+        );
+      });
+
+      it("should have updated user lists and links", async function () {
+        userList1 = await instaList.userList(wallet0.address, dsaV1Id);
+        userList2 = await instaList.userList(wallet0.address, dsaV2Id);
+        userLink1 = await instaList.userLink(wallet0.address);
+        userLink2 = await instaList.userLink(wallet1.address);
+        expect(userLink1.first).to.be.equal(dsaV1Id);
+        expect(userLink1.last).to.be.equal(dsaV2Id);
+        expect(userLink1.count).to.be.equal(new BigNumber(2).toString());
+        expect(userLink2.first).to.be.equal(dsaV1Id);
+        expect(userLink2.last).to.be.equal(dsaV1Id);
+        expect(userLink2.count).to.be.equal(new BigNumber(1).toString());
+        expect(userList1.prev).to.be.equal(new BigNumber(0).toString());
+        expect(userList1.next).to.be.equal(dsaV2Id);
+        expect(userList2.prev).to.be.equal(dsaV1Id);
+        expect(userList2.next).to.be.equal(new BigNumber(0).toString());
+        userList1 = await instaList.userList(wallet1.address, dsaV1Id);
+        expect(userList1.prev).to.be.equal(new BigNumber(0).toString());
+        expect(userList1.next).to.be.equal(new BigNumber(0).toString());
+        userList1 = await instaList.userList(dsaWalletv2.address, dsaV1Id);
+        expect(userList1.prev).to.be.equal(new BigNumber(0).toString());
+        expect(userList1.next).to.be.equal(new BigNumber(0).toString());
+        userLink1 = await instaList.userLink(wallet0.address);
+        expect(userLink1.first).to.be.equal(dsaV1Id);
+        expect(userLink1.last).to.be.equal(dsaV1Id);
+        expect(userLink1.count).to.be.equal(new BigNumber(1).toString());
+      });
+
+      it("should have updated account lists and links", async function () {
+        accountList1 = await instaList.accountList(dsaV1Id, wallet0.address);
+        accountList2 = await instaList.accountList(dsaV2Id, wallet0.address);
+        accountLink1 = await instaList.accountLink(dsaV1Id);
+        accountLink2 = await instaList.accountLink(dsaV2Id);
+        expect(accountLink1.first).to.be.equal(wallet0.address);
+        expect(accountLink1.last).to.be.equal(dsaWalletv2.address);
+        expect(accountLink1.count).to.be.equal(new BigNumber(3).toString());
+        expect(accountLink2.first).to.be.equal(wallet0.address);
+        expect(accountLink2.last).to.be.equal(wallet0.address);
+        expect(accountLink2.count).to.be.equal(new BigNumber(1).toString());
+        expect(accountList1.prev).to.be.equal(addr_zero);
+        expect(accountList1.next).to.be.equal(wallet1.address);
+        expect(accountList2.prev).to.be.equal(addr_zero);
+        expect(accountList2.next).to.be.equal(addr_zero);
+        accountList1 = await instaList.accountList(dsaV1Id, wallet1.address);
+        expect(accountList1.prev).to.be.equal(wallet0.address);
+        expect(accountList1.next).to.be.equal(dsaWalletv2.address);
+        accountList1 = await instaList.accountList(
+          dsaV1Id,
+          dsaWalletv2.address
+        );
+        expect(accountList1.prev).to.be.equal(wallet1.address);
+        expect(accountList1.next).to.be.equal(addr_zero);
+      });
+    });
+  });
+});
+
+/**
+ * TODOS
+ * - Configure hardhat gas reporter for gas estimate, gas reporter currently showing - USD
+ * - Configure solcover to include contracts calls which are used from artifacts --> including coverage_artifacts
+ * - Including time taken for test --> check constraints due to solcover
+ */
