@@ -11,9 +11,10 @@ chai.use(solidity);
 import expectEvent from "../scripts/expectEvent";
 import instaDeployContract from "../scripts/deployContract";
 
-import type { Contract, Signer } from "ethers";
+import { Contract, Signer } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Address } from "hardhat-deploy/dist/types";
+import BigNumber from "bignumber.js";
 
 describe("InstaIndex", function () {
   const addr_zero = ethers.constants.AddressZero;
@@ -35,7 +36,7 @@ describe("InstaIndex", function () {
   let setBasicsArgs: [string, string, string, string];
   let versionCount = 0;
   let masterAddress: Address;
-  let dsaWallet0: Address;
+  let dsaWallet0: Contract;
 
   before(async () => {
     await hre.network.provider.request({
@@ -325,6 +326,17 @@ describe("InstaIndex", function () {
     });
 
     describe("Build DSA", function () {
+      let accounts_before: any,
+        accounts_after: any,
+        userLink_before: any,
+        userLink_after: any,
+        userList_before: any,
+        userList_after: any,
+        accountLink_before: any,
+        accountLink_after: any,
+        accountList_before: any,
+        accountList_after: any,
+        dsaWallet1: Contract;
       it("should check if account module is clone", async function () {
         expect(await instaIndex.isClone(1, instaAccount.address)).to.be.false;
       });
@@ -340,12 +352,158 @@ describe("InstaIndex", function () {
         ).to.be.revertedWith("not-valid-account");
       });
 
+      it("should get account count and list links before building DSA", async function () {
+        accounts_before = await instaList.accounts();
+        console.log("\tPrevious Account ID: ", accounts_before);
+        userLink_before = await instaList.userLink(wallet0.address);
+        expect(userLink_before.first).to.be.equal(new BigNumber(0));
+        expect(userLink_before.last).to.be.equal(new BigNumber(0));
+        expect(userLink_before.count).to.be.equal(new BigNumber(0));
+        userList_before = await instaList.userList(wallet0.address, "0");
+        expect(userList_before.prev).to.be.equal(new BigNumber(0));
+        expect(userList_before.next).to.be.equal(new BigNumber(0));
+        accountLink_before = await instaList.accountLink(
+          new BigNumber(accounts_before).plus(1).toString()
+        );
+        expect(accountLink_before.first).to.be.equal(addr_zero);
+        expect(accountLink_before.last).to.be.equal(addr_zero);
+        expect(accountLink_before.count).to.be.equal(new BigNumber(0));
+        accountList_before = await instaList.accountList(
+          new BigNumber(accounts_before).plus(1).toFixed(0),
+          wallet0.address
+        );
+        expect(accountList_before.prev).to.be.equal(addr_zero);
+        expect(accountList_before.next).to.be.equal(addr_zero);
+      });
+
       it("should build DSA v1", async function () {
         let tx = await instaIndex
           .connect(wallet0)
           .build(wallet0.address, 1, wallet0.address);
         let txDetails = await tx.wait();
+        expect(!!txDetails.status).to.be.true;
+        dsaWallet0 = await ethers.getContractAt(
+          (
+            await deployments.getArtifact("InstaAccount")
+          ).abi,
+          txDetails.events[1].account
+        );
+
+        expectEvent(
+          txDetails,
+          (await deployments.getArtifact("InstaAccount")).abi,
+          "LogEnable",
+          {
+            user: wallet0.address,
+          }
+        );
+        console.log("\tLogEnable event fired...");
+        expectEvent(
+          txDetails,
+          (await deployments.getArtifact("InstaIndex")).abi,
+          "LogAccountCreated",
+          {
+            sender: wallet0.address,
+            owner: wallet0.address,
+            account: dsaWallet0.address,
+            origin: wallet0.address,
+          }
+        );
+        console.log("\tLogAccountCreated event fired...");
+      });
+
+      it("should increment the account ID", async function () {
+        accounts_after = await instaList.accounts();
+        expect(accounts_after).to.be.equal(
+          new BigNumber(accounts_before).plus(1).toString()
+        );
+      });
+
+      it("should add account to the list registry", async function () {
+        expect(await instaList.accountID(dsaWallet0.address)).to.be.equal(
+          accounts_after
+        );
+        console.log("\tAccount address to ID mapping updated...");
+        expect(await instaList.accountAddr(accounts_after)).to.be.equal(
+          dsaWallet0.address
+        );
+        console.log("\tAccount ID to address mapping updated...");
+      });
+
+      it("should add owner as auth in account module", async function () {
+        expect(await dsaWallet0.isAuth(wallet0.address)).to.be.true;
+      });
+
+      it("should update account links in list registry", async function () {
+        userLink_after = await instaList.userLink(wallet0.address);
+        expect(userLink_after.first).to.be.equal(accounts_after);
+        expect(userLink_after.last).to.be.equal(addr_zero);
+        expect(userLink_after.count).to.be.equal(new BigNumber(1));
+        console.log("\tUserLink updated...");
+        userList_after = await instaList.userList(wallet0.address, "0");
+        expect(userList_after.prev).to.be.equal(addr_zero);
+        expect(userList_after.next).to.be.equal(accounts_after);
+        console.log("\tUserList updated...");
+        accountLink_after = await instaList.accountLink(accounts_after);
+        expect(accountLink_after.first).to.be.equal(wallet0.address);
+        expect(accountLink_after.last).to.be.equal(addr_zero);
+        expect(accountLink_after.count).to.be.equal(new BigNumber(1));
+        console.log("\tAccountLink updated...");
+        accountList_after = await instaList.accountList(
+          accounts_after,
+          addr_zero
+        );
+        expect(accountList_after.prev).to.be.equal(addr_zero);
+        expect(accountList_after.next).to.be.equal(wallet0.address);
+        console.log("\tAccountList updated...");
+      });
+
+      it("should check DSA is clone of account module v1", async function () {
+        expect(await instaIndex.isClone(1, dsaWallet0.address)).to.be.true;
+      });
+
+      it("should build dsa v1 with owner not same as sender", async function () {
+        let tx = await instaIndex
+          .connect(wallet1)
+          .build(wallet0.address, 1, wallet0.address);
+        let txDetails = await tx.wait();
+        expect(!!txDetails.status).to.be.true;
+        dsaWallet1 = await ethers.getContractAt(
+          (
+            await deployments.getArtifact("InstaAccount")
+          ).abi,
+          txDetails.events[1].account
+        );
+
+        expectEvent(
+          txDetails,
+          (await deployments.getArtifact("InstaAccount")).abi,
+          "LogEnable",
+          {
+            user: wallet0.address,
+          }
+        );
+        console.log("\tLogEnable event fired...");
+        expectEvent(
+          txDetails,
+          (await deployments.getArtifact("InstaIndex")).abi,
+          "LogAccountCreated",
+          {
+            sender: wallet1.address,
+            owner: wallet0.address,
+            account: dsaWallet0.address,
+            origin: wallet0.address,
+          }
+        );
+        console.log("\tLogAccountCreated event fired...");
       });
     });
   });
 });
+
+/**
+ * TODOS
+ * - Configure hardhat gas reporter for gas estimate, gas reporter currently showing - USD
+ * - Configure solcover to include contracts calls which are used from artifacts --> including coverage_artifacts
+ * - Including time taken for each test --> check constraints due to solcover
+ */
