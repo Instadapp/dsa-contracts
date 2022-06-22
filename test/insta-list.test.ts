@@ -3,10 +3,6 @@ import hre from "hardhat";
 import { ethers } from "hardhat";
 const { web3, deployments, waffle } = hre;
 const { provider, deployContract } = waffle;
-import chai from "chai";
-import { solidity } from "ethereum-waffle";
-
-chai.use(solidity);
 
 import expectEvent from "../scripts/expectEvent";
 import instaDeployContract from "../scripts/deployContract";
@@ -26,7 +22,9 @@ describe("InstaList", function () {
     instaAccountV2: Contract,
     instaConnectorsV2: Contract;
 
-  let masterSigner: Signer, dsaV1: Signer, dsaV2: Signer;
+  let masterSigner: Signer;
+  let dsaV1: Signer;
+  let dsaV2: Signer;
   let deployer: SignerWithAddress, signer: SignerWithAddress;
 
   const wallets = provider.getWallets();
@@ -34,6 +32,7 @@ describe("InstaList", function () {
   let setBasicsArgs: [string, string, string, string];
   let masterAddress: Address;
   let dsaWalletv1: Contract, dsaWalletv2: Contract;
+  let walletv1: any, walletv2: any;
 
   let accounts: any;
 
@@ -45,7 +44,7 @@ describe("InstaList", function () {
           forking: {
             // @ts-ignore
             jsonRpcUrl: hre.config.networks.hardhat.forking.url,
-            blockNumber: 12065000,
+            blockNumber: 12068000,
           },
         },
       ],
@@ -132,8 +131,10 @@ describe("InstaList", function () {
   it("Should build DSAs", async () => {
     dsaWalletv1 = await buildDSA(wallet0.address, 1);
     expect(!!dsaWalletv1.address).to.be.true;
+    walletv1 = await ethers.getSigner(dsaWalletv1.address);
     dsaWalletv2 = await buildDSA(wallet0.address, 2);
     expect(!!dsaWalletv2.address).to.be.true;
+    walletv2 = await ethers.getSigner(dsaWalletv2.address);
   });
 
   describe("List init", function () {
@@ -167,17 +168,17 @@ describe("InstaList", function () {
   describe("DSA Auths", async function () {
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
-      params: [dsaWalletv1.address],
+      params: [walletv1.address],
     });
 
-    dsaV1 = ethers.provider.getSigner(dsaWalletv1.address);
+    dsaV1 = ethers.provider.getSigner(walletv1.address);
 
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
-      params: [dsaWalletv2.address],
+      params: [walletv2.address],
     });
 
-    dsaV2 = ethers.provider.getSigner(dsaWalletv2.address);
+    dsaV2 = ethers.provider.getSigner(walletv2.address);
 
     it("should revert on adding auth to non-dsa i.e sender is EOA", async function () {
       await expect(
