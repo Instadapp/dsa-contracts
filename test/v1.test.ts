@@ -17,9 +17,10 @@ import {
   ConnectAuth__factory,
   ConnectBasic__factory,
   ConnectV2Auth__factory,
+  InstaEvent__factory,
 } from "../typechain";
 import addresses from "../scripts/constant/addresses";
-import encodeSpells from "../scripts/encodeSpells";
+// import encodeSpells from "../scripts/encodeSpells";
 
 describe("InstaAccount v1", function () {
   const addr_zero = ethers.constants.AddressZero;
@@ -30,7 +31,8 @@ describe("InstaAccount v1", function () {
     instaAccount: Contract,
     instaAuth: Contract,
     instaBasic: Contract,
-    instaMemory: Contract;
+    instaMemory: Contract,
+    instaEvent: Contract;
 
   let masterSigner: Signer, chief1: Signer, chief2: Signer;
   let dsa1: any;
@@ -57,7 +59,7 @@ describe("InstaAccount v1", function () {
           forking: {
             // @ts-ignore
             jsonRpcUrl: hre.config.networks.hardhat.forking.url,
-            blockNumber: 14005000,
+            blockNumber: 15010000,
           },
         },
       ],
@@ -78,6 +80,8 @@ describe("InstaAccount v1", function () {
       instaIndex.address,
     ]);
     instaMemory = await instaDeployContract("InstaMemory", []);
+
+    instaEvent = await instaDeployContract("InstaEvent", [instaList.address]);
 
     setBasicsArgs = [
       deployerAddress,
@@ -107,6 +111,23 @@ describe("InstaAccount v1", function () {
 
     chief2 = ethers.provider.getSigner(ichief2.address);
   });
+
+  function encodeSpells(spells: any[]) {
+    const targets = spells.map(
+      (a: { connector: any }) => addresses.connectors[a.connector]
+    );
+    const calldatas = spells.map(
+      (a: { method: any; connector: string | number; args: any }) => {
+        const functionName = a.method;
+        const abi = abis.connectors[a.connector].find((b: { name: any }) => {
+          return b.name === functionName;
+        });
+        if (!abi) throw new Error("Couldn't find function");
+        return web3.eth.abi.encodeFunctionCall(abi, a.args);
+      }
+    );
+    return [targets, calldatas];
+  }
 
   it("should have the contracts deployed", async function () {
     expect(!!instaIndex.address).to.be.true;
@@ -240,6 +261,23 @@ describe("InstaAccount v1", function () {
     });
   });
 
+  describe("InstaEvents", function () {
+    it("should have InstaEvent deployed", async function () {
+      expect(!!instaEvent.address).to.be.true;
+    });
+
+    it("should revert calling emitEvent from non-dsa", async function () {
+      let eventCode = web3.utils.keccak256("LogRemoveAuth(address,address)");
+      let eventData = ethers.utils.defaultAbiCoder.encode(
+        ["address", "address"],
+        [wallet0.address, wallet3.address]
+      );
+      await expect(
+        instaEvent.connect(signer).emitEvent(1, 1, eventCode, eventData)
+      ).to.be.revertedWith("not-SA");
+    });
+  });
+
   describe("Insta chiefs", async function () {
     it("should revert on enabling chief with non-master, non-chief account", async function () {
       await expect(
@@ -326,7 +364,7 @@ describe("InstaAccount v1", function () {
     });
   });
 
-  describe("Connectors | Deploy, Enble, Disable", function () {
+  describe("Connectors | Deploy, Enable", function () {
     it("should have the connectors deployed", async function () {
       await deployConnector({
         connectorName: "insta-auth",
@@ -380,7 +418,8 @@ describe("InstaAccount v1", function () {
       expect(await instaConnectors.staticConnectorLength()).to.be.equal(
         new BigNumber(0).toString()
       );
-      //   expect(await instaConnectors.connectorArray(2)).to.be.equal(addr_zero);
+      // let connectorArr = [];
+      // expect(await instaConnectors.connectorArray()).to.be.equal(connectorArr);
     });
 
     it("should revert enabling the connector via non master, non-chief", async function () {
@@ -398,8 +437,9 @@ describe("InstaAccount v1", function () {
     });
 
     it("should revert enabling incorrect connector: connector id mismatch", async function () {
-      //   ---------------- CHECK ------------------------------
-      // expect(await instaBasic.connectorID()).to.be.equal([1, 2]);
+      let ids = await instaBasic.connectorID();
+      expect(ids[0]).to.be.equal(1);
+      expect(ids[1]).to.be.equal(2);
       await expect(
         instaConnectors
           .connect(masterSigner)
@@ -418,8 +458,9 @@ describe("InstaAccount v1", function () {
         await instaConnectors.connectors(addresses.connectors["insta-auth"])
       ).to.be.false;
 
-      //   ---------------- CHECK ------------------------------
-      // expect(await instaAuth.connectorID()).to.be.equal([1, 1]);
+      let ids = await instaAuth.connectorID();
+      expect(ids[0]).to.be.equal(1);
+      expect(ids[1]).to.be.equal(1);
       let tx = await instaConnectors
         .connect(masterSigner)
         .enable(addresses.connectors["insta-auth"]);
@@ -468,8 +509,9 @@ describe("InstaAccount v1", function () {
       expect(await instaConnectors.connectors(addresses.connectors["basic"])).to
         .be.false;
 
-      //   ---------------- CHECK ------------------------------
-      // expect(await instaBasic.connectorID()).to.be.equal([1, 2]);
+      let ids = await instaBasic.connectorID();
+      expect(ids[0]).to.be.equal(1);
+      expect(ids[1]).to.be.equal(2);
       let tx = await instaConnectors
         .connect(chief1)
         .enable(addresses.connectors["basic"]);
@@ -517,6 +559,7 @@ describe("InstaAccount v1", function () {
     });
 
     it("should revert on enabling the user via non-dsa", async function () {
+      expect(await instaAuth.name()).to.be.equal("Auth-v1");
       await expect(
         instaAuth.connect(wallet0).addModule(wallet1.address)
       ).to.be.revertedWith("not-self-index");
@@ -771,6 +814,7 @@ describe("InstaAccount v1", function () {
 
     it("should revert calling cast on DSA fron non-owner address", async function () {
       expect(await dsaWallet1.isAuth(signer.address)).to.be.false;
+
       const spells = [
         {
           connector: "insta-auth",
@@ -795,8 +839,8 @@ describe("InstaAccount v1", function () {
         },
       ];
 
-      let [targets] = encodeSpells(spells);
-      expect(targets.length).to.be.gt(new BigNumber(1).toString());
+      let [targets, datas] = encodeSpells(spells);
+      expect(targets.length).to.be.gte(1);
 
       await expect(
         dsaWallet1.connect(wallet0).cast(targets, [], wallet0.address)
@@ -811,8 +855,8 @@ describe("InstaAccount v1", function () {
         factory: ConnectV2Auth__factory,
       });
       expect(!!addresses.connectors["auth"]).to.be.true;
-      expect(await instaConnectors.isConnector(addresses.connectors["auth"])).to
-        .be.false;
+      expect(await instaConnectors.isConnector([addresses.connectors["auth"]]))
+        .to.be.false;
       const spells = [
         {
           connector: "auth",
@@ -879,6 +923,17 @@ describe("InstaAccount v1", function () {
       );
       console.log("\tInstaEvent:LogEvent event fired...");
 
+      expectEvent(
+        txDetails,
+        (await deployments.getArtifact("InstaAccount")).abi,
+        "LogCast",
+        {
+          origin: wallet0.address,
+          sender: wallet0.address,
+          value: ethers.utils.parseEther("0"),
+        }
+      );
+      console.log("\tLogCast event fired...");
       expect(await dsaWallet1.isAuth(wallet1.address)).to.be.true;
     });
 
@@ -997,6 +1052,18 @@ describe("InstaAccount v1", function () {
       );
       console.log("\tInstaEvent:LogEvent event fired...");
 
+      expectEvent(
+        txDetails,
+        (await deployments.getArtifact("InstaAccount")).abi,
+        "LogCast",
+        {
+          origin: wallet0.address,
+          sender: wallet0.address,
+          value: ethers.utils.parseEther("5"),
+        }
+      );
+      console.log("\tLogCast event fired...");
+
       expect(await ethers.provider.getBalance(dsaWallet1.address)).to.be.gte(
         new BigNumber(balance_before).plus(new BigNumber(5).multipliedBy(1e18))
       );
@@ -1085,6 +1152,18 @@ describe("InstaAccount v1", function () {
       );
       console.log("\tInstaEvent:LogEvent event fired...");
 
+      expectEvent(
+        txDetails,
+        (await deployments.getArtifact("InstaAccount")).abi,
+        "LogCast",
+        {
+          origin: wallet0.address,
+          sender: wallet0.address,
+          value: ethers.utils.parseEther("0"),
+        }
+      );
+      console.log("\tLogCast event fired...");
+
       expect(await dsaWallet1.isAuth(wallet1.address)).to.be.true;
     });
 
@@ -1092,6 +1171,7 @@ describe("InstaAccount v1", function () {
       const abi = abis.basic.erc20;
       const usdcContract = new ethers.Contract(usdcAddr, abi, provider);
       let whale = "0xCFFAd3200574698b78f32232aa9D63eABD290703";
+      console.log((await usdcContract.connect(signer).balanceOf(whale)).toString());
 
       await hre.network.provider.request({
         method: "hardhat_impersonateAccount",
@@ -1101,7 +1181,7 @@ describe("InstaAccount v1", function () {
       let signer1 = await ethers.getSigner(whale);
       await usdcContract
         .connect(signer1)
-        .transfer(wallet0.address, ethers.utils.parseEther("10"));
+        .transfer(wallet0.address, ethers.utils.parseUnits("10",6));
 
       let txn = await usdcContract
         .connect(wallet0)
@@ -1171,7 +1251,7 @@ describe("InstaAccount v1", function () {
         "LogDeposit",
         {
           erc20: usdcAddr,
-          tokenAmt: ethers.utils.parseEther("10"),
+          tokenAmt: ethers.utils.parseUnits("10",6),
           getId: "0",
           setId: "0",
         }
@@ -1191,7 +1271,7 @@ describe("InstaAccount v1", function () {
           ),
           eventData: ethers.utils.defaultAbiCoder.encode(
             ["address", "uint256", "uint256", "uint256"],
-            [usdcAddr, ethers.utils.parseEther("10"), "0", "0"]
+            [usdcAddr, ethers.utils.parseUnits("10",6), "0", "0"]
           ),
         }
       );
@@ -1229,6 +1309,370 @@ describe("InstaAccount v1", function () {
         }
       );
       console.log("\tInstaEvent:LogEvent event fired...");
+
+      expectEvent(
+        txDetails,
+        (await deployments.getArtifact("InstaAccount")).abi,
+        "LogCast",
+        {
+          origin: wallet0.address,
+          sender: wallet0.address,
+          value: ethers.utils.parseEther("0"),
+        }
+      );
+      console.log("\tLogCast event fired...");
+    });
+  });
+
+  describe("Static connectors and shield", async function () {
+    it("should revert enabling static connector via non-chief or non-master", async function () {
+      await expect(
+        instaConnectors
+          .connect(signer)
+          .enableStatic(addresses.connectors["insta-auth"])
+      ).to.be.revertedWith("not-an-chief");
+    });
+    it("should enable Auth connector as static connector", async function () {
+      expect(
+        await instaConnectors.connectors(addresses.connectors["insta-auth"])
+      ).to.be.true;
+      expect(
+        await instaConnectors.staticConnectors(
+          addresses.connectors["insta-auth"]
+        )
+      ).to.be.false;
+      let tx = await instaConnectors
+        .connect(chief1)
+        .enableStatic(addresses.connectors["insta-auth"]);
+      let txDetails = await tx.wait();
+      expect(!!txDetails.status).to.be.true;
+
+      expectEvent(
+        txDetails,
+        (await deployments.getArtifact("InstaConnectors")).abi,
+        "LogEnableStatic",
+        {
+          connector: addresses.connectors["insta-auth"],
+        }
+      );
+      console.log("\tLogEnableStatic event fired...");
+
+      expect(
+        await instaConnectors.isStaticConnector([
+          addresses.connectors["insta-auth"],
+        ])
+      ).to.be.true;
+      expect(
+        await instaConnectors.staticConnectors(
+          addresses.connectors["insta-auth"]
+        )
+      ).to.be.true;
+      expect(await instaConnectors.staticConnectorLength()).to.be.equal(
+        new BigNumber(1).toString()
+      );
+    });
+
+    it("should revert re-enabling already enabled static connector", async function () {
+      await expect(
+        instaConnectors
+          .connect(masterSigner)
+          .enableStatic(addresses.connectors["insta-auth"])
+      ).to.be.revertedWith("already-enabled");
+    });
+
+    it("should cast on non-static auth connector(shield-off)", async function () {
+      expect(await dsaWallet1.shield()).to.be.false;
+      const spells = [
+        {
+          connector: "insta-auth",
+          method: "addModule",
+          args: [wallet3.address],
+        },
+      ];
+      let tx = await dsaWallet1
+        .connect(wallet0)
+        .cast(...encodeSpells(spells), wallet0.address);
+      let txDetails = await tx.wait();
+
+      expectEvent(
+        txDetails,
+        (await deployments.getArtifact("InstaAccount")).abi,
+        "LogEnable",
+        {
+          user: wallet3.address,
+        }
+      );
+      console.log("\tAccount:LogEnable event fired...");
+
+      expectEvent(
+        txDetails,
+        (await deployments.getArtifact("ConnectAuth")).abi,
+        "LogAddAuth",
+        { _msgSender: wallet0.address, _auth: wallet3.address }
+      );
+      console.log("\tAuth:LogAddAuth event fired...");
+
+      let [type, id] = await instaAuth.connectorID();
+      expectEvent(
+        txDetails,
+        (await deployments.getArtifact("InstaEvent")).abi,
+        "LogEvent",
+        {
+          connectorType: type,
+          connectorID: id,
+          accountID: instaList.accountID(dsaWallet1.address),
+          eventCode: web3.utils.keccak256("LogAddAuth(address,address)"),
+          eventData: ethers.utils.defaultAbiCoder.encode(
+            ["address", "address"],
+            [wallet0.address, wallet3.address]
+          ),
+        }
+      );
+      console.log("\tInstaEvent:LogEvent event fired...");
+
+      expectEvent(
+        txDetails,
+        (await deployments.getArtifact("InstaAccount")).abi,
+        "LogCast",
+        {
+          origin: wallet0.address,
+          sender: wallet0.address,
+          value: ethers.utils.parseEther("0"),
+        }
+      );
+      console.log("\tLogCast event fired...");
+      expect(await dsaWallet1.isAuth(wallet3.address)).to.be.true;
+    });
+
+    describe("Check module", async function () {
+      it("should deploy add check module to index", async function () {
+        let instaCheck: Contract = await instaDeployContract("InstaCheck", []);
+        let tx = await instaIndex
+          .connect(masterSigner)
+          .changeCheck(1, instaCheck.address);
+        expect(!!(await tx.wait()).status).to.be.true;
+        expect(!!instaCheck.address).to.be.true;
+      });
+
+      it("should deploy add check module to index", async function () {
+        let instaCheck: Contract = await instaDeployContract("InstaCheck", []);
+        let tx = await instaIndex
+          .connect(masterSigner)
+          .changeCheck(1, instaCheck.address);
+        expect(!!(await tx.wait()).status).to.be.true;
+      });
+
+      it("should revert cast when target connector fails check", async function () {
+        const spells = [
+          {
+            connector: "insta-auth",
+            method: "addModule",
+            args: [wallet2.address],
+          },
+        ];
+        await expect(
+          dsaWallet1
+            .connect(wallet0)
+            .cast(...encodeSpells(spells), wallet0.address)
+        ).to.be.revertedWith("not-ok");
+      });
+
+      it("should check connector's 'ok' and cast", async function () {
+        const spells = [
+          {
+            connector: "insta-auth",
+            method: "addModule",
+            args: [wallet2.address],
+          },
+        ];
+        let tx = await dsaWallet1
+          .connect(wallet0)
+          .cast(...encodeSpells(spells), wallet0.address);
+        let txDetails = await tx.wait();
+
+        expectEvent(
+          txDetails,
+          (await deployments.getArtifact("InstaAccount")).abi,
+          "LogEnable",
+          {
+            user: wallet2.address,
+          }
+        );
+        console.log("\tAccount:LogEnable event fired...");
+
+        expectEvent(
+          txDetails,
+          (await deployments.getArtifact("ConnectAuth")).abi,
+          "LogAddAuth",
+          { _msgSender: wallet0.address, _auth: wallet2.address }
+        );
+        console.log("\tAuth:LogAddAuth event fired...");
+
+        let [type, id] = await instaAuth.connectorID();
+        expectEvent(
+          txDetails,
+          (await deployments.getArtifact("InstaEvent")).abi,
+          "LogEvent",
+          {
+            connectorType: type,
+            connectorID: id,
+            accountID: instaList.accountID(dsaWallet1.address),
+            eventCode: web3.utils.keccak256("LogAddAuth(address,address)"),
+            eventData: ethers.utils.defaultAbiCoder.encode(
+              ["address", "address"],
+              [wallet0.address, wallet2.address]
+            ),
+          }
+        );
+        console.log("\tInstaEvent:LogEvent event fired...");
+
+        expectEvent(
+          txDetails,
+          (await deployments.getArtifact("InstaAccount")).abi,
+          "LogCast",
+          {
+            origin: wallet0.address,
+            sender: wallet0.address,
+            value: ethers.utils.parseEther("0"),
+          }
+        );
+        console.log("\tLogCast event fired...");
+
+        expect(await dsaWallet1.isAuth(wallet2.address)).to.be.true;
+      });
+    });
+
+    it("should toggle shield (false --> true)", async function () {
+      expect(await dsaWallet1.shield()).to.be.false;
+      let tx = await dsaWallet1.connect(wallet0).switchShield(true);
+      let txDetails = await tx.wait();
+      expect(!!txDetails.status).to.be.true;
+
+      expectEvent(
+        txDetails,
+        (await deployments.getArtifact("InstaAccount")).abi,
+        "LogSwitchShield",
+        { _shield: true }
+      );
+      console.log("\tLogSwitchShield event fired...");
+
+      expect(await dsaWallet1.shield()).to.be.true;
+    });
+
+    it("should revert re-switching shield to already set value", async function () {
+      await expect(
+        dsaWallet1.connect(wallet0).switchShield(true)
+      ).to.be.revertedWith("shield is set");
+    });
+
+    it("should revert switching shield with not owner", async function () {
+      await expect(
+        dsaWallet1.connect(signer).switchShield(false)
+      ).to.be.revertedWith("not-self");
+    });
+
+    it("should cast on static auth connector(shield-on)", async function () {
+      expect(await dsaWallet1.shield()).to.be.true;
+      const spells = [
+        {
+          connector: "insta-auth",
+          method: "removeModule",
+          args: [wallet3.address],
+        },
+      ];
+      let tx = await dsaWallet1
+        .connect(wallet0)
+        .cast(...encodeSpells(spells), wallet0.address);
+      let txDetails = await tx.wait();
+
+      expectEvent(
+        txDetails,
+        (await deployments.getArtifact("InstaAccount")).abi,
+        "LogDisable",
+        {
+          user: wallet3.address,
+        }
+      );
+      console.log("\tAccount:LogDisable event fired...");
+
+      expectEvent(
+        txDetails,
+        (await deployments.getArtifact("ConnectAuth")).abi,
+        "LogRemoveAuth",
+        { _msgSender: wallet0.address, _auth: wallet3.address }
+      );
+      console.log("\tAuth:LogRemoveAuth event fired...");
+
+      let [type, id] = await instaAuth.connectorID();
+      expectEvent(
+        txDetails,
+        (await deployments.getArtifact("InstaEvent")).abi,
+        "LogEvent",
+        {
+          connectorType: type,
+          connectorID: id,
+          accountID: instaList.accountID(dsaWallet1.address),
+          eventCode: web3.utils.keccak256("LogRemoveAuth(address,address)"),
+          eventData: ethers.utils.defaultAbiCoder.encode(
+            ["address", "address"],
+            [wallet0.address, wallet3.address]
+          ),
+        }
+      );
+      console.log("\tInstaEvent:LogEvent event fired...");
+
+      expectEvent(
+        txDetails,
+        (await deployments.getArtifact("InstaAccount")).abi,
+        "LogCast",
+        {
+          origin: wallet0.address,
+          sender: wallet0.address,
+          value: ethers.utils.parseEther("0"),
+        }
+      );
+      console.log("\tLogCast event fired...");
+      expect(await dsaWallet1.isAuth(wallet3.address)).to.be.false;
+    });
+
+    it("should revert on casting spells for non-static connector with shield on", async function () {
+      let ethAddr = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+      let spells = [
+        {
+          connector: "basic",
+          method: "withdraw",
+          args: [ethAddr, ethers.utils.parseEther("5"), wallet1.address, 0, 0],
+        },
+      ];
+      await expect(
+        dsaWallet1
+          .connect(wallet0)
+          .cast(...encodeSpells(spells), wallet0.address)
+      ).to.be.revertedWith("not-static-connector");
+    });
+  });
+
+  describe("should disable connector", function () {
+    it("should revert disabling the connector via non-chief", async function () {
+      await expect(
+        instaConnectors
+          .connect(signer)
+          .disable(addresses.connectors["insta-auth"])
+      ).to.be.revertedWith("not-an-chief");
+    });
+    it("should disable auth connector", async function () {
+      let tx = await instaConnectors
+        .connect(masterSigner)
+        .disable(instaAuth.address);
+      let txDetails = await tx.wait();
+      expect(!!txDetails.status).to.be.true;
+      expect(await instaConnectors.connectors(instaAuth.address)).to.be.false;
+      expect(await instaConnectors.isConnector([instaAuth.address])).to.be.false;
+    });
+    it("should revert disabling disabled connector", async function () {
+      await expect(
+        instaConnectors.connect(masterSigner).disable(instaAuth.address)
+      ).to.be.revertedWith("already-disabled");
     });
   });
 });
