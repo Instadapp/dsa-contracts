@@ -108,7 +108,8 @@ describe("InstaList", function () {
   async function getVersionAbi(version: any) {
     if (version === 1)
       return (await deployments.getArtifact("InstaAccount")).abi;
-    else return (await deployments.getArtifact("InstaImplementationM1")).abi;
+    else
+      return (await deployments.getArtifact("InstaDefaultImplementation")).abi;
   }
 
   async function buildDSA(owner: any, version: any) {
