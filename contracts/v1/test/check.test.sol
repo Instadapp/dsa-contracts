@@ -2,7 +2,7 @@
 pragma solidity ^0.7.0;
 
 contract Change {
-    bool internal status;
+    bool public status;
     function change(bool _status) public {
         status = _status;
     }

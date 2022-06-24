@@ -28,18 +28,13 @@ interface EventInterface {
 
 contract Memory {
 
-    /**
-     * @dev Return InstaMemory Address.
+     /**
+     * @dev InstaMemory Address.
      */
-    function getMemoryAddr() public pure returns (address) {
-        return 0x0000000000000000000000000000000000000000; // InstaMemory Address
-    }
+    address public immutable instaMemoryAddress;
 
-    /**
-     * @dev Return InstaEvent Address.
-     */
-    function getEventAddr() public pure returns (address) {
-        return 0x0000000000000000000000000000000000000000; // InstaEvent Address
+    constructor (address _instaMemoryAddress) {
+        instaMemoryAddress = _instaMemoryAddress;
     }
 
     /**
@@ -48,7 +43,7 @@ contract Memory {
      * @param val if any value.
      */
     function getUint(uint getId, uint val) internal returns (uint returnVal) {
-        returnVal = getId == 0 ? val : MemoryInterface(getMemoryAddr()).getUint(getId);
+        returnVal = getId == 0 ? val : MemoryInterface(instaMemoryAddress).getUint(getId);
     }
 
     /**
@@ -57,7 +52,7 @@ contract Memory {
      * @param val Value To store.
      */
     function setUint(uint setId, uint val) internal {
-        if (setId != 0) MemoryInterface(getMemoryAddr()).setUint(setId, val);
+        if (setId != 0) MemoryInterface(instaMemoryAddress).setUint(setId, val);
     }
 
     /**
@@ -74,6 +69,14 @@ contract BasicResolver is Memory {
     event LogDeposit(address indexed erc20, uint256 tokenAmt, uint256 getId, uint256 setId);
     event LogWithdraw(address indexed erc20, uint256 tokenAmt, address indexed to, uint256 getId, uint256 setId);
 
+      /**
+     * @dev InstaEvent Address.
+     */
+    address public immutable instaEventAddress;
+    
+    constructor (address _instaEventAddress, address _instaMemoryAddress) Memory(_instaMemoryAddress) {
+        instaEventAddress = _instaEventAddress;
+    }
     /**
      * @dev ETH Address.
      */
@@ -105,7 +108,7 @@ contract BasicResolver is Memory {
         bytes32 _eventCode = keccak256("LogDeposit(address,uint256,uint256,uint256)");
         bytes memory _eventParam = abi.encode(erc20, amt, getId, setId);
         (uint _type, uint _id) = connectorID();
-        EventInterface(getEventAddr()).emitEvent(_type, _id, _eventCode, _eventParam);
+        EventInterface(instaEventAddress).emitEvent(_type, _id, _eventCode, _eventParam);
     }
 
    /**
@@ -140,12 +143,14 @@ contract BasicResolver is Memory {
         bytes32 _eventCode = keccak256("LogWithdraw(address,uint256,address,uint256,uint256)");
         bytes memory _eventParam = abi.encode(erc20, amt, to, getId, setId);
         (uint _type, uint _id) = connectorID();
-        EventInterface(getEventAddr()).emitEvent(_type, _id, _eventCode, _eventParam);
+        EventInterface(instaEventAddress).emitEvent(_type, _id, _eventCode, _eventParam);
     }
 
 }
 
 
 contract ConnectBasic is BasicResolver {
+
+    constructor (address _instaEventAddress, address _instaMemoryAddress) public BasicResolver(_instaEventAddress, _instaMemoryAddress) {}
     string public constant name = "Basic-v1";
 }

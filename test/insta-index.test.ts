@@ -46,7 +46,7 @@ describe("InstaIndex", function () {
           forking: {
             // @ts-ignore
             jsonRpcUrl: hre.config.networks.hardhat.forking.url,
-            blockNumber: 12068005,
+            blockNumber: 15010000,
           },
         },
       ],
