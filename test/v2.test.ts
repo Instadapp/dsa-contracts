@@ -25,11 +25,14 @@ import encodeSpells from "../scripts/encodeSpells";
 import { Contracts } from "@openzeppelin/upgrades";
 import deployContracts from "../scripts/deployContracts";
 import getMasterSigner from "../scripts/getMasterSigner";
+import { encode } from "punycode";
 
-describe("InstaAccount v1", function () {
+describe("InstaAccount V2", function () {
   let masterSigner: Signer,
-    chief1: SignerWithAddress,
-    chief2: SignerWithAddress;
+    chief1: Signer,
+    chief2: Signer,
+    ichief1: SignerWithAddress,
+    ichief2: SignerWithAddress;
 
   let dsaWallet1: Contract,
     dsaWallet2: Contract,
@@ -41,10 +44,16 @@ describe("InstaAccount v1", function () {
     walletv20: any,
     walletv21: any;
 
+  let deployer: SignerWithAddress, signer: SignerWithAddress;
+  let masterAddress: Address;
+  let setBasicsArgs: any;
+
   let instaAuthV2: Contract, instaEventV2: Contract;
 
   let instaIndex: Contract,
     instaList: Contract,
+    instaAccount: Contract,
+    instaConnectors: Contract,
     instaConnectorsV2: Contract,
     implementationsMapping: Contract,
     instaAccountV2Proxy: Contract,
@@ -109,23 +118,73 @@ describe("InstaAccount v1", function () {
         },
       ],
     });
-    const deploys = await deployContracts();
+    [deployer, signer, ichief1, ichief2] = await ethers.getSigners();
+    const deployerAddress = deployer.address;
+    masterAddress = deployerAddress;
 
-    instaConnectorsV2 = deploys.instaConnectorsV2;
-    implementationsMapping = deploys.implementationsMapping;
-    instaAccountV2Proxy = deploys.instaAccountV2Proxy;
-    instaAccountV2DefaultImpl = deploys.instaAccountV2DefaultImpl;
-    instaAccountV2ImplM1 = deploys.instaAccountV2ImplM1;
-    instaAccountV2ImplM2 = deploys.instaAccountV2ImplM2;
+    instaIndex = await instaDeployContract("InstaIndex", []);
+    instaList = await instaDeployContract("InstaList", [instaIndex.address]);
+    instaAccount = await instaDeployContract("InstaAccount", [
+      instaIndex.address,
+    ]);
+    instaConnectors = await instaDeployContract("InstaConnectors", [
+      instaIndex.address,
+    ]);
 
-    masterSigner = await getMasterSigner();
-    instaAccountV2DefaultImplV2 = await deployContract(
-      masterSigner,
-      InstaDefaultImplementationV2__factory,
+    instaConnectorsV2 = await instaDeployContract("InstaConnectorsV2", [
+      instaIndex.address,
+    ]);
+    implementationsMapping = await instaDeployContract("InstaImplementations", [
+      instaIndex.address,
+    ]);
+    instaAccountV2Proxy = await instaDeployContract("InstaAccountV2", [
+      implementationsMapping.address,
+    ]);
+    instaAccountV2DefaultImpl = await instaDeployContract(
+      "InstaDefaultImplementation",
+      [instaIndex.address]
+    );
+    instaAccountV2ImplM1 = await instaDeployContract("InstaImplementationM1", [
+      instaIndex.address,
+      instaConnectorsV2.address,
+    ]);
+    instaAccountV2ImplM2 = await instaDeployContract("InstaImplementationM2", [
+      instaIndex.address,
+      instaConnectorsV2.address,
+    ]);
+
+    setBasicsArgs = [
+      deployerAddress,
+      instaList.address,
+      instaAccount.address,
+      instaConnectors.address,
+    ];
+
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [masterAddress],
+    });
+
+    masterSigner = ethers.provider.getSigner(masterAddress);
+
+    instaAccountV2DefaultImplV2 = await instaDeployContract(
+      "InstaDefaultImplementationV2",
       []
     );
 
-    [chief1, chief2] = await ethers.getSigners();
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [ichief1.address],
+    });
+
+    chief1 = ethers.provider.getSigner(ichief1.address);
+
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [ichief2.address],
+    });
+
+    chief2 = ethers.provider.getSigner(ichief2.address);
   });
 
   async function buildDSAv2(owner: any, abi: any) {
@@ -147,85 +206,13 @@ describe("InstaAccount v1", function () {
     expect(!!instaAccountV2ImplM2.address).to.be.true;
   });
 
-  it("should add AccountV2 to index registry", async function () {
-    let tx = await instaIndex
-      .connect(masterSigner)
-      .addNewAccount(
-        instaAccountV2Proxy.address,
-        instaConnectorsV2.address,
-        addr_zero
-      );
-    let txDetails = await tx.wait();
-
-    expect(await instaIndex.account(2)).to.be.equal(
-      instaAccountV2Proxy.address
-    );
-  });
-
-  it("Should build DSAs", async () => {
-    //builds DSA and adds wallet0 as auth
-    let defaultM1abi = (
-      await deployments.getArtifact("InstaDefaultImplementation")
-    ).abi;
-    let defaultM2abi = await deployments.getArtifact(
-      "InstaDefaultImplementationV2"
-    );
-    let implM1abi = await deployments.getArtifact("InstaImplementationM1");
-    let implM2abi = await deployments.getArtifact("InstaImplementationM2");
-
-    dsaWallet1 = await buildDSAv2(wallet0.address, implM1abi);
-    expect(!!dsaWallet1.address).to.be.true;
-    dsaWallet2 = await buildDSAv2(wallet0.address, implM2abi);
-    expect(!!dsaWallet2.address).to.be.true;
-    dsaWallet3 = await buildDSAv2(wallet0.address, defaultM1abi);
-    expect(!!dsaWallet3.address).to.be.true;
-    dsaWallet4 = await buildDSAv2(wallet0.address, defaultM2abi);
-    expect(!!dsaWallet4.address).to.be.true;
-    dsaWallet0 = await buildDSAv2(
-      wallet0.address,
-      await deployments.getArtifact("InstaAccountV2")
-    );
-    expect(!!dsaWallet0.address).to.be.true;
-
-    walletv20 = await ethers.getSigner(dsaWallet1.address);
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [walletv20.address],
-    });
-    dsa1 = ethers.provider.getSigner(walletv20.address);
-    walletv21 = await ethers.getSigner(dsaWallet2.address);
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [walletv21.address],
-    });
-    dsa2 = ethers.provider.getSigner(walletv21.address);
-  });
-
-  it("Should set balances", async () => {
-    await wallet3.sendTransaction({
-      to: dsaWallet1.address,
-      value: ethers.utils.parseEther("10"),
-    });
-    await wallet3.sendTransaction({
-      to: dsaWallet2.address,
-      value: ethers.utils.parseEther("10"),
-    });
-    await wallet3.sendTransaction({
-      to: dsaWallet3.address,
-      value: ethers.utils.parseEther("10"),
-    });
-    await wallet3.sendTransaction({
-      to: dsaWallet4.address,
-      value: ethers.utils.parseEther("10"),
-    });
+  it("should set the basics", async function () {
+    const tx = await instaIndex.setBasics(...setBasicsArgs);
+    const txDetails = await tx.wait();
+    expect(!!txDetails.status).to.be.true;
   });
 
   describe("Implementations Registry", function () {
-    //addImplementation
-    //removeImplementation
-    //getImplementation
-    //getImplementationSigs
-    //getSigImplementation
     it("should check instaIndex", async function () {
       expect(await implementationsMapping.instaIndex()).to.be.equal(
         instaIndex.address
@@ -238,7 +225,7 @@ describe("InstaAccount v1", function () {
     it("should revert setting default implementation via non-master", async function () {
       await expect(
         implementationsMapping
-          .connect(wallet0)
+          .connect(signer)
           .setDefaultImplementation(instaAccountV2DefaultImpl.address)
       ).to.be.revertedWith("Implementations: not-master");
     });
@@ -289,16 +276,19 @@ describe("InstaAccount v1", function () {
       await expect(
         implementationsMapping
           .connect(masterSigner)
-          .addImplementation(addr_zero)
+          .addImplementation(addr_zero, instaAccountV2ImplM1Sigs)
       ).to.be.revertedWith("Implementations: _implementation not valid.");
     });
 
     it("should revert if non-master account adds implementation", async function () {
       await expect(
         implementationsMapping
-          .connect(wallet0)
-          .addImplementations(instaAccountV2ImplM1.address)
-      ).to.be.revertedWith("Implementations: _implementation already added.");
+          .connect(signer)
+          .addImplementation(
+            instaAccountV2ImplM1.address,
+            instaAccountV2ImplM1Sigs
+          )
+      ).to.be.revertedWith("Implementations: not-master");
     });
 
     it("should add ImplementationM1 to mappings", async function () {
@@ -328,14 +318,16 @@ describe("InstaAccount v1", function () {
           instaAccountV2ImplM1.address
         )
       ).forEach((a: any, i: string | number) => {
-        expect(a).to.be.eq(instaAccountV2ImplM1Sigs[i]);
+        expect(a).to.be.equal(instaAccountV2ImplM1Sigs[i]);
       });
     });
 
     it("should get the implementation address for the sigs", async function () {
-      for (let a in instaAccountV2ImplM1Sigs) {
+      for (let i = 0; i < implementationsMapping.length; i++) {
         expect(
-          await implementationsMapping.getSigImplementation(a)
+          await implementationsMapping.getSigImplementation(
+            implementationsMapping[i]
+          )
         ).to.be.equal(instaAccountV2ImplM1.address);
       }
     });
@@ -406,7 +398,7 @@ describe("InstaAccount v1", function () {
     it("should revert removing implementation with non-master account", async function () {
       await expect(
         implementationsMapping
-          .connect(wallet0)
+          .connect(signer)
           .removeImplementation(instaAccountV2DefaultImplV2.address)
       ).to.be.revertedWith("Implementations: not-master");
     });
@@ -414,12 +406,12 @@ describe("InstaAccount v1", function () {
     it("should revert removing invalid/non-existing implementation", async function () {
       await expect(
         implementationsMapping
-          .conenct(masterSigner)
+          .connect(masterSigner)
           .removeImplementation(addr_zero)
       ).to.be.revertedWith("Implementations: _implementation not valid.");
       await expect(
         implementationsMapping
-          .conenct(masterSigner)
+          .connect(masterSigner)
           .removeImplementation(instaAccountV2ImplM2.address)
       ).to.be.revertedWith("Implementations: _implementation not found.");
     });
@@ -500,6 +492,69 @@ describe("InstaAccount v1", function () {
     });
   });
 
+  describe("Setup", function () {
+    it("should add AccountV2 to index registry", async function () {
+      let tx = await instaIndex
+        .connect(masterSigner)
+        .addNewAccount(
+          instaAccountV2Proxy.address,
+          instaConnectorsV2.address,
+          addr_zero
+        );
+      let txDetails = await tx.wait();
+
+      expect(await instaIndex.account(2)).to.be.equal(
+        instaAccountV2Proxy.address
+      );
+    });
+
+    it("Should build DSAs", async () => {
+      //builds DSA and adds wallet0 as auth
+      let defaultM1abi = (
+        await deployments.getArtifact("InstaDefaultImplementation")
+      ).abi;
+      let defaultM2abi = await deployments.getArtifact(
+        "InstaDefaultImplementationV2"
+      );
+      let implM1abi = await deployments.getArtifact("InstaImplementationM1");
+      let implM2abi = await deployments.getArtifact("InstaImplementationM2");
+
+      dsaWallet1 = await buildDSAv2(wallet0.address, implM1abi.abi);
+      expect(!!dsaWallet1.address).to.be.true;
+      dsaWallet2 = await buildDSAv2(wallet0.address, implM2abi.abi);
+      expect(!!dsaWallet2.address).to.be.true;
+      dsaWallet3 = await buildDSAv2(wallet0.address, defaultM1abi);
+      expect(!!dsaWallet3.address).to.be.true;
+      dsaWallet4 = await buildDSAv2(wallet0.address, defaultM2abi.abi);
+      expect(!!dsaWallet4.address).to.be.true;
+
+      walletv21 = await ethers.getSigner(dsaWallet2.address);
+      await hre.network.provider.request({
+        method: "hardhat_impersonateAccount",
+        params: [walletv21.address],
+      });
+      dsa2 = ethers.provider.getSigner(walletv21.address);
+    });
+
+    it("Should set balances", async () => {
+      await wallet3.sendTransaction({
+        to: dsaWallet1.address,
+        value: ethers.utils.parseEther("10"),
+      });
+      await wallet3.sendTransaction({
+        to: dsaWallet2.address,
+        value: ethers.utils.parseEther("10"),
+      });
+      await wallet3.sendTransaction({
+        to: dsaWallet3.address,
+        value: ethers.utils.parseEther("10"),
+      });
+      await wallet3.sendTransaction({
+        to: dsaWallet4.address,
+        value: ethers.utils.parseEther("10"),
+      });
+    });
+  });
   describe("Connector Registry", async function () {
     let connectorNames = ["authV2", "emitEvent"];
     let authAddr = "0x351Bb32e90C35647Df7a584f3c1a3A0c38F31c68";
@@ -508,76 +563,81 @@ describe("InstaAccount v1", function () {
       expect(await instaConnectorsV2.instaIndex()).to.be.equal(
         instaIndex.address
       );
-      expect(await instaConnectorsV2.chief(chief1.address)).to.be.false;
+      expect(await instaConnectorsV2.chief(ichief1.address)).to.be.false;
 
       let tx = await instaConnectorsV2
         .connect(masterSigner)
-        .toggleChief(chief1.address);
+        .toggleChief(ichief1.address);
       let txDetails = await tx.wait();
 
-      expect(await instaConnectorsV2.chief(chief1.address)).to.be.true;
+      expect(await instaConnectorsV2.chief(ichief1.address)).to.be.true;
 
       expectEvent(
         txDetails,
         (await deployments.getArtifact("InstaConnectorsV2")).abi,
         "LogController",
         {
-          addr: chief1.address,
+          addr: ichief1.address,
           isChief: true,
         }
       );
     });
 
     it("should revert toggling chief with a chief", async function () {
-      expect(await instaConnectorsV2.chief(chief1.address)).to.be.true;
-      expect(await instaConnectorsV2.chief(chief2.address)).to.be.false;
+      expect(await instaConnectorsV2.chief(ichief1.address)).to.be.true;
+      expect(await instaConnectorsV2.chief(ichief2.address)).to.be.false;
+      console.log(ichief1.address);
+      console.log(masterAddress);
       await expect(
-        instaConnectorsV2.connect(chief1).toggleChief(chief2.address)
+        instaConnectorsV2.connect(chief1).toggleChief(ichief2.address)
       ).to.be.revertedWith("toggleChief: not-master");
     });
 
     it("should revert toggling chief with non-master", async function () {
-      expect(await instaConnectorsV2.chief(chief2.address)).to.be.false;
+      expect(await instaConnectorsV2.chief(ichief2.address)).to.be.false;
       await expect(
-        instaConnectorsV2.connect(wallet0).toggleChief(chief2.address)
+        instaConnectorsV2.connect(signer).toggleChief(ichief2.address)
       ).to.be.revertedWith("toggleChief: not-master");
     });
 
     it("should set toggle chief2 on-and-off", async function () {
-      expect(await instaConnectorsV2.chief(chief2.address)).to.be.false;
+      expect(await instaConnectorsV2.chief(ichief2.address)).to.be.false;
       let tx = await instaConnectorsV2
         .connect(masterSigner)
-        .toggleChief(chief2.address);
+        .toggleChief(ichief2.address);
       let txDetails = await tx.wait();
 
-      expect(await instaConnectorsV2.chief(chief2.address)).to.be.true;
+      expect(await instaConnectorsV2.chief(ichief2.address)).to.be.true;
 
-      expectEvent(
-        txDetails,
-        (await deployments.getArtifact("InstaConnectorsV2")).abi,
-        "LogController",
-        {
-          addr: chief2.address,
-          isChief: true,
-        }
-      );
+      expect(txDetails.events[0].args.addr).to.be.eq(ichief2.address);
+      expect(txDetails.events[0].args.isChief).to.be.eq(true);
+      //   expectEvent(
+      //     txDetails,
+      //     (await deployments.getArtifact("InstaConnectorsV2")).abi,
+      //     "LogController",
+      //     {
+      //       addr: ichief2.address,
+      //       isChief: true,
+      //     }
+      //   );
 
       tx = await instaConnectorsV2
         .connect(masterSigner)
-        .toggleChief(chief2.address);
+        .toggleChief(ichief2.address);
       txDetails = await tx.wait();
 
-      expect(await instaConnectorsV2.chief(chief2.address)).to.be.false;
-
-      expectEvent(
-        txDetails,
-        (await deployments.getArtifact("InstaConnectorsV2")).abi,
-        "LogController",
-        {
-          addr: chief2.address,
-          isChief: false,
-        }
-      );
+      expect(await instaConnectorsV2.chief(ichief2.address)).to.be.false;
+      expect(txDetails.events[0].args.addr).to.be.eq(ichief2.address);
+      expect(txDetails.events[0].args.isChief).to.be.eq(false);
+      //   expectEvent(
+      //     txDetails,
+      //     (await deployments.getArtifact("InstaConnectorsV2")).abi,
+      //     "LogController",
+      //     {
+      //       addr: ichief2.address,
+      //       isChief: false,
+      //     }
+      //   );
     });
 
     it("should deploy Auth and EmitEvent connectors", async function () {
@@ -606,21 +666,34 @@ describe("InstaAccount v1", function () {
         ).abi,
         addresses.connectors["emitEvent"]
       );
+
+      await deployConnector({
+        connectorName: "authV2-a",
+        contract: "ConnectV2Auth",
+        factory: ConnectV2Auth__factory,
+      });
+      expect(!!addresses.connectors["authV2-a"]).to.be.true;
     });
 
     it("should revert adding connectors via non-chief or non-master", async function () {
-      expect(await instaConnectorsV2.connectors("authV2")).to.be.false;
+      expect(await instaConnectorsV2.connectors("authV2")).to.be.equal(
+        addr_zero
+      );
 
       await expect(
         instaConnectorsV2
-          .connect(wallet2)
+          .connect(signer)
           .addConnectors(["authV2"], [instaAuthV2.address])
       ).to.be.revertedWith("not-an-chief");
     });
 
     it("should revert when name and address length not same", async function () {
-      expect(await instaConnectorsV2.connectors("emitEvent")).to.be.false;
-      expect(await instaConnectorsV2.connectors("authV2")).to.be.false;
+      expect(await instaConnectorsV2.connectors("emitEvent")).to.be.equal(
+        addr_zero
+      );
+      expect(await instaConnectorsV2.connectors("authV2")).to.be.equal(
+        addr_zero
+      );
 
       await expect(
         instaConnectorsV2
@@ -630,14 +703,18 @@ describe("InstaAccount v1", function () {
     });
 
     it("should revert with invalid connector addresses", async function () {
-      expect(await instaConnectorsV2.connectors("emitEvent")).to.be.false;
-      expect(await instaConnectorsV2.connectors("authV2")).to.be.false;
+      expect(await instaConnectorsV2.connectors("emitEvent")).to.be.equal(
+        addr_zero
+      );
+      expect(await instaConnectorsV2.connectors("authV2")).to.be.equal(
+        addr_zero
+      );
 
       await expect(
         instaConnectorsV2
           .connect(chief1)
           .addConnectors(["authV2", "emitEvent"], [addr_zero, addr_zero])
-      ).to.be.revertedWith("addConnectors: _connectors address not valid");
+      ).to.be.revertedWith("addConnectors: _connectors address not vaild");
 
       await expect(
         instaConnectorsV2
@@ -646,12 +723,16 @@ describe("InstaAccount v1", function () {
             ["authV2", "emitEvent"],
             [instaAuthV2.address, addr_zero]
           )
-      ).to.be.revertedWith("addConnectors: _connectors address not valid");
+      ).to.be.revertedWith("addConnectors: _connectors address not vaild");
     });
 
     it("should revert adding same name connectors", async function () {
-      expect(await instaConnectorsV2.connectors("emitEvent")).to.be.false;
-      expect(await instaConnectorsV2.connectors("authV2")).to.be.false;
+      expect(await instaConnectorsV2.connectors("emitEvent")).to.be.equal(
+        addr_zero
+      );
+      expect(await instaConnectorsV2.connectors("authV2")).to.be.equal(
+        addr_zero
+      );
 
       await expect(
         instaConnectorsV2
@@ -660,20 +741,13 @@ describe("InstaAccount v1", function () {
             ["authV2", "authV2"],
             [instaAuthV2.address, instaEventV2.address]
           )
-      ).to.be.revertedWith("addConnectors: _connectors address not valid");
-
-      await expect(
-        instaConnectorsV2
-          .connect(chief1)
-          .addConnectors(
-            ["authV2", "emitEvent"],
-            [instaAuthV2.address, addr_zero]
-          )
-      ).to.be.revertedWith("addConnectors: _connectors address not valid");
+      ).to.be.revertedWith("addConnectors: _connectorName added already");
     });
 
     it("should revert removing disabled connectors", async function () {
-      expect(await instaConnectorsV2.connectors("emitEvent")).to.be.false;
+      expect(await instaConnectorsV2.connectors("emitEvent")).to.be.equal(
+        addr_zero
+      );
 
       await expect(
         instaConnectorsV2.connect(chief1).removeConnectors(["authV2"])
@@ -696,21 +770,25 @@ describe("InstaAccount v1", function () {
       );
       expect(events[0].args.connectorName).to.be.equal("authV2");
       expect(events[0].args.connector).to.be.equal(instaAuthV2.address);
-      expect(await instaConnectorsV2.connectors("authV2")).to.be.true;
+      expect(await instaConnectorsV2.connectors("authV2")).to.be.eq(
+        instaAuthV2.address
+      );
     });
 
     it("should revert disabling connectors with non-chief or non-master", async function () {
-      expect(await instaConnectorsV2.connectors("authV2")).to.be.true;
+      expect(await instaConnectorsV2.connectors("authV2")).to.be.equal(
+        instaAuthV2.address
+      );
 
       await expect(
-        instaConnectorsV2.connect(wallet1).removeConnectors("authV2")
+        instaConnectorsV2.connect(signer).removeConnectors(["authV2"])
       ).to.be.revertedWith("not-an-chief");
     });
 
     it("should remove auth connector", async function () {
       let tx = await instaConnectorsV2
         .connect(masterSigner)
-        .removeConnectors("authV2");
+        .removeConnectors(["authV2"]);
       let receipt = await tx.wait();
       expect(!!receipt.status).to.be.true;
 
@@ -720,7 +798,9 @@ describe("InstaAccount v1", function () {
       );
       expect(events[0].args.connectorName).to.be.equal("authV2");
       expect(events[0].args.connector).to.be.equal(instaAuthV2.address);
-      expect(await instaConnectorsV2.connectors("authV2")).to.be.false;
+      expect(await instaConnectorsV2.connectors("authV2")).to.be.equal(
+        addr_zero
+      );
     });
 
     it("should add multiple connectors", async function () {
@@ -732,11 +812,12 @@ describe("InstaAccount v1", function () {
       expect(!!txDetails.status).to.be.true;
 
       txDetails.events.forEach((a: any, i: string | number) => {
-        expect(a.connectorNameHash).to.be.eq(
+        expect(a.event).to.be.equal("LogConnectorAdded");
+        expect(a.args.connectorNameHash).to.be.eq(
           web3.utils.keccak256(connectorNames[i])
         );
-        expect(a.connectorName).to.be.eq(connectorNames[i]);
-        expect(a.connector).to.be.eq(address[i]);
+        expect(a.args.connectorName).to.be.eq(connectorNames[i]);
+        expect(a.args.connector).to.be.eq(address[i]);
       });
     });
 
@@ -749,6 +830,7 @@ describe("InstaAccount v1", function () {
     });
 
     it("should remove multiple connectors", async function () {
+      let address = [instaAuthV2.address, instaEventV2.address];
       let tx = await instaConnectorsV2
         .connect(chief1)
         .removeConnectors(connectorNames);
@@ -756,18 +838,21 @@ describe("InstaAccount v1", function () {
       expect(!!receipt.status).to.be.true;
 
       receipt.events.forEach((a: any, i: string | number) => {
-        expect(a.connectorNameHash).to.be.eq(
+        expect(a.event).to.be.equal("LogConnectorRemoved");
+        expect(a.args.connectorNameHash).to.be.eq(
           web3.utils.keccak256(connectorNames[i])
         );
-        expect(a.connectorName).to.be.eq(connectorNames[i]);
-        expect(a.connector).to.be.eq(addresses[i]);
+        expect(a.args.connectorName).to.be.eq(connectorNames[i]);
+        expect(a.args.connector).to.be.eq(address[i]);
       });
 
       let [ok] = await instaConnectorsV2.isConnectors(connectorNames);
       expect(ok).to.be.false;
 
       for (let connector in connectorNames) {
-        expect(await instaConnectorsV2.connectors(connector)).to.be.false;
+        expect(await instaConnectorsV2.connectors(connector)).to.be.equal(
+          addr_zero
+        );
       }
     });
 
@@ -782,7 +867,7 @@ describe("InstaAccount v1", function () {
     });
 
     it("can add same address to multiple connector names", async function () {
-      connectorNames.push("authV2-a");
+      connectorNames = ["authV2", "emitEvent", "authV2-a"];
       let connectors = [
         instaAuthV2.address,
         instaEventV2.address,
@@ -796,11 +881,12 @@ describe("InstaAccount v1", function () {
       expect(!!receipt.status).to.be.true;
 
       receipt.events.forEach((a: any, i: string | number) => {
-        expect(a.connectorNameHash).to.be.eq(
+        expect(a.event).to.be.equal("LogConnectorAdded");
+        expect(a.args.connectorNameHash).to.be.eq(
           web3.utils.keccak256(connectorNames[i])
         );
-        expect(a.connectorName).to.be.eq(connectorNames[i]);
-        expect(a.connector).to.be.eq(connectors[i]);
+        expect(a.args.connectorName).to.be.eq(connectorNames[i]);
+        expect(a.args.connector).to.be.eq(connectors[i]);
       });
 
       let [ok, address] = await instaConnectorsV2.isConnectors(connectorNames);
@@ -815,13 +901,13 @@ describe("InstaAccount v1", function () {
         instaConnectorsV2
           .connect(chief1)
           .updateConnectors(["authV2", "authV2-a"], [addr_zero, addr_zero])
-      ).to.be.revertedWith("updateConnectors: _connector address is not valid");
+      ).to.be.revertedWith("updateConnectors: _connector address is not vaild");
 
       await expect(
         instaConnectorsV2
           .connect(chief1)
           .updateConnectors(["authV2", "authV2-a"], [authAddr, addr_zero])
-      ).to.be.revertedWith("updateConnectors: _connector address is not valid");
+      ).to.be.revertedWith("updateConnectors: _connector address is not vaild");
     });
 
     it("should revert with invalid name and address length", async function () {
@@ -838,6 +924,7 @@ describe("InstaAccount v1", function () {
         .updateConnectors(["authV2-a"], [authAddr]);
       let receipt = await tx.wait();
       expect(!!receipt.status).to.be.true;
+      addresses.connectors["authV2-a"] = authAddr;
 
       let [ok, connectors] = await instaConnectorsV2.isConnectors(
         connectorNames
@@ -858,11 +945,36 @@ describe("InstaAccount v1", function () {
       },
     ];
 
+    before(async function () {
+      dsaWallet0 = await buildDSAv2(
+        wallet0.address,
+        (
+          await deployments.getArtifact("InstaAccountV2")
+        ).abi
+      );
+      expect(!!dsaWallet0.address).to.be.true;
+
+      walletv20 = await ethers.getSigner(dsaWallet0.address);
+      await hre.network.provider.request({
+        method: "hardhat_impersonateAccount",
+        params: [walletv20.address],
+      });
+      dsa1 = ethers.provider.getSigner(walletv20.address);
+
+      await wallet3.sendTransaction({
+        to: dsaWallet0.address,
+        value: ethers.utils.parseEther("10"),
+      });
+      await wallet3.sendTransaction({
+        to: walletv20.address,
+        value: ethers.utils.parseEther("10"),
+      });
+    });
+
     it("should revert cast if the msg sender is not auth of DSA", async function () {
+      let [targets, data] = encodeSpells(spell);
       await expect(
-        dsaWallet0
-          .connect(wallet3)
-          .cast(...encodeSpells(spell), wallet0.address)
+        dsaWallet0.connect(signer).cast(targets, data, wallet0.address)
       ).to.be.revertedWith("1: permission-denied");
     });
 
@@ -880,7 +992,9 @@ describe("InstaAccount v1", function () {
     });
 
     it("it should revert on casting on invalid connectors", async function () {
-      expect(await instaConnectorsV2.connectors("authV2-b")).to.be.false;
+      expect(await instaConnectorsV2.connectors("authV2-b")).to.be.equal(
+        addr_zero
+      );
       spell = [
         {
           connector: "authV2-b",
@@ -895,7 +1009,7 @@ describe("InstaAccount v1", function () {
       ).to.be.revertedWith("1: not-connector");
     });
 
-    describe("Auth", function () {
+    describe("Auth and EmitEvent connector", function () {
       it("should add wallet1 as auth of dsaWallet0 | ImplementationsM1:Cast", async function () {
         expect(await dsaWallet0.connect(wallet0).isAuth(wallet1.address)).to.be
           .false;
@@ -1019,6 +1133,334 @@ describe("InstaAccount v1", function () {
             .connect(wallet0)
             .cast(...encodeSpells(spells), wallet0.address)
         ).to.be.revertedWith("Removing-all-authorities");
+      });
+
+      it("should cast multiple spells for same connectors | ImplementationsM1:Cast", async function () {
+        expect(await dsaWallet0.connect(wallet0).isAuth(wallet1.address)).to.be
+          .false;
+        let spells = [
+          {
+            connector: "authV2",
+            method: "add",
+            args: [wallet1.address],
+          },
+          {
+            connector: "authV2",
+            mehtod: "remove",
+            args: [wallet1.address],
+          },
+        ];
+        let tx = await dsaWallet0
+          .connect(wallet0)
+          .cast(...encodeSpells(spells), wallet0.address);
+        let receipt = await tx.wait();
+
+        expect(await dsaWallet0.connect(wallet0).isAuth(wallet1.address)).to.be
+          .false;
+
+        expectEvent(
+          receipt,
+          (await deployments.getArtifact("InstaDefaultImplementation")).abi,
+          "LogEnableUser",
+          {
+            user: wallet1.address,
+          }
+        );
+        expectEvent(
+          receipt,
+          (await deployments.getArtifact("ConnectV2Auth")).abi,
+          "LogAddAuth",
+          {
+            _msgSender: dsaWallet0.address,
+            _authority: wallet1.address,
+          }
+        );
+        expectEvent(
+          receipt,
+          (await deployments.getArtifact("InstaDefaultImplementation")).abi,
+          "LogDisableUser",
+          {
+            user: wallet1.address,
+          }
+        );
+        expectEvent(
+          receipt,
+          (await deployments.getArtifact("ConnectV2Auth")).abi,
+          "LogRemoveAuth",
+          {
+            _msgSender: dsaWallet0.address,
+            _authority: wallet1.address,
+          }
+        );
+        expectEvent(
+          receipt,
+          (await deployments.getArtifact("InstaImplementationM1")).abi,
+          "LogCast",
+          {
+            origin: wallet0.address,
+            sender: wallet0.address,
+            value: "0",
+            targetNames: ["authV2", "authV2"],
+            targets: [instaAuthV2.address, instaAuthV2.address],
+            eventNames: [
+              "LogAddAuth(address,address)",
+              "LogRemoveAuth(address,address)",
+            ],
+            eventParams: [
+              ethers.utils.defaultAbiCoder.encode(
+                ["address", "address"],
+                [wallet0.address, wallet1.address]
+              ),
+              ethers.utils.defaultAbiCoder.encode(
+                ["address", "address"],
+                [wallet0.address, wallet1.address]
+              ),
+            ],
+          }
+        );
+      });
+
+      it("should cast multiple spells for different connectors | ImplementationsM1:Cast", async function () {
+        expect(await dsaWallet0.connect(wallet0).isAuth(wallet1.address)).to.be;
+        let spells = [
+          {
+            connector: "authV2",
+            method: "add",
+            args: [wallet1.address],
+          },
+          {
+            connector: "emitEvent",
+            mehtod: "emitEvent",
+            args: [],
+          },
+        ];
+        let tx = await dsaWallet0
+          .connect(wallet0)
+          .cast(...encodeSpells(spells), wallet0.address);
+        let receipt = await tx.wait();
+
+        expect(await dsaWallet0.connect(wallet0).isAuth(wallet1.address)).to.be
+          .false;
+
+        expectEvent(
+          receipt,
+          (await deployments.getArtifact("InstaDefaultImplementation")).abi,
+          "LogEnableUser",
+          {
+            user: wallet1.address,
+          }
+        );
+        expectEvent(
+          receipt,
+          (await deployments.getArtifact("ConnectV2Auth")).abi,
+          "LogAddAuth",
+          {
+            _msgSender: dsaWallet0.address,
+            _authority: wallet1.address,
+          }
+        );
+        expectEvent(
+          receipt,
+          (await deployments.getArtifact("ConnectV2EmitEvent")).abi,
+          "LogEmitEvent",
+          {
+            dsaAddress: dsaWallet0.address,
+            _sender: wallet0.address,
+          }
+        );
+
+        expectEvent(
+          receipt,
+          (await deployments.getArtifact("InstaImplementationM1")).abi,
+          "LogCast",
+          {
+            origin: wallet0.address,
+            sender: wallet0.address,
+            value: "0",
+            targetNames: ["authV2", "emitEvent"],
+            targets: [instaAuthV2.address, instaAuthV2.address],
+            eventNames: [
+              "LogAddAuth(address,address)",
+              "LogEmitEvent(address,address)",
+            ],
+            eventParams: [
+              ethers.utils.defaultAbiCoder.encode(
+                ["address", "address"],
+                [wallet0.address, wallet1.address]
+              ),
+              ethers.utils.defaultAbiCoder.encode(
+                ["address", "address"],
+                [dsaWallet0.address, wallet0.address]
+              ),
+            ],
+          }
+        );
+      });
+
+      it("should be able to call methods of implementationsM2 | InstaImplementationsM2: CastWithFlashLoan", async function () {
+        let spells = [
+          {
+            connector: "emitEvent",
+            mehtod: "emitEvent",
+            args: [],
+          },
+        ];
+
+        let tx = await dsaWallet0
+          .connect(wallet0)
+          .castWithFlashloan(...encodeSpells(spells), wallet0.address);
+        let receipt = await tx.wait();
+
+        expectEvent(
+          receipt,
+          (await deployments.getArtifact("ConnectV2EmitEvent")).abi,
+          "LogEmitEvent",
+          {
+            dsaAddress: dsaWallet0.address,
+            _sender: wallet0.address,
+          }
+        );
+
+        expectEvent(
+          receipt,
+          (await deployments.getArtifact("InstaImplementationM1")).abi,
+          "LogCast",
+          {
+            origin: wallet0.address,
+            sender: wallet0.address,
+            value: "0",
+            targetNames: ["authV2", "emitEvent"],
+            targets: [instaAuthV2.address, instaAuthV2.address],
+            eventNames: ["LogEmitEvent(address,address)"],
+            eventParams: [
+              ethers.utils.defaultAbiCoder.encode(
+                ["address", "address"],
+                [dsaWallet0.address, wallet0.address]
+              ),
+            ],
+          }
+        );
+      });
+    });
+
+    describe("Default implementation", function () {
+      it("should check state", async function () {
+        expect(
+          await dsaWallet0.connect(wallet0).implementationVersion()
+        ).to.be.equal(1);
+        expect(await dsaWallet0.connect(wallet0).instaIndex()).to.be.equal(
+          instaIndex.address
+        );
+        expect(await dsaWallet0.connect(wallet0).version()).to.be.equal(2);
+      });
+      it("should check auth via default implementation", async function () {
+        expect(await dsaWallet0.isAuth(wallet0.address)).to.be.true;
+        expect(await dsaWallet0.isAuth(wallet1.address)).to.be.false;
+      });
+      it("should revert toggling beta mode from non dsa", async function () {
+        await expect(
+          dsaWallet0.connect(wallet0).toggleBeta()
+        ).to.be.revertedWith("not-self");
+      });
+      it("should toggle beta mode", async function () {
+        expect(await dsaWallet0.isBeta()).to.be.false;
+        let tx = await dsaWallet0.connect(dsa1).toggleBeta();
+        let receipt = await tx.wait();
+        expect(!!receipt.status).to.be.true;
+
+        expectEvent(
+          receipt,
+          (await deployments.getArtifact("InstaDefaultImplementation")).abi,
+          "LogBetaMode",
+          {
+            beta: true,
+          }
+        );
+        expect(await dsaWallet0.isBeta()).to.be.true;
+
+        tx = await dsaWallet0.connect(dsa1).toggleBeta();
+        receipt = await tx.wait();
+        expect(!!receipt.status).to.be.true;
+
+        expectEvent(
+          receipt,
+          (await deployments.getArtifact("InstaDefaultImplementation")).abi,
+          "LogBetaMode",
+          {
+            beta: false,
+          }
+        );
+        expect(await dsaWallet0.isBeta()).to.be.false;
+      });
+
+      it("should revert enabling wallet2 as auth via non dsa", async function () {
+        await expect(
+          dsaWallet0.connect(wallet0).enable(wallet2.address)
+        ).to.be.revertedWith("not-self");
+      });
+
+      it("should revert enabling zero-address as auth", async function () {
+        await expect(
+          dsaWallet0.connect(dsa1).enable(addr_zero)
+        ).to.be.revertedWith("not-valid");
+      });
+
+      it("should enable wallet2 as auth via default implementation", async function () {
+        let tx = await dsaWallet0.connect(dsa1).enable(wallet2.address);
+        let receipt = await tx.wait();
+        expect(!!receipt.status).to.be.true;
+
+        expect(dsaWallet0.isAuth(wallet2.address)).to.be.true;
+
+        expectEvent(
+          receipt,
+          (await deployments.getArtifact("InstaDefaultImplementation")).abi,
+          "LogEnableUser",
+          {
+            user: wallet2.address,
+          }
+        );
+      });
+
+      it("should revert re-enabling enabled auth", async function () {
+        await expect(
+          dsaWallet0.connect(dsa1).enable(wallet2.address)
+        ).to.be.revertedWith("already-enabled");
+      });
+
+      it("should revert disabling wallet2 as auth via non dsa", async function () {
+        await expect(
+          dsaWallet0.connect(wallet0).disable(wallet2.address)
+        ).to.be.revertedWith("not-self");
+      });
+
+      it("should revert disabling zero-address as auth", async function () {
+        await expect(
+          dsaWallet0.connect(dsa1).disable(addr_zero)
+        ).to.be.revertedWith("not-valid");
+      });
+
+      it("should disable wallet2 as auth via default implementation", async function () {
+        let tx = await dsaWallet0.connect(dsa1).disable(wallet2.address);
+        let receipt = await tx.wait();
+        expect(!!receipt.status).to.be.true;
+
+        expect(dsaWallet0.isAuth(wallet2.address)).to.be.false;
+
+        expectEvent(
+          receipt,
+          (await deployments.getArtifact("InstaDefaultImplementation")).abi,
+          "LogDisableUser",
+          {
+            user: wallet2.address,
+          }
+        );
+      });
+
+      it("should revert re-disabling disabled auth", async function () {
+        await expect(
+          dsaWallet0.connect(dsa1).disable(wallet2.address)
+        ).to.be.revertedWith("already-disabled");
       });
     });
   });

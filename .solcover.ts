@@ -4,7 +4,7 @@ export default {
   //     "v1"
   //   ],
   skipFiles: [
-    // "v2/connectors/test/",
+    "v2/connectors/test/",
   ],
   istanbulReporter: ["html", "json"],
 };

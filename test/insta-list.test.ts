@@ -44,7 +44,7 @@ describe("InstaList", function () {
           forking: {
             // @ts-ignore
             jsonRpcUrl: hre.config.networks.hardhat.forking.url,
-            blockNumber: 14005000,
+            blockNumber: 15010000,
           },
         },
       ],
@@ -224,7 +224,7 @@ describe("InstaList", function () {
     });
   });
 
-  describe("Enable and add auths", function () {
+  describe("Enable/Disable and add/remove auths", function () {
     let userList1: any,
       userLink1: any,
       userList2: any,
@@ -400,6 +400,36 @@ describe("InstaList", function () {
       expect(accountList1.prev).to.be.equal(wallet1.address);
       expect(accountList1.next).to.be.equal(addr_zero);
     });
+
+    it("should disable the EOA as owner via DSA and add auth", async function () {
+      expect(await dsaWalletv1.isAuth(wallet1.address)).to.be.true;
+      let tx = await dsaWalletv1.connect(dsaV1).disable(wallet1.address);
+      let txDetails = await tx.wait();
+      expect(!!txDetails.status).to.be.true;
+      expectEvent(
+        txDetails,
+        (await deployments.getArtifact("InstaAccount")).abi,
+        "LogDisable",
+        {
+          user: wallet1.address,
+        }
+      );
+      expect(await dsaWalletv1.isAuth(wallet1.address)).to.be.false;
+    });
+
+    it("should check the user lists and links", async function () {
+
+    })
+
+    ///////////////
+    /////////////
+    ///////////
+    /////////
+    ///////
+    /////
+    ///
+    //
+
   });
 });
 

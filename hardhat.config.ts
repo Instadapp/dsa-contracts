@@ -61,6 +61,9 @@ const INSTA_MASTER = "0xb1DC62EC38E6E3857a887210C38418E4A17Da5B2";
 // ================================= CONFIG =========================================
 const config = {
   defaultNetwork: "hardhat",
+  gasReporter: {
+    currency: "USD",
+  },
   tenderly: {
     project: "team-development",
     username: "InstaDApp",
@@ -69,12 +72,12 @@ const config = {
   networks: {
     hardhat: {
       forking: {
-        url: String(getNetworkUrl(String(process.env.networkType))),
-        // blockNumber: 11739260,
-        blockNumber: 12068005,
+        url: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_ID}`,
+        // blockNumber: 11739260,`
+        blockNumber: 15010000,
       },
       blockGasLimit: 12000000,
-      masterAddress: INSTA_MASTER,
+      // masterAddress: INSTA_MASTER,
     },
     kovan: {
       url: `https://eth-kovan.alchemyapi.io/v2/${ALCHEMY_ID}`,

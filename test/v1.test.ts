@@ -1737,3 +1737,8 @@ describe("InstaAccount v1", function () {
     });
   });
 });
+
+//TODOS
+// - ConnectorArray check
+// - Multiple events fetch
+// - Removing all authorities should revert
