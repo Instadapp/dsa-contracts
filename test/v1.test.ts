@@ -840,11 +840,14 @@ describe("InstaAccount v1", function () {
 
     it("should revert on casting spells with not-enabled connector", async function () {
       expect(await dsaWallet1.isAuth(wallet0.address)).to.be.true;
-      await deployConnector({
-        connectorName: "auth",
-        contract: "ConnectV2Auth",
-        factory: ConnectV2Auth__factory,
-      });
+      await deployConnector(
+        {
+          connectorName: "auth",
+          contract: "ConnectV2Auth",
+          factory: ConnectV2Auth__factory,
+        },
+        [instaList.address]
+      );
       expect(!!addresses.connectors["auth"]).to.be.true;
       expect(await instaConnectors.isConnector([addresses.connectors["auth"]]))
         .to.be.false;

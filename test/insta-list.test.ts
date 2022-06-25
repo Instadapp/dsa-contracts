@@ -418,18 +418,51 @@ describe("InstaList", function () {
     });
 
     it("should check the user lists and links", async function () {
+      userList1 = await instaList.userList(wallet0.address, dsaV1Id);
+      userList2 = await instaList.userList(wallet0.address, dsaV2Id);
+      userLink1 = await instaList.userLink(wallet0.address);
+      userLink2 = await instaList.userLink(wallet1.address);
+      expect(userLink1.first).to.be.equal(dsaV1Id);
+      expect(userLink1.last).to.be.equal(dsaV2Id);
+      expect(userLink1.count).to.be.equal(new BigNumber(2).toString());
+      expect(userLink2.first).to.be.equal("0");
+      expect(userLink2.last).to.be.equal("0");
+      expect(userLink2.count).to.be.equal(new BigNumber(0).toString());
+      expect(userList1.prev).to.be.equal(new BigNumber(0).toString());
+      expect(userList1.next).to.be.equal(dsaV2Id);
+      expect(userList2.prev).to.be.equal(dsaV1Id);
+      expect(userList2.next).to.be.equal(new BigNumber(0).toString());
+      userList1 = await instaList.userList(wallet1.address, dsaV1Id);
+      expect(userList1.prev).to.be.equal(new BigNumber(0).toString());
+      expect(userList1.next).to.be.equal(new BigNumber(0).toString());
+      userList1 = await instaList.userList(dsaWalletv2.address, dsaV1Id);
+      expect(userList1.prev).to.be.equal(new BigNumber(0).toString());
+      expect(userList1.next).to.be.equal(new BigNumber(0).toString());
+      userLink1 = await instaList.userLink(dsaWalletv2.address);
+      expect(userLink1.first).to.be.equal(dsaV1Id);
+      expect(userLink1.last).to.be.equal(dsaV1Id);
+      expect(userLink1.count).to.be.equal(new BigNumber(1).toString());
+    });
 
-    })
-
-    ///////////////
-    /////////////
-    ///////////
-    /////////
-    ///////
-    /////
-    ///
-    //
-
+    it("should have updated account lists and links", async function () {
+      accountList1 = await instaList.accountList(dsaV1Id, wallet0.address);
+      accountList2 = await instaList.accountList(dsaV2Id, wallet0.address);
+      accountLink1 = await instaList.accountLink(dsaV1Id);
+      accountLink2 = await instaList.accountLink(dsaV2Id);
+      expect(accountLink1.first).to.be.equal(wallet0.address);
+      expect(accountLink1.last).to.be.equal(dsaWalletv2.address);
+      expect(accountLink1.count).to.be.equal(new BigNumber(2).toString());
+      expect(accountLink2.first).to.be.equal(wallet0.address);
+      expect(accountLink2.last).to.be.equal(wallet0.address);
+      expect(accountLink2.count).to.be.equal(new BigNumber(1).toString());
+      expect(accountList1.prev).to.be.equal(addr_zero);
+      expect(accountList1.next).to.be.equal(dsaWalletv2.address);
+      expect(accountList2.prev).to.be.equal(addr_zero);
+      expect(accountList2.next).to.be.equal(addr_zero);
+      accountList1 = await instaList.accountList(dsaV1Id, dsaWalletv2.address);
+      expect(accountList1.prev).to.be.equal(wallet0.address);
+      expect(accountList1.next).to.be.equal(addr_zero);
+    });
   });
 });
 

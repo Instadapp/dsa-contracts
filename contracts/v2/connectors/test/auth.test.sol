@@ -57,9 +57,6 @@ contract Basics {
     /**
      * @dev Return InstaList Address.
      */
-    // function getListAddr() internal pure returns (address) {
-    //     return 0x4c8a1BEb8a87765788946D6B19C6C6355194AbEb;
-    // }
     address public immutable instaList;
 
     constructor(address _instaList) {
