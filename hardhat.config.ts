@@ -72,12 +72,12 @@ const config = {
   networks: {
     hardhat: {
       forking: {
-        url: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_ID}`,
+        url: String(getNetworkUrl(String(process.env.networkType))),
         // blockNumber: 11739260,`
         blockNumber: 15010000,
       },
       blockGasLimit: 12000000,
-      // masterAddress: INSTA_MASTER,
+      masterAddress: INSTA_MASTER,
     },
     kovan: {
       url: `https://eth-kovan.alchemyapi.io/v2/${ALCHEMY_ID}`,
