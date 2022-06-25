@@ -34,6 +34,7 @@ describe("Core", function () {
   const maxValue =
     "115792089237316195423570985008687907853269984665640564039457584007913129639935";
 
+  let INSTA_LIST = "0x4c8a1BEb8a87765788946D6B19C6C6355194AbEb";
   let instaConnectorsV2: Contract,
     implementationsMapping: Contract,
     instaAccountV2Proxy: Contract,
@@ -291,11 +292,14 @@ describe("Core", function () {
 
     it("Should deploy Auth connector", async function () {
       const connectorName = "authV2";
-      await deployConnector({
-        connectorName,
-        contract: "ConnectV2Auth",
-        factory: ConnectV2Auth__factory,
-      });
+      await deployConnector(
+        {
+          connectorName,
+          contract: "ConnectV2Auth",
+          factory: ConnectV2Auth__factory,
+        },
+        [INSTA_LIST]
+      );
       expect(!!addresses.connectors["authV2"]).to.be.true;
       const tx = await instaConnectorsV2
         .connect(masterSigner)
@@ -478,7 +482,7 @@ describe("Core", function () {
         connectorName,
         contract: "ConnectV2Auth",
         factory: ConnectV2Auth__factory,
-      });
+      }, [INSTA_LIST]);
       expect(!!addresses.connectors["authV1"]).to.be.true;
       const tx = await instaConnectorsV2
         .connect(masterSigner)
@@ -552,8 +556,8 @@ describe("Core", function () {
         ConnectCompound__factory,
         []
       );
-      authV3 = await deployContract(masterSigner, ConnectV2Auth__factory, []);
-      authV4 = await deployContract(masterSigner, ConnectV2Auth__factory, []);
+      authV3 = await deployContract(masterSigner, ConnectV2Auth__factory, [INSTA_LIST]);
+      authV4 = await deployContract(masterSigner, ConnectV2Auth__factory, [INSTA_LIST]);
       compound2 = await deployContract(
         masterSigner,
         ConnectCompound__factory,

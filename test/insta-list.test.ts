@@ -31,7 +31,10 @@ describe("InstaList", function () {
   let [wallet0, wallet1, wallet2, wallet3] = wallets;
   let setBasicsArgs: [string, string, string, string];
   let masterAddress: Address;
-  let dsaWalletv1: Contract, dsaWalletv2: Contract;
+  let dsaWalletv1: Contract,
+    dsaWalletv2: Contract,
+    dsaWalletv3: Contract,
+    dsaWalletv0: Contract;
   let walletv1: any, walletv2: any;
 
   let accounts: any;
@@ -159,6 +162,9 @@ describe("InstaList", function () {
       params: [walletv2.address],
     });
     dsaV2 = ethers.provider.getSigner(walletv2.address);
+
+    dsaWalletv0 = await buildDSA(wallet1.address, 1);
+    expect(!!dsaWalletv0.address).to.be.true;
   });
 
   it("Should set balances", async () => {
@@ -184,7 +190,7 @@ describe("InstaList", function () {
   describe("List init", function () {
     it("should have accounts added on build", async function () {
       accounts = await instaList.accounts();
-      expect(accounts.toString()).to.be.equal(new BigNumber(2).toString());
+      expect(accounts.toString()).to.be.equal(new BigNumber(3).toString());
       expect(await instaList.accountID(dsaWalletv1.address)).to.be.equal(
         new BigNumber(1).toString()
       );
@@ -253,9 +259,9 @@ describe("InstaList", function () {
       expect(userLink1.first).to.be.equal(dsaV1Id);
       expect(userLink1.last).to.be.equal(dsaV2Id);
       expect(userLink1.count).to.be.equal(new BigNumber(2).toString());
-      expect(userLink2.first).to.be.equal(new BigNumber(0).toString());
-      expect(userLink2.last).to.be.equal(new BigNumber(0).toString());
-      expect(userLink2.count).to.be.equal(new BigNumber(0).toString());
+      expect(userLink2.first).to.be.equal(new BigNumber(3).toString());
+      expect(userLink2.last).to.be.equal(new BigNumber(3).toString());
+      expect(userLink2.count).to.be.equal(new BigNumber(1).toString());
       expect(userList1.prev).to.be.equal(new BigNumber(0).toString());
       expect(userList1.next).to.be.equal(dsaV2Id);
       expect(userList2.prev).to.be.equal(dsaV1Id);
@@ -295,6 +301,11 @@ describe("InstaList", function () {
       );
     });
 
+    it("should build dsa with wallet1 as auth", async function () {
+      dsaWalletv3 = await buildDSA(wallet1.address, 1);
+      expect(!!dsaWalletv3.address).to.be.true;
+    });
+
     it("should have updated user lists and links", async function () {
       userList1 = await instaList.userList(wallet0.address, dsaV1Id);
       userList2 = await instaList.userList(wallet0.address, dsaV2Id);
@@ -303,16 +314,19 @@ describe("InstaList", function () {
       expect(userLink1.first).to.be.equal(dsaV1Id);
       expect(userLink1.last).to.be.equal(dsaV2Id);
       expect(userLink1.count).to.be.equal(new BigNumber(2).toString());
-      expect(userLink2.first).to.be.equal(dsaV1Id);
-      expect(userLink2.last).to.be.equal(dsaV1Id);
-      expect(userLink2.count).to.be.equal(new BigNumber(1).toString());
+      expect(userLink2.first).to.be.equal("3");
+      expect(userLink2.last).to.be.equal("4");
+      expect(userLink2.count).to.be.equal(new BigNumber(3).toString());
       expect(userList1.prev).to.be.equal(new BigNumber(0).toString());
       expect(userList1.next).to.be.equal(dsaV2Id);
       expect(userList2.prev).to.be.equal(dsaV1Id);
       expect(userList2.next).to.be.equal(new BigNumber(0).toString());
       userList1 = await instaList.userList(wallet1.address, dsaV1Id);
+      expect(userList1.prev).to.be.equal(new BigNumber("3").toString());
+      expect(userList1.next).to.be.equal(new BigNumber("4").toString());
+      userList1 = await instaList.userList(wallet0.address, dsaV1Id);
       expect(userList1.prev).to.be.equal(new BigNumber(0).toString());
-      expect(userList1.next).to.be.equal(new BigNumber(0).toString());
+      expect(userList1.next).to.be.equal(new BigNumber(2).toString());
     });
 
     it("should have updated account lists and links", async function () {
@@ -333,6 +347,13 @@ describe("InstaList", function () {
       accountList1 = await instaList.accountList(dsaV1Id, wallet1.address);
       expect(accountList1.prev).to.be.equal(wallet0.address);
       expect(accountList1.next).to.be.equal(addr_zero);
+    });
+
+    it("should revert disabling auth if not been removed from _auth mapping of account", async function () {
+      expect(await dsaWalletv1.isAuth(wallet1.address)).to.be.true;
+      await expect(
+        instaList.connect(dsaV1).removeAuth(wallet1.address)
+      ).to.be.revertedWith("already-owner");
     });
 
     it("should enable a DSA as owner of DSA and add auth", async function () {
@@ -359,16 +380,16 @@ describe("InstaList", function () {
       expect(userLink1.first).to.be.equal(dsaV1Id);
       expect(userLink1.last).to.be.equal(dsaV2Id);
       expect(userLink1.count).to.be.equal(new BigNumber(2).toString());
-      expect(userLink2.first).to.be.equal(dsaV1Id);
-      expect(userLink2.last).to.be.equal(dsaV1Id);
-      expect(userLink2.count).to.be.equal(new BigNumber(1).toString());
+      expect(userLink2.first).to.be.equal("3");
+      expect(userLink2.last).to.be.equal("4");
+      expect(userLink2.count).to.be.equal(new BigNumber(3).toString());
       expect(userList1.prev).to.be.equal(new BigNumber(0).toString());
       expect(userList1.next).to.be.equal(dsaV2Id);
       expect(userList2.prev).to.be.equal(dsaV1Id);
       expect(userList2.next).to.be.equal(new BigNumber(0).toString());
       userList1 = await instaList.userList(wallet1.address, dsaV1Id);
-      expect(userList1.prev).to.be.equal(new BigNumber(0).toString());
-      expect(userList1.next).to.be.equal(new BigNumber(0).toString());
+      expect(userList1.prev).to.be.equal(new BigNumber("3").toString());
+      expect(userList1.next).to.be.equal(new BigNumber("4").toString());
       userList1 = await instaList.userList(dsaWalletv2.address, dsaV1Id);
       expect(userList1.prev).to.be.equal(new BigNumber(0).toString());
       expect(userList1.next).to.be.equal(new BigNumber(0).toString());
@@ -425,9 +446,9 @@ describe("InstaList", function () {
       expect(userLink1.first).to.be.equal(dsaV1Id);
       expect(userLink1.last).to.be.equal(dsaV2Id);
       expect(userLink1.count).to.be.equal(new BigNumber(2).toString());
-      expect(userLink2.first).to.be.equal("0");
-      expect(userLink2.last).to.be.equal("0");
-      expect(userLink2.count).to.be.equal(new BigNumber(0).toString());
+      expect(userLink2.first).to.be.equal("3");
+      expect(userLink2.last).to.be.equal("4");
+      expect(userLink2.count).to.be.equal(new BigNumber(2).toString());
       expect(userList1.prev).to.be.equal(new BigNumber(0).toString());
       expect(userList1.next).to.be.equal(dsaV2Id);
       expect(userList2.prev).to.be.equal(dsaV1Id);
@@ -463,6 +484,59 @@ describe("InstaList", function () {
       expect(accountList1.prev).to.be.equal(wallet0.address);
       expect(accountList1.next).to.be.equal(addr_zero);
     });
+
+    it("should disable wallet0 as auth", async function () {
+      expect(await dsaWalletv1.isAuth(wallet0.address)).to.be.true;
+      let tx = await dsaWalletv1.connect(dsaV1).disable(wallet0.address);
+      let txDetails = await tx.wait();
+      expect(!!txDetails.status).to.be.true;
+      expectEvent(
+        txDetails,
+        (await deployments.getArtifact("InstaAccount")).abi,
+        "LogDisable",
+        {
+          user: wallet0.address,
+        }
+      );
+      expect(await dsaWalletv1.isAuth(wallet0.address)).to.be.false;
+    });
+
+    it("should enable wallet0 as owner of DSA and add auth", async function () {
+      expect(await dsaWalletv1.isAuth(wallet0.address)).to.be.false;
+      let tx = await dsaWalletv1.connect(dsaV1).enable(wallet0.address);
+      let txDetails = await tx.wait();
+      expect(!!txDetails.status).to.be.true;
+      expectEvent(
+        txDetails,
+        (await deployments.getArtifact("InstaAccount")).abi,
+        "LogEnable",
+        {
+          user: wallet0.address,
+        }
+      );
+    });
+
+    it("should disable wallet0 as auth", async function () {
+      expect(await dsaWalletv1.isAuth(wallet0.address)).to.be.true;
+      let tx = await dsaWalletv1.connect(dsaV1).disable(wallet0.address);
+      let txDetails = await tx.wait();
+      expect(!!txDetails.status).to.be.true;
+      expectEvent(
+        txDetails,
+        (await deployments.getArtifact("InstaAccount")).abi,
+        "LogDisable",
+        {
+          user: wallet0.address,
+        }
+      );
+      expect(await dsaWalletv1.isAuth(wallet0.address)).to.be.false;
+    });
+
+    it("should revert disabling if sender is not DSA", async function () {
+      await expect(
+        instaList.connect(signer).removeAuth(wallet1.address)
+      ).to.be.revertedWith("not-account");
+    });
   });
 });
 
@@ -472,3 +546,8 @@ describe("InstaList", function () {
 //  * - Configure solcover to include contracts calls which are used from artifacts --> including coverage_artifacts
 //  * - Including time taken for test --> check constraints due to solcover
 //  */
+
+/**
+ * Uncovered
+ * - DSMath overflows add, subtract
+ */

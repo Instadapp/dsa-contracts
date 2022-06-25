@@ -46,6 +46,7 @@ describe("Mainnet", function () {
   const M1_IMPLEMENTATION_ADDRESS =
     "0x77a34e599dA1e37215445c5740D57b63E5Bb98FD";
   const INSTA_INDEX = "0x2971AdFa57b20E5a416aE5a708A8655A9c74f723";
+  let INSTA_LIST = "0x4c8a1BEb8a87765788946D6B19C6C6355194AbEb";
 
   let instaConnectorsV2: Contract,
     implementationsMapping: Contract,
@@ -284,11 +285,14 @@ describe("Mainnet", function () {
     });
 
     it("Should deploy Auth connector", async function () {
-      await deployConnector({
-        connectorName: "authV2",
-        contract: "ConnectV2Auth",
-        factory: ConnectV2Auth__factory,
-      });
+      await deployConnector(
+        {
+          connectorName: "authV2",
+          contract: "ConnectV2Auth",
+          factory: ConnectV2Auth__factory,
+        },
+        [INSTA_LIST]
+      );
       expect(!!addresses.connectors["authV2"]).to.be.true;
       await instaConnectorsV2
         .connect(masterSigner)
@@ -460,7 +464,7 @@ describe("Mainnet", function () {
         connectorName: "authV1",
         contract: "ConnectV2Auth",
         factory: ConnectV2Auth__factory,
-      });
+      }, [INSTA_LIST]);
       expect(!!addresses.connectors["authV1"]).to.be.true;
       await instaConnectorsV2
         .connect(masterSigner)
@@ -531,8 +535,8 @@ describe("Mainnet", function () {
         ConnectCompound__factory,
         []
       );
-      authV3 = await deployContract(masterSigner, ConnectV2Auth__factory, []);
-      authV4 = await deployContract(masterSigner, ConnectV2Auth__factory, []);
+      authV3 = await deployContract(masterSigner, ConnectV2Auth__factory, [INSTA_LIST]);
+      authV4 = await deployContract(masterSigner, ConnectV2Auth__factory, [INSTA_LIST]);
       compound2 = await deployContract(
         masterSigner,
         ConnectCompound__factory,

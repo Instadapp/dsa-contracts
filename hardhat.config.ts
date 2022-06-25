@@ -62,7 +62,9 @@ const INSTA_MASTER = "0xb1DC62EC38E6E3857a887210C38418E4A17Da5B2";
 const config = {
   defaultNetwork: "hardhat",
   gasReporter: {
-    currency: "USD",
+    enabled: true,
+    currency: "ETH",
+    coinmarketcap: process.env.COINMARKETCAP_API_KEY
   },
   tenderly: {
     project: "team-development",

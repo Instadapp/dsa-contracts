@@ -19,6 +19,7 @@ import {
   ConnectV2Auth__factory,
   InstaCheck__factory,
   InstaEvent__factory,
+  StaticTest__factory,
 } from "../typechain";
 import addresses from "../scripts/constant/addresses";
 // import encodeSpells from "../scripts/encodeSpells";
@@ -398,6 +399,12 @@ describe("InstaAccount v1", function () {
         ).abi,
         addresses.connectors["basic"]
       );
+      await deployConnector({
+        connectorName: "static-test",
+        contract: "StaticTest",
+        factory: StaticTest__factory,
+      });
+      expect(!!addresses.connectors["static-test"]).to.be.true;
     });
 
     it("should check state of Connectors registry", async function () {
@@ -643,7 +650,7 @@ describe("InstaAccount v1", function () {
       ).to.be.revertedWith("not-self-index");
     });
 
-    it("should revert enabling non-zero address as auth", async function () {
+    it("should revert enabling zero address as auth", async function () {
       await expect(
         dsaWallet1.connect(dsa1).enable(addr_zero)
       ).to.be.revertedWith("not-valid");
@@ -713,19 +720,19 @@ describe("InstaAccount v1", function () {
 
     it("should revert disabling user via non-DSA", async function () {
       await expect(
-        dsaWallet1.connect(signer).enable(wallet1.address)
+        dsaWallet1.connect(signer).disable(wallet1.address)
       ).to.be.revertedWith("not-self");
       await expect(
-        dsaWallet1.connect(masterSigner).enable(wallet1.address)
+        dsaWallet1.connect(masterSigner).disable(wallet1.address)
       ).to.be.revertedWith("not-self");
       await expect(
-        dsaWallet1.connect(wallet0).enable(wallet1.address)
+        dsaWallet1.connect(wallet0).disable(wallet1.address)
       ).to.be.revertedWith("not-self");
     });
 
-    it("should revert disabling non-zero address as auth", async function () {
+    it("should revert disabling zero address as auth", async function () {
       await expect(
-        dsaWallet1.connect(dsa1).enable(addr_zero)
+        dsaWallet1.connect(dsa1).disable(addr_zero)
       ).to.be.revertedWith("not-valid");
     });
 
@@ -836,6 +843,23 @@ describe("InstaAccount v1", function () {
       await expect(
         dsaWallet1.connect(wallet0).cast(targets, [], wallet0.address)
       ).to.be.revertedWith("array-length-invalid");
+    });
+
+    it("should revert casting spells on zero-address connectors", async function () {
+      const spells = [
+        {
+          connector: "insta-auth",
+          method: "addModule",
+          args: [wallet1.address],
+        },
+      ];
+
+      let [targets, datas] = encodeSpells(spells);
+      expect(targets.length).to.be.gte(1);
+
+      await expect(
+        dsaWallet1.connect(wallet0).cast([addr_zero], datas, wallet0.address)
+      ).to.be.revertedWith("not-connector");
     });
 
     it("should revert on casting spells with not-enabled connector", async function () {
@@ -1440,6 +1464,20 @@ describe("InstaAccount v1", function () {
           .connect(masterSigner)
           .enableStatic(addresses.connectors["insta-auth"])
       ).to.be.revertedWith("already-enabled");
+    });
+
+    it("should revert enabling zero-address as static connector", async function () {
+      await expect(
+        instaConnectors.connect(masterSigner).enableStatic(addr_zero)
+      ).to.be.revertedWith("Not-valid-connector");
+    });
+
+    it("should revert enabling incorrect-version as static connector", async function () {
+      await expect(
+        instaConnectors
+          .connect(masterSigner)
+          .enableStatic(addresses.connectors["static-test"])
+      ).to.be.revertedWith("ConnectorID-doesnt-match");
     });
 
     it("should cast on non-static auth connector(shield-off)", async function () {

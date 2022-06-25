@@ -213,12 +213,23 @@ describe("InstaAccount V2", function () {
   });
 
   describe("Implementations Registry", function () {
-    it("should check instaIndex", async function () {
+    it("should check states", async function () {
       expect(await implementationsMapping.instaIndex()).to.be.equal(
         instaIndex.address
       );
       expect(await implementationsMapping.defaultImplementation()).to.be.equal(
         addr_zero
+      );
+      expect(await instaAccountV2Proxy.implementations()).to.be.eq(
+        implementationsMapping.address
+      );
+      expect(await instaAccountV2DefaultImpl.instaIndex()).to.be.eq(
+        instaIndex.address
+      );
+      expect(await instaAccountV2DefaultImpl.isAuth(wallet0.address)).to.be
+        .false;
+      expect(await instaAccountV2ImplM1.connectorsM1()).to.be.eq(
+        instaConnectorsV2.address
       );
     });
 
@@ -572,6 +583,7 @@ describe("InstaAccount V2", function () {
       });
     });
   });
+
   describe("Connector Registry", async function () {
     let connectorNames = ["authV2", "emitEvent"];
     let authAddr = "0x351Bb32e90C35647Df7a584f3c1a3A0c38F31c68";
@@ -994,8 +1006,7 @@ describe("InstaAccount V2", function () {
 
     describe("Auth and EmitEvent connector", function () {
       it("should add wallet1 as auth of dsaWallet0 | ImplementationsM1:Cast", async function () {
-        expect(await dsaWallet1.connect(wallet0).isAuth(wallet1.address)).to.be
-          .false;
+        expect(await dsaWallet1.isAuth(wallet1.address)).to.be.false;
 
         let spells = [
           {

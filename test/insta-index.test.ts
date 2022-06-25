@@ -24,7 +24,9 @@ describe("InstaIndex", function () {
     instaConnectors: Contract,
     instaAccount: Contract,
     instaDefaultAccountV2: Contract,
-    instaConnectorsV2: Contract;
+    instaConnectorsV2: Contract,
+    instaAccountTestV3: Contract,
+    instaAccountTestV4: Contract;
 
   let masterSigner: Signer;
   let deployer: SignerWithAddress,
@@ -65,6 +67,9 @@ describe("InstaIndex", function () {
     instaAccount = await instaDeployContract("InstaAccount", [
       instaIndex.address,
     ]);
+
+    instaAccountTestV3 = await instaDeployContract("InstaAccountV3", []);
+    instaAccountTestV4 = await instaDeployContract("InstaAccountV4", []);
 
     instaConnectors = await instaDeployContract("InstaConnectors", [
       instaIndex.address,
@@ -253,7 +258,7 @@ describe("InstaIndex", function () {
         ).to.be.revertedWith("not-valid-version");
       });
 
-      it("should add new module", async function () {
+      it("should add new module with connectors and zero-check address", async function () {
         const tx = await instaIndex
           .connect(newMaster)
           .addNewAccount(
@@ -268,6 +273,53 @@ describe("InstaIndex", function () {
           _newAccount: instaDefaultAccountV2.address,
           _connectors: instaConnectorsV2.address,
           _check: addr_zero,
+        };
+        expectEvent(
+          txDetails,
+          (await deployments.getArtifact("InstaIndex")).abi,
+          "LogNewAccount",
+          accountArgs
+        );
+        console.log("\tLogNewAccount event fired...");
+      });
+
+      it("should add new module with no connector registry and zero-check address", async function () {
+        const tx = await instaIndex
+          .connect(newMaster)
+          .addNewAccount(instaAccountTestV3.address, addr_zero, addr_zero);
+        let txDetails = await tx.wait();
+        expect(!!txDetails.status).to.be.true;
+        versionCount++;
+        let accountArgs = {
+          _newAccount: instaAccountTestV3.address,
+          _connectors: addr_zero,
+          _check: addr_zero,
+        };
+        expectEvent(
+          txDetails,
+          (await deployments.getArtifact("InstaIndex")).abi,
+          "LogNewAccount",
+          accountArgs
+        );
+        console.log("\tLogNewAccount event fired...");
+      });
+
+      it("should add new module with connector registry and check module", async function () {
+        let check_addr = "0x8a5419CfC711B2343c17a6ABf4B2bAFaBb06957F";
+        const tx = await instaIndex
+          .connect(newMaster)
+          .addNewAccount(
+            instaAccountTestV4.address,
+            instaConnectors.address,
+            check_addr
+          );
+        let txDetails = await tx.wait();
+        expect(!!txDetails.status).to.be.true;
+        versionCount++;
+        let accountArgs = {
+          _newAccount: instaAccountTestV4.address,
+          _connectors: instaConnectors.address,
+          _check: check_addr,
         };
         expectEvent(
           txDetails,
@@ -512,7 +564,12 @@ describe("InstaIndex", function () {
 
 /**
  * TODOS
- * - Configure hardhat gas reporter for gas estimate, gas reporter currently showing - USD
- * - Configure solcover to include contracts calls which are used from artifacts --> including coverage_artifacts
+ * - BuildWithCast
  * - Including time taken for test --> check constraints due to solcover
+ */
+
+
+/**
+ * Uncovered
+ * - BuildWithCast
  */
