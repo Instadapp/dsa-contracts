@@ -59,6 +59,7 @@ describe("InstaAccount V2", function () {
     instaAccountV2Proxy: Contract,
     instaAccountV2ImplM1: Contract,
     instaAccountV2ImplM2: Contract,
+    instaAccountV2ImplM0: Contract,
     instaAccountV2DefaultImpl: Contract,
     instaAccountV2DefaultImplV2: Contract;
 
@@ -93,6 +94,7 @@ describe("InstaAccount V2", function () {
     "enable",
     "disable",
     "shield()",
+    "receiveEther()",
   ].map((a) => web3.utils.keccak256(a).slice(0, 10));
 
   const instaAccountV2ImplM1Sigs = [
@@ -153,6 +155,11 @@ describe("InstaAccount V2", function () {
       instaConnectorsV2.address,
     ]);
 
+    instaAccountV2ImplM0 = await instaDeployContract(
+      "InstaImplementationM0Test",
+      [instaIndex.address]
+    );
+
     setBasicsArgs = [
       deployerAddress,
       instaList.address,
@@ -210,6 +217,28 @@ describe("InstaAccount V2", function () {
     const tx = await instaIndex.setBasics(...setBasicsArgs);
     const txDetails = await tx.wait();
     expect(!!txDetails.status).to.be.true;
+  });
+
+  describe("Account Proxy ", function () {
+    it("should revert if no method not found in implementation and no default implementation added", async function () {
+      await expect(
+        instaIndex
+          .connect(masterSigner)
+          .addNewAccount(
+            instaAccountV2Proxy.address,
+            instaConnectorsV2.address,
+            addr_zero
+          )
+      ).to.be.revertedWith("InstaAccountV2: Not able to find _implementation");
+    });
+
+    it("should send ether", async function () {
+      const txn = await signer.sendTransaction({
+        to: instaAccountV2Proxy.address,
+        value: ethers.utils.parseEther("2"),
+      });
+      expect(!!(await txn.wait()).status).to.be.true;
+    });
   });
 
   describe("Implementations Registry", function () {
@@ -400,6 +429,24 @@ describe("InstaAccount V2", function () {
       ).forEach((a: any, i: string | number) => {
         expect(a).to.be.eq(instaAccountV2DefaultImplV2Sigs[i]);
       });
+    });
+
+    it("should send ether with method call | AccountProxy: receive()", async function () {
+      const txn = await instaAccountV2ImplM0
+        .connect(signer)
+        .handlePayment(instaAccountV2Proxy.address, {
+          value: ethers.utils.parseEther("2"),
+        });
+      expect(!!(await txn.wait()).status).to.be.true;
+
+      expectEvent(
+        await txn.wait(),
+        (await deployments.getArtifact("InstaDefaultImplementationV2")).abi,
+        "LogReceiveEther",
+        {
+          amt: ethers.utils.parseEther("2"),
+        }
+      );
     });
 
     it("should revert removing implementation with non-master account", async function () {
