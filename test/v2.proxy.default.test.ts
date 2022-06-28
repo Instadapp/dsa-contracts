@@ -57,6 +57,7 @@ describe("InstaAccount V2", function () {
     instaAccount: Contract,
     instaConnectors: Contract,
     instaConnectorsV2: Contract,
+    instaConnectorsV2Test: Contract,
     implementationsMapping: Contract,
     instaAccountV2Proxy: Contract,
     instaAccountV2ImplM1: Contract,
@@ -135,9 +136,14 @@ describe("InstaAccount V2", function () {
       instaIndex.address,
     ]);
 
+    instaConnectorsV2Test = await instaDeployContract("InstaConnectorsV2Test", [
+      instaIndex.address,
+    ]);
+
     instaConnectorsV2 = await instaDeployContract("InstaConnectorsV2", [
       instaIndex.address,
     ]);
+
     implementationsMapping = await instaDeployContract("InstaImplementations", [
       instaIndex.address,
     ]);
@@ -150,7 +156,7 @@ describe("InstaAccount V2", function () {
     );
     instaAccountV2ImplM1 = await instaDeployContract("InstaImplementationM1", [
       instaIndex.address,
-      instaConnectorsV2.address,
+      instaConnectorsV2Test.address,
     ]);
     instaAccountV2ImplM2 = await instaDeployContract("InstaImplementationM2", [
       instaIndex.address,
@@ -273,7 +279,7 @@ describe("InstaAccount V2", function () {
         .connect(masterSigner)
         .addNewAccount(
           instaAccountV2Proxy.address,
-          instaConnectorsV2.address,
+          instaConnectorsV2Test.address,
           addr_zero
         );
       let txDetails = await tx.wait();
@@ -450,6 +456,14 @@ describe("InstaAccount V2", function () {
           to: dsaWallet3.address,
         }
       );
+    });
+  });
+
+  describe("ImplementationM1 Cast", function () {
+    it("should revert casting spell for not enabled connector", async function () {
+      await expect(
+        dsaWallet3.connect(wallet0).cast(["authV2"], ["0x"], wallet0.address)
+      ).to.be.revertedWith("target-invalid");
     });
   });
 });

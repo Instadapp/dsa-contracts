@@ -60,8 +60,6 @@ contract Record is CommonSetup {
      * @param _account account module address.
      */
     function handlePayment(address payable _account) public payable {
-        // bool sent = _account.send(msg.value);
-        // require(sent, "failed sent");
         _account.transfer(msg.value);
         emit LogPayEther(msg.value);
     }
