@@ -19,6 +19,7 @@ import {
   ConnectV2Auth__factory,
   InstaDefaultImplementationV2__factory,
   ConnectV2EmitEvent__factory,
+  NFTTest__factory,
 } from "../typechain";
 import addresses from "../scripts/constant/addresses";
 import encodeSpells from "../scripts/encodeSpells";
@@ -350,6 +351,17 @@ describe("InstaAccount V2", function () {
       });
     });
 
+    it("should revert re-adding ImplementationM1 to mappings", async function () {
+      await expect(
+        implementationsMapping
+          .connect(masterSigner)
+          .addImplementation(
+            instaAccountV2ImplM1.address,
+            instaAccountV2ImplM1Sigs
+          )
+      ).to.be.revertedWith("Implementations: _implementation already added.");
+    });
+
     it("should get the sigs for ImplementationM1", async function () {
       (
         await implementationsMapping.getImplementationSigs(
@@ -441,8 +453,8 @@ describe("InstaAccount V2", function () {
 
       expectEvent(
         await txn.wait(),
-        (await deployments.getArtifact("InstaDefaultImplementationV2")).abi,
-        "LogReceiveEther",
+        (await deployments.getArtifact("InstaImplementationM0Test")).abi,
+        "LogPayEther",
         {
           amt: ethers.utils.parseEther("2"),
         }
