@@ -1,14 +1,13 @@
 # <p align="center"> DSA Contracts Test Coverage</p>
 
 All the contracts in action have been tested and covered by the tests.<br>
-
 Test Coverage as of **June 28, 2022**:
 - Statements: `303/308`
 - Branches: `191/200`
 - Functions: `104/107`
 - Lines: `319/324`
 
-  ![Screenshot from 2022-06-28 14-40-42](https://user-images.githubusercontent.com/76250660/176197453-cfa7b1d5-76b7-4c63-9604-4bb9b9e54875.png)
+![Screenshot from 2022-06-28 14-40-42](https://user-images.githubusercontent.com/76250660/176197453-cfa7b1d5-76b7-4c63-9604-4bb9b9e54875.png)
 
 The missing numbers in the coverage can be accounted for:
 
