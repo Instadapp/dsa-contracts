@@ -22,7 +22,7 @@ The missing numbers in the coverage can be accounted for:
 
   - The lines and statements associated with above stated functions/branches are uncovered.
 
-Run the coverage:
+### Run the coverage:
 
 ```
 npm run coverage
