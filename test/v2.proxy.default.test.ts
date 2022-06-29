@@ -55,7 +55,7 @@ describe("InstaAccount V2", function () {
   let instaIndex: Contract,
     instaList: Contract,
     instaAccount: Contract,
-    instaConnectors: Contract,
+    instaConnectorsTest: Contract,
     instaConnectorsV2: Contract,
     instaConnectorsV2Test: Contract,
     implementationsMapping: Contract,
@@ -132,7 +132,7 @@ describe("InstaAccount V2", function () {
     instaAccount = await instaDeployContract("InstaAccount", [
       instaIndex.address,
     ]);
-    instaConnectors = await instaDeployContract("InstaConnectors", [
+    instaConnectorsTest = await instaDeployContract("InstaConnectorsTest", [
       instaIndex.address,
     ]);
 
@@ -172,7 +172,7 @@ describe("InstaAccount V2", function () {
       deployerAddress,
       instaList.address,
       instaAccount.address,
-      instaConnectors.address,
+      instaConnectorsTest.address,
     ];
 
     await hre.network.provider.request({
@@ -309,18 +309,23 @@ describe("InstaAccount V2", function () {
       let defaultM1abi = (
         await deployments.getArtifact("InstaDefaultImplementation")
       ).abi;
-      let defaultM2abi = await deployments.getArtifact(
-        "InstaDefaultImplementationV2"
-      );
-      let implM2abi = await deployments.getArtifact("InstaImplementationM2");
 
       dsaWallet1 = await ethers.getContractAt(defaultM1abi, dsaWallet0.address);
       expect(!!dsaWallet1.address).to.be.true;
+
+      const tx = await instaIndex.build(wallet1.address, 1, wallet1.address);
+      const receipt = await tx.wait();
+      const event = receipt.events.find(
+        (a: { event: string }) => a.event === "LogAccountCreated"
+      );
       dsaWallet2 = await ethers.getContractAt(
-        implM2abi.abi,
-        dsaWallet0.address
+        (
+          await deployments.getArtifact("InstaAccount")
+        ).abi,
+        event.args.account
       );
       expect(!!dsaWallet2.address).to.be.true;
+
       dsaWallet3 = await ethers.getContractAt(
         (
           await deployments.getArtifact("InstaImplementationM1")
@@ -329,22 +334,11 @@ describe("InstaAccount V2", function () {
       );
 
       expect(!!dsaWallet3.address).to.be.true;
-
-      walletv21 = await ethers.getSigner(dsaWallet2.address);
-      await hre.network.provider.request({
-        method: "hardhat_impersonateAccount",
-        params: [walletv21.address],
-      });
-      dsa2 = ethers.provider.getSigner(walletv21.address);
     });
 
     it("Should set balances", async () => {
       await wallet3.sendTransaction({
         to: dsaWallet0.address,
-        value: ethers.utils.parseEther("10"),
-      });
-      await wallet3.sendTransaction({
-        to: walletv20.address,
         value: ethers.utils.parseEther("10"),
       });
 
@@ -459,10 +453,14 @@ describe("InstaAccount V2", function () {
     });
   });
 
-  describe("ImplementationM1 Cast", function () {
+  describe("Cast", function () {
     it("should revert casting spell for not enabled connector", async function () {
       await expect(
         dsaWallet3.connect(wallet0).cast(["authV2"], ["0x"], wallet0.address)
+      ).to.be.revertedWith("target-invalid");
+
+      await expect(
+        dsaWallet2.connect(wallet1).cast([addr_zero], ["0x"], wallet1.address)
       ).to.be.revertedWith("target-invalid");
     });
   });
