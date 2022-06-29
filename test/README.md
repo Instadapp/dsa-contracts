@@ -1,8 +1,8 @@
 # <p align="center"> DSA Contracts Test Coverage</p>
 
 All the contracts in action have been tested and covered by the tests.<br>
-Test Coverage as of **June 28, 2022**:
 
+Test Coverage as of **June 28, 2022**:
 - Statements: `303/308`
 - Branches: `191/200`
 - Functions: `104/107`
@@ -23,9 +23,9 @@ The missing numbers in the coverage can be accounted for:
 
   - The lines and statements associated with above stated functions/branches are uncovered.
 
-  Run the coverage:
+Run the coverage:
 
-  ```
-  npm run coverage
-  ```
+```
+npm run coverage
+```
 
