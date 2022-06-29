@@ -7,7 +7,7 @@
   },
   "scripts": {
     "test": "hardhat test",
-    "coverage": "hardhat coverage --testfiles 'test/**.test.ts'",
+    "coverage": "hardhat coverage --solcoverjs .solcover.ts --testfiles 'test/**.test.ts'",
     "compile": "hardhat compile"
   },
   "repository": {
