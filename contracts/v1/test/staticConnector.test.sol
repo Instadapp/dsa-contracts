@@ -6,10 +6,12 @@ pragma solidity ^0.7.0;
  */
 
 contract StaticTest {
-    /**
+
+     /**
      * @dev Connector ID and Type.
      */
-    function connectorID() public pure returns (uint256 _type, uint256 _id) {
+    function connectorID() public pure returns(uint _type, uint _id) {
         (_type, _id) = (1, 4);
     }
+
 }

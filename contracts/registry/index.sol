@@ -8,15 +8,9 @@ pragma experimental ABIEncoderV2;
  */
 
 interface AccountInterface {
-    function version() external view returns (uint256);
-
+    function version() external view returns (uint);
     function enable(address authority) external;
-
-    function cast(
-        address[] calldata _targets,
-        bytes[] calldata _datas,
-        address _origin
-    ) external payable returns (bytes32[] memory responses);
+    function cast(address[] calldata _targets, bytes[] calldata _datas, address _origin) external payable returns (bytes32[] memory responses);
 }
 
 interface ListInterface {
@@ -24,14 +18,11 @@ interface ListInterface {
 }
 
 contract AddressIndex {
+
     event LogNewMaster(address indexed master);
     event LogUpdateMaster(address indexed master);
-    event LogNewCheck(uint256 indexed accountVersion, address indexed check);
-    event LogNewAccount(
-        address indexed _newAccount,
-        address indexed _connectors,
-        address indexed _check
-    );
+    event LogNewCheck(uint indexed accountVersion, address indexed check);
+    event LogNewAccount(address indexed _newAccount, address indexed _connectors, address indexed _check);
 
     // New Master Address.
     address private newMaster;
@@ -41,17 +32,17 @@ contract AddressIndex {
     address public list;
 
     // Connectors Modules(Account Module Version => Connectors Registry Module Address).
-    mapping(uint256 => address) public connectors;
+    mapping (uint => address) public connectors;
     // Check Modules(Account Module Version => Check Module Address).
-    mapping(uint256 => address) public check;
+    mapping (uint => address) public check;
     // Account Modules(Account Module Version => Account Module Address).
-    mapping(uint256 => address) public account;
+    mapping (uint => address) public account;
     // Version Count of Account Modules.
-    uint256 public versionCount;
+    uint public versionCount;
 
     /**
-     * @dev Throws if the sender not is Master Address.
-     */
+    * @dev Throws if the sender not is Master Address.
+    */
     modifier isMaster() {
         require(msg.sender == master, "not-master");
         _;
@@ -82,10 +73,7 @@ contract AddressIndex {
      * @param accountVersion Account Module version.
      * @param _newCheck The New Check Address.
      */
-    function changeCheck(uint256 accountVersion, address _newCheck)
-        external
-        isMaster
-    {
+    function changeCheck(uint accountVersion, address _newCheck) external isMaster {
         require(_newCheck != check[accountVersion], "already-a-check");
         check[accountVersion] = _newCheck;
         emit LogNewCheck(accountVersion, _newCheck);
@@ -97,22 +85,16 @@ contract AddressIndex {
      * @param _connectors Connectors Registry Module Address.
      * @param _check Check Module Address.
      */
-    function addNewAccount(
-        address _newAccount,
-        address _connectors,
-        address _check
-    ) external isMaster {
+    function addNewAccount(address _newAccount, address _connectors, address _check) external isMaster {
         require(_newAccount != address(0), "not-valid-address");
         versionCount++;
-        require(
-            AccountInterface(_newAccount).version() == versionCount,
-            "not-valid-version"
-        );
+        require(AccountInterface(_newAccount).version() == versionCount, "not-valid-version");
         account[versionCount] = _newAccount;
         if (_connectors != address(0)) connectors[versionCount] = _connectors;
         if (_check != address(0)) check[versionCount] = _check;
         emit LogNewAccount(_newAccount, _connectors, _check);
     }
+
 }
 
 contract CloneFactory is AddressIndex {
@@ -120,20 +102,14 @@ contract CloneFactory is AddressIndex {
      * @dev Clone a new Account Module.
      * @param version Account Module version to clone.
      */
-    function createClone(uint256 version) internal returns (address result) {
+    function createClone(uint version) internal returns (address result) {
         bytes20 targetBytes = bytes20(account[version]);
         // solium-disable-next-line security/no-inline-assembly
         assembly {
             let clone := mload(0x40)
-            mstore(
-                clone,
-                0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000
-            )
+            mstore(clone, 0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000)
             mstore(add(clone, 0x14), targetBytes)
-            mstore(
-                add(clone, 0x28),
-                0x5af43d82803e903d91602b57fd5bf30000000000000000000000000000000000
-            )
+            mstore(add(clone, 0x28), 0x5af43d82803e903d91602b57fd5bf30000000000000000000000000000000000)
             result := create(0, clone, 0x37)
         }
     }
@@ -143,24 +119,14 @@ contract CloneFactory is AddressIndex {
      * @param version Account Module version.
      * @param query Account Module Address.
      */
-    function isClone(uint256 version, address query)
-        external
-        view
-        returns (bool result)
-    {
+    function isClone(uint version, address query) external view returns (bool result) {
         bytes20 targetBytes = bytes20(account[version]);
         // solium-disable-next-line security/no-inline-assembly
         assembly {
             let clone := mload(0x40)
-            mstore(
-                clone,
-                0x363d3d373d3d3d363d7300000000000000000000000000000000000000000000
-            )
+            mstore(clone, 0x363d3d373d3d3d363d7300000000000000000000000000000000000000000000)
             mstore(add(clone, 0xa), targetBytes)
-            mstore(
-                add(clone, 0x1e),
-                0x5af43d82803e903d91602b57fd5bf30000000000000000000000000000000000
-            )
+            mstore(add(clone, 0x1e), 0x5af43d82803e903d91602b57fd5bf30000000000000000000000000000000000)
 
             let other := add(clone, 0x40)
             extcodecopy(query, other, 0, 0x2d)
@@ -173,12 +139,8 @@ contract CloneFactory is AddressIndex {
 }
 
 contract InstaIndex is CloneFactory {
-    event LogAccountCreated(
-        address sender,
-        address indexed owner,
-        address indexed account,
-        address indexed origin
-    );
+
+    event LogAccountCreated(address sender, address indexed owner, address indexed account, address indexed origin);
 
     /**
      * @dev Create a new DeFi Smart Account for a user and run cast function in the new Smart Account.
@@ -190,18 +152,13 @@ contract InstaIndex is CloneFactory {
      */
     function buildWithCast(
         address _owner,
-        uint256 accountVersion,
+        uint accountVersion,
         address[] calldata _targets,
         bytes[] calldata _datas,
         address _origin
     ) external payable returns (address _account) {
         _account = build(_owner, accountVersion, _origin);
-        if (_targets.length > 0)
-            AccountInterface(_account).cast{value: msg.value}(
-                _targets,
-                _datas,
-                _origin
-            );
+        if (_targets.length > 0) AccountInterface(_account).cast{value: msg.value}(_targets, _datas, _origin);
     }
 
     /**
@@ -212,13 +169,10 @@ contract InstaIndex is CloneFactory {
      */
     function build(
         address _owner,
-        uint256 accountVersion,
+        uint accountVersion,
         address _origin
     ) public returns (address _account) {
-        require(
-            accountVersion != 0 && accountVersion <= versionCount,
-            "not-valid-account"
-        );
+        require(accountVersion != 0 && accountVersion <= versionCount, "not-valid-account");
         _account = createClone(accountVersion);
         ListInterface(list).init(_account);
         AccountInterface(_account).enable(_owner);
@@ -240,10 +194,10 @@ contract InstaIndex is CloneFactory {
     ) external {
         require(
             master == address(0) &&
-                list == address(0) &&
-                account[1] == address(0) &&
-                connectors[1] == address(0) &&
-                versionCount == 0,
+            list == address(0) &&
+            account[1] == address(0) &&
+            connectors[1] == address(0) &&
+            versionCount == 0,
             "already-defined"
         );
         master = _master;
@@ -252,4 +206,5 @@ contract InstaIndex is CloneFactory {
         account[versionCount] = _account;
         connectors[versionCount] = _connectors;
     }
+
 }

@@ -460,14 +460,11 @@ describe("Mainnet", function () {
     });
 
     it("Should new connector", async function () {
-      await deployConnector(
-        {
-          connectorName: "authV1",
-          contract: "ConnectV2Auth",
-          factory: ConnectV2Auth__factory,
-        },
-        [INSTA_LIST]
-      );
+      await deployConnector({
+        connectorName: "authV1",
+        contract: "ConnectV2Auth",
+        factory: ConnectV2Auth__factory,
+      }, [INSTA_LIST]);
       expect(!!addresses.connectors["authV1"]).to.be.true;
       await instaConnectorsV2
         .connect(masterSigner)
@@ -538,12 +535,8 @@ describe("Mainnet", function () {
         ConnectCompound__factory,
         []
       );
-      authV3 = await deployContract(masterSigner, ConnectV2Auth__factory, [
-        INSTA_LIST,
-      ]);
-      authV4 = await deployContract(masterSigner, ConnectV2Auth__factory, [
-        INSTA_LIST,
-      ]);
+      authV3 = await deployContract(masterSigner, ConnectV2Auth__factory, [INSTA_LIST]);
+      authV4 = await deployContract(masterSigner, ConnectV2Auth__factory, [INSTA_LIST]);
       compound2 = await deployContract(
         masterSigner,
         ConnectCompound__factory,

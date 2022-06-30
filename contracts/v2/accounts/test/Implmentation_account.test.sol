@@ -29,6 +29,32 @@ contract Record is CommonSetup {
     event LogEnableUser(address indexed user);
     event LogPayEther(uint256 amt);
 
+    // /**
+    //  * @dev Check for Auth if enabled.
+    //  * @param user address/user/owner.
+    //  */
+    // function isAuth(address user) public view returns (bool) {
+    //     return auth[user];
+    // }
+
+    // /**
+    //  * @dev Enable New User.
+    //  * @param user Owner of the Smart Account.
+    //  */
+    // function enable(address user) public {
+    //     require(
+    //         msg.sender == address(this) ||
+    //             msg.sender == instaIndex ||
+    //             isAuth(msg.sender),
+    //         "not-self-index"
+    //     );
+    //     require(user != address(0), "not-valid");
+    //     require(!auth[user], "already-enabled");
+    //     auth[user] = true;
+    //     ListInterface(IndexInterface(instaIndex).list()).addAuth(user);
+    //     emit LogEnableUser(user);
+    // }
+
     /**
      * @dev Test function to check transfer of ether, should not be used.
      * @param _account account module address.

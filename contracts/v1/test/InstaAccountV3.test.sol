@@ -7,9 +7,12 @@ pragma experimental ABIEncoderV2;
  */
 
 contract Record {
-    uint256 public constant version = 3;
+    uint public constant version = 3;
+
 }
 
 contract InstaAccountV3 is Record {
+
     receive() external payable {}
+
 }

@@ -5,34 +5,38 @@ pragma solidity ^0.7.0;
  * @dev Registry for Connectors.
  */
 
+
 interface IndexInterface {
     function master() external view returns (address);
 }
 
 interface ConnectorInterface {
-    function connectorID() external view returns (uint256 _type, uint256 _id);
-
+    function connectorID() external view returns(uint _type, uint _id);
     function name() external view returns (string memory);
 }
 
+
 contract DSMath {
-    function add(uint256 x, uint256 y) internal pure returns (uint256 z) {
+
+    function add(uint x, uint y) internal pure returns (uint z) {
         require((z = x + y) >= x, "ds-math-add-overflow");
     }
 
-    function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
+    function sub(uint x, uint y) internal pure returns (uint z) {
         require((z = x - y) <= x, "ds-math-sub-underflow");
     }
+
 }
 
 contract Controllers is DSMath {
+
     event LogAddController(address indexed addr);
     event LogRemoveController(address indexed addr);
 
     // InstaIndex Address.
     address public immutable instaIndex;
 
-    constructor(address _instaIndex) {
+    constructor (address _instaIndex) {
         instaIndex = _instaIndex;
     }
 
@@ -44,22 +48,18 @@ contract Controllers is DSMath {
     mapping(address => bool) public staticConnectors;
 
     /**
-     * @dev Throws if the sender not is Master Address from InstaIndex
-     * or Enabled Chief.
-     */
-    modifier isChief() {
-        require(
-            chief[msg.sender] ||
-                msg.sender == IndexInterface(instaIndex).master(),
-            "not-an-chief"
-        );
+    * @dev Throws if the sender not is Master Address from InstaIndex
+    * or Enabled Chief.
+    */
+    modifier isChief {
+        require(chief[msg.sender] || msg.sender == IndexInterface(instaIndex).master(), "not-an-chief");
         _;
     }
 
     /**
      * @dev Enable a Chief.
      * @param _userAddress Chief Address.
-     */
+    */
     function enableChief(address _userAddress) external isChief {
         chief[_userAddress] = true;
         emit LogAddController(_userAddress);
@@ -68,29 +68,33 @@ contract Controllers is DSMath {
     /**
      * @dev Disables a Chief.
      * @param _userAddress Chief Address.
-     */
+    */
     function disableChief(address _userAddress) external isChief {
         delete chief[_userAddress];
         emit LogRemoveController(_userAddress);
     }
+
 }
 
+
 contract Listings is Controllers {
-    constructor(address _instaIndex) Controllers(_instaIndex) {}
+
+    constructor (address _instaIndex) Controllers(_instaIndex) {
+    }
 
     // Connectors Array.
     address[] public connectorArray;
     // Count of Connector's Enabled.
-    uint256 public connectorCount;
+    uint public connectorCount;
 
     /**
      * @dev Add Connector to Connector's array.
      * @param _connector Connector Address.
-     **/
+    **/
     function addToArr(address _connector) internal {
         require(_connector != address(0), "Not-valid-connector");
-        (, uint256 _id) = ConnectorInterface(_connector).connectorID();
-        require(_id == (connectorArray.length + 1), "ConnectorID-doesnt-match");
+        (, uint _id) = ConnectorInterface(_connector).connectorID();
+        require(_id == (connectorArray.length+1),"ConnectorID-doesnt-match");
         ConnectorInterface(_connector).name(); // Checking if connector has function name()
         connectorArray.push(_connector);
     }
@@ -101,21 +105,22 @@ contract Listings is Controllers {
     /**
      * @dev Add Connector to Static Connector's array.
      * @param _connector Static Connector Address.
-     **/
+    **/
     function addToArrStatic(address _connector) internal {
         require(_connector != address(0), "Not-valid-connector");
-        (, uint256 _id) = ConnectorInterface(_connector).connectorID();
-        require(
-            _id == (staticConnectorArray.length + 1),
-            "ConnectorID-doesnt-match"
-        );
+        (, uint _id) = ConnectorInterface(_connector).connectorID();
+        require(_id == (staticConnectorArray.length+1),"ConnectorID-doesnt-match");
         ConnectorInterface(_connector).name(); // Checking if connector has function name()
         staticConnectorArray.push(_connector);
     }
+
 }
 
+
 contract InstaConnectorsTest is Listings {
-    constructor(address _instaIndex) public Listings(_instaIndex) {}
+
+    constructor (address _instaIndex) public Listings(_instaIndex) {
+    }
 
     event LogEnable(address indexed connector);
     event LogDisable(address indexed connector);
@@ -124,7 +129,7 @@ contract InstaConnectorsTest is Listings {
     /**
      * @dev Enable Connector.
      * @param _connector Connector Address.
-     */
+    */
     function enable(address _connector) external isChief {
         require(!connectors[_connector], "already-enabled");
         addToArr(_connector);
@@ -132,11 +137,10 @@ contract InstaConnectorsTest is Listings {
         connectorCount++;
         emit LogEnable(_connector);
     }
-
     /**
      * @dev Disable Connector.
      * @param _connector Connector Address.
-     */
+    */
     function disable(address _connector) external isChief {
         require(connectors[_connector], "already-disabled");
         delete connectors[_connector];
@@ -147,7 +151,7 @@ contract InstaConnectorsTest is Listings {
     /**
      * @dev Enable Static Connector.
      * @param _connector Static Connector Address.
-     */
+    */
     function enableStatic(address _connector) external isChief {
         require(!staticConnectors[_connector], "already-enabled");
         addToArrStatic(_connector);
@@ -155,29 +159,21 @@ contract InstaConnectorsTest is Listings {
         emit LogEnableStatic(_connector);
     }
 
-    /**
+     /**
      * @dev Check if Connector addresses are enabled.
      * @param _connectors Array of Connector Addresses.
-     */
-    function isConnector(address[] calldata _connectors)
-        external
-        view
-        returns (bool isOk)
-    {
+    */
+    function isConnector(address[] calldata _connectors) external view returns (bool isOk) {
         isOk = true;
     }
 
     /**
      * @dev Check if Connector addresses are static enabled.
      * @param _connectors Array of Connector Addresses.
-     */
-    function isStaticConnector(address[] calldata _connectors)
-        external
-        view
-        returns (bool isOk)
-    {
+    */
+    function isStaticConnector(address[] calldata _connectors) external view returns (bool isOk) {
         isOk = true;
-        for (uint256 i = 0; i < _connectors.length; i++) {
+        for (uint i = 0; i < _connectors.length; i++) {
             if (!staticConnectors[_connectors[i]]) {
                 isOk = false;
                 break;
@@ -187,15 +183,15 @@ contract InstaConnectorsTest is Listings {
 
     /**
      * @dev get Connector's Array length.
-     */
-    function connectorLength() external view returns (uint256) {
+    */
+    function connectorLength() external view returns (uint) {
         return connectorArray.length;
     }
 
     /**
      * @dev get Static Connector's Array length.
-     */
-    function staticConnectorLength() external view returns (uint256) {
+    */
+    function staticConnectorLength() external view returns (uint) {
         return staticConnectorArray.length;
     }
 }

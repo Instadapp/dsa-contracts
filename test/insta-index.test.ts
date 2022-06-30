@@ -561,3 +561,15 @@ describe("InstaIndex", function () {
     });
   });
 });
+
+/**
+ * TODOS
+ * - BuildWithCast
+ * - Including time taken for test --> check constraints due to solcover
+ */
+
+
+/**
+ * Uncovered
+ * - BuildWithCast
+ */

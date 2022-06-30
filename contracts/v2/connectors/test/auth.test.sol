@@ -8,7 +8,6 @@ pragma experimental ABIEncoderV2;
 
 interface AccountInterface {
     function enable(address) external;
-
     function disable(address) external;
 }
 
@@ -35,39 +34,32 @@ interface ListInterface {
         address next;
     }
 
-    function accounts() external view returns (uint256);
-
+    function accounts() external view returns (uint);
     function accountID(address) external view returns (uint64);
-
     function accountAddr(uint64) external view returns (address);
-
     function userLink(address) external view returns (UserLink memory);
-
     function userList(address, uint64) external view returns (UserList memory);
-
     function accountLink(uint64) external view returns (AccountLink memory);
-
-    function accountList(uint64, address)
-        external
-        view
-        returns (AccountList memory);
+    function accountList(uint64, address) external view returns (AccountList memory);
 }
+
 
 contract Basics {
     /**
      * @dev Return Address.
-     */
+    */
     address public immutable instaList;
 
     constructor(address _instaList) {
         instaList = _instaList;
     }
+
 }
 
 contract Helpers is Basics {
     constructor(address _instaList) Basics(_instaList) {}
 
-    function checkAuthCount() internal view returns (uint256 count) {
+    function checkAuthCount() internal view returns (uint count) {
         ListInterface listContract = ListInterface(instaList);
         uint64 accountId = listContract.accountID(address(this));
         count = listContract.accountLink(accountId).count;
@@ -84,11 +76,7 @@ contract Auth is Helpers {
      * @dev Add New authority
      * @param authority authority Address.
      */
-    function add(address authority)
-        external
-        payable
-        returns (string memory _eventName, bytes memory _eventParam)
-    {
+    function add(address authority) external payable returns (string memory _eventName, bytes memory _eventParam) {
         AccountInterface(address(this)).enable(authority);
 
         emit LogAddAuth(msg.sender, authority);
@@ -102,11 +90,7 @@ contract Auth is Helpers {
      * @dev Remove authority
      * @param authority authority Address.
      */
-    function remove(address authority)
-        external
-        payable
-        returns (string memory _eventName, bytes memory _eventParam)
-    {
+    function remove(address authority) external payable returns (string memory _eventName, bytes memory _eventParam)  {
         require(checkAuthCount() > 1, "Removing-all-authorities");
         AccountInterface(address(this)).disable(authority);
 
@@ -116,10 +100,11 @@ contract Auth is Helpers {
         _eventName = "LogRemoveAuth(address,address)";
         _eventParam = abi.encode(msg.sender, authority);
     }
+
 }
+
 
 contract ConnectV2Auth is Auth {
     constructor(address _instaList) Auth(_instaList) {}
-
     string public constant name = "Auth-v1";
 }
