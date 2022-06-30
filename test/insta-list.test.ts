@@ -540,14 +540,3 @@ describe("InstaList", function () {
   });
 });
 
-// /**
-//  * TODOS
-//  * - Configure hardhat gas reporter for gas estimate, gas reporter currently showing - USD
-//  * - Configure solcover to include contracts calls which are used from artifacts --> including coverage_artifacts
-//  * - Including time taken for test --> check constraints due to solcover
-//  */
-
-/**
- * Uncovered
- * - DSMath overflows add, subtract
- */

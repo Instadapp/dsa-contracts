@@ -1050,23 +1050,6 @@ describe("InstaAccount v1", function () {
       );
       console.log("\tBasic:LogDepositEvent event fired...");
 
-      // expectEvent(
-      //   txDetails,
-      //   (await deployments.getArtifact("InstaEvent")).abi,
-      //   "LogEvent",
-      //   {
-      //     connectorType: "1",
-      //     connectorID: "1",
-      //     accountID: await instaList.accountID(dsaWallet1.address),
-      //     eventCode: web3.utils.keccak256(
-      //       "LogDeposit(address,uint256,uint256,uint256)"
-      //     ),
-      //     eventData: ethers.utils.defaultAbiCoder.encode(
-      //       ["address", "uint256", "uint256", "uint256"],
-      //       [ethAddr, ethers.utils.parseEther("5"), 0, 0]
-      //     ),
-      //   }
-      // );
       console.log("\tInstaEvent:LogEvent event fired...");
 
       expectEvent(
@@ -1279,58 +1262,6 @@ describe("InstaAccount v1", function () {
         }
       );
       console.log("\tBasic:LogDepositEvent event fired...");
-
-      // expectEvent(
-      //   txDetails,
-      //   (await deployments.getArtifact("InstaEvent")).abi,
-      //   "LogEvent",
-      //   {
-      //     connectorType: type,
-      //     connectorID: id,
-      //     accountID: await instaList.accountID(dsaWallet1.address),
-      //     eventCode: web3.utils.keccak256(
-      //       "LogDeposit(address,uint256,uint256,uint256)"
-      //     ),
-      //     eventData: ethers.utils.defaultAbiCoder.encode(
-      //       ["address", "uint256", "uint256", "uint256"],
-      //       [usdcAddr, bal, 0, 1]
-      //     ),
-      //   }
-      // );
-      // console.log("\tInstaEvent:LogEvent event fired...");
-
-      // expectEvent(
-      //   txDetails,
-      //   (await deployments.getArtifact("ConnectBasic")).abi,
-      //   "LogWithdraw",
-      //   {
-      //     erc20: usdcAddr,
-      //     tokenAmt: bal,
-      //     to: wallet0.address,
-      //     getId: "1",
-      //     setId: "0",
-      //   }
-      // );
-      // console.log("\tBasic:LogWithdrawEvent event fired...");
-
-      // expectEvent(
-      //   txDetails,
-      //   (await deployments.getArtifact("InstaEvent")).abi,
-      //   "LogEvent",
-      //   {
-      //     connectorType: type,
-      //     connectorID: id,
-      //     accountID: await instaList.accountID(dsaWallet1.address),
-      //     eventCode: web3.utils.keccak256(
-      //       "LogWithdraw(address,uint256,address,uint256,uint256)"
-      //     ),
-      //     eventData: ethers.utils.defaultAbiCoder.encode(
-      //       ["address", "uint256", "address", "uint256", "uint256"],
-      //       [ethAddr, ethers.utils.parseEther("10"), wallet0.address, 0, 0]
-      //     ),
-      //   }
-      // );
-      // console.log("\tInstaEvent:LogEvent event fired...");
 
       expectEvent(
         txDetails,
@@ -1779,7 +1710,3 @@ describe("InstaAccount v1", function () {
   });
 });
 
-//TODOS
-// - ConnectorArray check
-// - Multiple events fetch
-// - Removing all authorities should revert

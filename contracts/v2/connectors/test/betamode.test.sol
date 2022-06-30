@@ -6,9 +6,13 @@ pragma solidity ^0.7.0;
 
 interface AccountInterface {
     function enable(address) external;
+
     function disable(address) external;
+
     function isAuth(address) external view returns (bool);
+
     function isBeta() external view returns (bool);
+
     function toggleBeta() external;
 }
 
@@ -22,7 +26,11 @@ abstract contract Resolver is Events {
      * @dev Enable beta mode
      * @notice enabling beta mode gives early access to new/risky features
      */
-    function enable() external payable returns (string memory _eventName, bytes memory _eventParam) {
+    function enable()
+        external
+        payable
+        returns (string memory _eventName, bytes memory _eventParam)
+    {
         AccountInterface _dsa = AccountInterface(address(this));
         require(!_dsa.isBeta(), "beta-already-enabled");
         _dsa.toggleBeta();
@@ -34,8 +42,12 @@ abstract contract Resolver is Events {
      * @dev Disable beta mode
      * @notice disabling beta mode removes early access to new/risky features
      */
-    function disable() external payable returns (string memory _eventName, bytes memory _eventParam) {
-         AccountInterface _dsa = AccountInterface(address(this));
+    function disable()
+        external
+        payable
+        returns (string memory _eventName, bytes memory _eventParam)
+    {
+        AccountInterface _dsa = AccountInterface(address(this));
         require(_dsa.isBeta(), "beta-already-disabled");
         _dsa.toggleBeta();
 
