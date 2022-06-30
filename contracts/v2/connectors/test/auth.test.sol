@@ -46,23 +46,28 @@ interface ListInterface {
 
 contract Basics {
     /**
-     * @dev Return InstaList Address.
+     * @dev Return Address.
     */
-    function getListAddr() internal pure returns (address) {
-        return 0x4c8a1BEb8a87765788946D6B19C6C6355194AbEb;
+    address public immutable instaList;
+
+    constructor(address _instaList) {
+        instaList = _instaList;
     }
 
 }
 
 contract Helpers is Basics {
+    constructor(address _instaList) Basics(_instaList) {}
+
     function checkAuthCount() internal view returns (uint count) {
-        ListInterface listContract = ListInterface(getListAddr());
+        ListInterface listContract = ListInterface(instaList);
         uint64 accountId = listContract.accountID(address(this));
         count = listContract.accountLink(accountId).count;
     }
 }
 
 contract Auth is Helpers {
+    constructor(address _instaList) Helpers(_instaList) {}
 
     event LogAddAuth(address indexed _msgSender, address indexed _authority);
     event LogRemoveAuth(address indexed _msgSender, address indexed _authority);
@@ -100,5 +105,6 @@ contract Auth is Helpers {
 
 
 contract ConnectV2Auth is Auth {
+    constructor(address _instaList) Auth(_instaList) {}
     string public constant name = "Auth-v1";
 }

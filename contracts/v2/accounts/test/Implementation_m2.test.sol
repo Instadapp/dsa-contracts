@@ -29,10 +29,10 @@ interface CheckInterface {
 contract InstaImplementationM2 {
     address internal immutable instaIndex;
     // Connnectors Address.
-    address public immutable connectorsM1;
+    address public immutable connectorsM2;
 
     constructor(address _instaIndex, address _connectors) {
-        connectorsM1 = _connectors;
+        connectorsM2 = _connectors;
         instaIndex = _instaIndex;
     }
     
@@ -102,7 +102,7 @@ contract InstaImplementationM2 {
         string[] memory eventNames = new string[](_length);
         bytes[] memory eventParams = new bytes[](_length);
 
-        (bool isOk, address[] memory _targets) = ConnectorsInterface(connectorsM1).isConnectors(_targetNames);
+        (bool isOk, address[] memory _targets) = ConnectorsInterface(connectorsM2).isConnectors(_targetNames);
         require(isOk, "1: not-connector");
         
         for (uint i = 0; i < _targets.length; i++) {

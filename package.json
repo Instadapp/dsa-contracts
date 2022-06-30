@@ -7,7 +7,7 @@
   },
   "scripts": {
     "test": "hardhat test",
-    "coverage": "hardhat coverage --testfiles 'test/core.test.js'",
+    "coverage": "hardhat coverage --solcoverjs .solcover.ts --testfiles 'test/**.test.ts'",
     "compile": "hardhat compile"
   },
   "repository": {
@@ -54,8 +54,8 @@
     "ethereum-waffle": "^3.2.1",
     "ethers": "^5.0.26",
     "hardhat": "^2.0.8",
-    "hardhat-gas-reporter": "^1.0.4",
-    "solidity-coverage": "^0.7.14",
+    "hardhat-gas-reporter": "^1.0.8",
+    "solidity-coverage": "^0.7.21",
     "ts-node": "^10.4.0",
     "typescript": "^4.5.4"
   }

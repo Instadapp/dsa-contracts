@@ -4,11 +4,11 @@ import addresses from "./constant/addresses";
 import hre from "hardhat";
 const { ethers } = hre;
 
-export default async function ({ connectorName, contract, factory }) {
+export default async function ({ connectorName, contract, factory }, args?) {
   const ConnectorInstance = <typeof factory>(
     await ethers.getContractFactory(contract)
   );
-  const connectorInstance = await ConnectorInstance.deploy();
+  const connectorInstance = await ConnectorInstance.deploy(...args);
   await connectorInstance.deployed();
 
   console.log(`${connectorName} Deployed: ${connectorInstance.address}`);
