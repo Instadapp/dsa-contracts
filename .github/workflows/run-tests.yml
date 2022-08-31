@@ -1,6 +1,7 @@
 name: Run tests
 
 on:
+  workflow_dispatch:
   pull_request_target:
     types: [assigned, opened, synchronize, reopened]
 
@@ -26,13 +27,20 @@ jobs:
           path: |
             node_modules
             */*/node_modules
-          key: ${{ runner.os }}-${{ matrix.node_version }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - name: Install Dependencies
         run: |
           npm install
-      - name: Compile
-        run: |
-          npm run compile
       - name: Run tests
         run: |
+          npx hardhat typechain
           npm run test
+        env:
+          networkType: mainnet
+          ALCHEMY_ID: ${{ secrets.ALCHEMY_ID }}
+      - name: Check Test Coverage
+        run: |
+          npm run coverage
+        env:
+          networkType: mainnet
+          ALCHEMY_ID: ${{ secrets.ALCHEMY_ID }}
