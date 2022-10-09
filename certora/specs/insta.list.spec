@@ -1,20 +1,13 @@
 /*
 Specification file for insta index smart contract verifcation using certora. 
 Run the spec using:
-    certoraRun contracts/registry/index.sol:InstaIndex contracts/registry/list.sol:InstaList --verify InstaIndex:certora/specs/insta.index.spec  --link InstaIndex:list=InstaList
+    certoraRun contracts/registry/list.sol:InstaList contracts/registry/index.sol:InstaIndex --verify InstaList:certora/specs/insta.list.spec  --link InstaList:index=InstaIndex
 */
 
 using InstaIndex as index
 
 methods {
     instaIndex() returns address envfree => CONSTANT
-    changeCheck(uint256, address)
-    connectors(uint256) returns address envfree
-    account(uint256) returns address envfree
-    check(uint256) returns address envfree
-    version() returns uint256 envfree => PER_CALLEE_CONSTANT
-    isClone(uint256, address) returns bool envfree
-    versionCount() returns uint256 envfree
     accounts() returns uint64 envfree
     accountID(address) returns uint64 envfree
     accountAddr(uint64) returns address envfree
@@ -24,89 +17,59 @@ methods {
     accountList(uint64,address) envfree
 }
 
-ghost address _master;
-ghost address oldMaster;
-
-hook Sstore master address master_ (address oldMaster_) STORAGE {
-    oldMaster = oldMaster_;
-    _master = master_;
-}
-
-function calledByMaster(env e) returns bool { return e.msg.sender == _master;}
-function cantBeZero(address addr) { require(addr != 0); }
-invariant masterNonZero() master() != 0
-invariant versionCountNotZero() versionCount() != 0
-
-rule integrityChange { 
-    method f;
-    env e;
-
-    assert f.selector == changeCheck(uint256,address).selector || f.selector == changeMaster(address).selector || f.selector == addNewAccount(address, address, address).selector => calledByMaster(e) == true; 
-}
-
-rule masterCanBeChangedByMaster {
-    env e;
-    method f;
-    calldataarg args;
-
-    cantBeZero(master());
-    require master() == _master;
-    address old_ = master();
-
-    f(e, args);
-
-    assert f.selector == updateMaster().selector => master() == _master && oldMaster == old_ && master() == e.msg.sender;
-}
-
-rule integrityChangeCheck(address newCheck, uint256 accountVersion) {
-    env e;
-    cantBeZero(newCheck);
-
-    address oldCheck = check(accountVersion);
-    require oldCheck != newCheck;
-    changeCheck(e,accountVersion, newCheck);
-
-    assert (check(accountVersion) == newCheck, "check-not-changed-as-expected");
-}
-
-rule integrityAddAccount {
-    env e;
-    address _newAccount;
-    address _connectors;
-    address _check;
-
-    cantBeZero(_newAccount);
-
-    require(account(versionCount()) != 0);
-    /* require(_newAccount.version() == versionCount()) */
-
-    uint256 _oldVersion = versionCount();
-    address _oldAccount = account(_oldVersion + 1);
-
-    addNewAccount(e, _newAccount, _connectors, _check);
-    uint256 _newVersion = versionCount();
-    address _newAccnt = account(_newVersion);
-
-    assert(_newVersion == _oldVersion + 1, "version-didn't-upgrade");
-    assert(_newAccnt == _newAccount, "account-not-added");
-    assert(connectors(_newVersion) == _connectors, "connectors-not-updated");
-    assert(check(_newVersion) == _check, "check-module-not-updated");
-}
-
-rule integrityBuild {
+/*
+should update the links and lists
+*/
+rule integrityAddAuth { 
     env e;
     address _owner;
-    uint256 _version;
-    address _origin;
 
-    require(_version != 0 && _version <= versionCount());
-    uint64 accounts_before = list.accounts();
-    address _dsa = build(e, _owner, _version, _origin);
-    uint64 accounts_after = list.accounts();
-    
-    assert(isClone(_version, _dsa) == true, "not-cloned");
-    assert(accounts_after == accounts_before + 1, "account-count-mismatch");
-    assert(list.accountID(_dsa) != 0, "not-dsa");
-    assert(list.accountAddr(accounts_after) == _dsa, "dsaID-mismatch"); 
+    cantBeZero(_owner);
+    require(accountID(e.msg.sender) != 0 );
+
+    uint64 user_count_before = userLink(_owner).count;
+    uint64 prev_accnt = userLink(_owner).last;
+    uint64 accnt_count_before = accountLink(accountID(e.msg.sender)).count;
+    address prev_user = accountLink(accountID(e.msg.sender)).last;
+
+    addAuth(e,_owner);
+
+    uint64 user_count_after = userLink(_owner).count;
+    uint64 last_accnt = userLink(_owner).last;
+    uint64 accnt_count_after = accountLink(accountID(e.msg.sender)).count;
+    address last_user = accountLink(accountID(e.msg.sender)).last;
+
+    assert(user_count_after == user_count_before + 1, "user not added");
+    assert(accnt_count_after == accnt_count_before + 1, "account not added");
+    assert(userList(_owner, prev_accnt).next == accountID(e.msg.sender), "account not added");
+    assert(accountList(_owner, prev_user).next == _owner, "user not added");
+    assert(last_user == _owner, "accountLink not updated");
+    assert(last_accnt == accountID(e.msg.sender), "last account not updated");
+    assert(last_user == _owner, "last user not updated");
+}
+
+rule integrityRemoveAuth{
+    env e;
+    address _owner;
+
+    cantBeZero(_owner);
+    require(accountID(e.msg.sender) != 0 );
+
+    uint64 user_count_before = userLink(_owner).count;
+    uint64 prev_accnt = userLink(_owner).last;
+    uint64 accnt_count_before = accountLink(accountID(e.msg.sender)).count;
+    address prev_user = accountLink(accountID(e.msg.sender)).last;
+
+    addAuth(e,_owner);
+
+    uint64 user_count_after = userLink(_owner).count;
+    uint64 last_accnt = userLink(_owner).last;
+    uint64 accnt_count_after = accountLink(accountID(e.msg.sender)).count;
+    address last_user = accountLink(accountID(e.msg.sender)).last;
+
+    assert(user_count_after == user_count_before - 1, "user not removed");
+    assert(accnt_count_after == accnt_count_before - 1, "account not removed");
+    assert(userList(_owner, prev_accnt).prev == last_accnt, "account not added");
+    assert(accountList(_owner, prev_user).prev == last_user, "user not added");
 }
 

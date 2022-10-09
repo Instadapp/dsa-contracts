@@ -21,6 +21,7 @@ coverage.json
 coverage
 public/css/main.css
 .nyc_output/*
+.certora_internal
 
 # API keys and secrets
 .env
