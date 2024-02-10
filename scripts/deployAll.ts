@@ -123,6 +123,43 @@ async function main() {
   console.log("###########\n");
 
   if (hre.network.name === "mainnet" || hre.network.name === "kovan") {
+    // InstaIndex
+    await hre.run("verify:verify", {
+      address: instaIndex.address,
+      constructorArguments: [],
+    });
+
+    // InstaList
+    await hre.run("verify:verify", {
+      address: instaList.address,
+      constructorArguments: [instaIndex.address],
+    });
+
+    // InstaAccount
+    await hre.run("verify:verify", {
+      address: instaAccount.address,
+      constructorArguments: [instaIndex.address],
+    });
+
+    // InstaConnectors
+    await hre.run("verify:verify", {
+      address: instaConnectors.address,
+      constructorArguments: [instaIndex.address],
+    });
+
+    // InstaEvent
+    await hre.run("verify:verify", {
+      address: instaEvent.address,
+      constructorArguments: [instaList.address],
+    });
+
+    // InstaMemory
+    await hre.run("verify:verify", {
+      address: instaMemory.address,
+      constructorArguments: [],
+    });
+
+    // v2
     await hre.run("verify:verify", {
       address: instaConnectorsV2Impl.address,
       constructorArguments: [],
