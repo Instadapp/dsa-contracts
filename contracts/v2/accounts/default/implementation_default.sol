@@ -220,7 +220,9 @@ contract Record is Constants {
         } else {
             address signer = ECDSA.recover(hash, signature);
 
-            require(_auth[signer], "invalid-EIP-1271-signature");
+            if (!_auth[signer]) {
+                require(_signedMessages[hash], "invalid-EIP-1271-signature");
+            }
         }
 
         return EIP1271_MAGIC_VALUE;
