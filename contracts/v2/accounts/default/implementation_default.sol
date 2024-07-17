@@ -208,7 +208,7 @@ contract Record is Constants {
      * @param signature Signature byte array associated with data
     */
     function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4 magicValue) {
-        // hashing with domain separator mitigates any potential replaying on other networks or other Avocados of the same owner
+        // hashing with domain separator mitigates any potential replaying on other networks or other DSA of the same owner
         hash = ECDSA.toTypedDataHash(
             domainSeparatorV4(),
             keccak256(abi.encode(EIP1271_TYPE_HASH, hash))
