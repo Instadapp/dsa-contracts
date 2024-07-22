@@ -97,6 +97,11 @@ const config = {
       url: "https://rpc.ankr.com/scroll",
       accounts: !!PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : { mnemonic },
       timeout: 150000,
+    },
+    gnosis: {
+      url: "https://rpc.ankr.com/gnosis",
+      accounts: !!PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : { mnemonic },
+      timeout: 150000,
     }
   },
   solidity: {
@@ -133,6 +138,8 @@ const config = {
       mainnet: process.env.ETHERSCAN,
       scroll: process.env.SCROLL_API_KEY || "",
       base: process.env.BASE_API_KEY || "",
+      xdai: process.env.GNOSIS_API_KEY || "",
+      gnosis: process.env.GNOSIS_API_KEY || "",
     },
     customChains: [
       {

@@ -15,24 +15,24 @@ async function main() {
 
   console.log(" Deploying Contracts to", hre.network.name, "...");
 
-  const deployedContract = {
-    // "InstaIndex": "0x6CE3e607C808b4f4C26B7F6aDAeB619e49CAbb25",
-    // "InstaList": "0x9926955e0Dd681Dc303370C52f4Ad0a4dd061687",
+  const deployedContract =  {
+    // "InstaIndex": "0x17417f8cA2f6e4Ad49F9B561a66D3dE7DdE6db1c",
+    // "InstaList": "0xdF791173aFd1798718D7d1dd6E37366D1907bB02",
     "versions": {
       "v1": {
-        // "InstaAccount": "0xA9B99766E6C676Cf1975c0D3166F96C0848fF5ad",
-        // "InstaConnectors": "0x839c2D3aDe63DF5b0b8F3E57D5e145057Ab41556",
-        // "InstaEvent": "0xA7c805e4ad4E7B51d2a1eB442B2014a9B63D3703",
-        // "InstaMemory": "0x3254Ce8f5b1c82431B8f21Df01918342215825C2"
+        // "InstaAccount": "0x497Bc53507DF17e60F731e9534cff74E8BC9DBb8",
+        // "InstaConnectors": "0xcD7661f786D5fd6b87ee33497Dd9cCD3b2702012",
+        // "InstaEvent": "0x8358A92707824476f0d788075D53b627E85490a7",
+        // "InstaMemory": "0x89305678Cc853A929428fA6a97ab35bD864e3F14"
       },
       "v2": {
-      //   "InstaAccountV2": "0x0a0a82D2F86b9E46AE60E22FCE4e8b916F858Ddc",
-      //   "InstaConnectorsV2Proxy": "0x6C7256cf7C003dD85683339F75DdE9971f98f2FD",
-      //   "InstaConnectorsV2": "0x127d8cD0E2b2E0366D522DeA53A787bfE9002C14",
-      //   "InstaImplementations": "0x01fEF4d2B513C9F69E34b2f93Ef707FA9Ff60109",
-      //   "InstaDefaultImplementation": "0x39d3d5e7c11D61E072511485878dd84711c19d4A",
-      //   "InstaImplementationM1": "0x28846f4051EB05594B3fF9dE76b7B5bf00431155",
-      //   "InstaConnectorsV2EmptyImplementation": "0xa4bf319968986d2352fa1c550d781bbfcce3fcab" 
+        // "InstaAccountV2": "0xC7Cb1dE2721BFC0E0DA1b9D526bCdC54eF1C0eFC",
+        // "InstaConnectorsV2Proxy": "0x6f40d4A6237C257fff2dB00FA0510DeEECd303eb",
+        // "InstaConnectorsV2": "0x171aeB3Ba7F12E67d3D3e2f523e6C02E1670cD33",
+        // "InstaImplementations": "0x0204Cd037B2ec03605CFdFe482D8e257C765fA1B",
+        // "InstaDefaultImplementation": "0xf70FE590f1C47e327302bd13E615fE7d9608fae9",
+        // "InstaImplementationM1": "0x697860CeE594c577F18f71cAf3d8B68D913c7366",
+        // "InstaConnectorsV2EmptyImplementation": "0x31de2088f38ed7f8a4231de03973814eda1f8773"
       }
     }
   }
@@ -65,13 +65,13 @@ async function main() {
         throw new Error(`not vaild ${contractName}`)
     }
     console.log(contractName, deployedContractAddress)
-    await sleep(2000)
     
     if (deployedContractAddress) {
       const isDeployed = await ethers.provider.getCode(deployedContractAddress).then(a => a != "0x")
       if (!isDeployed) throw new Error("contract not deployed")
-      return await ethers.getContractAt(contractName, deployedContractAddress, deployer) 
+        return await ethers.getContractAt(contractName, deployedContractAddress, deployer) 
     } else {
+      await sleep(2000)
       return await instaDeployContract(contractName, constructorArguments);
     }
   }
@@ -133,59 +133,94 @@ async function main() {
     [instaIndex.address, instaConnectorsV2.address]
   );
 
-  console.log("\n########### setBasics ########");
+    {
+      console.log("\n########### setBasics ########");
+      const master = await instaIndex.functions.master()
+      if (master == ethers.constants.AddressZero) {
+        const setBasicsArgs: [string, string, string, string] = [
+          deployerAddress,
+          instaList.address,
+          instaAccount.address,
+          instaConnectors.address,
+        ];
+      
+        const tx = await instaIndex.setBasics(...setBasicsArgs);
+        const txDetails = await tx.wait();
+        console.log(`
+                status: ${txDetails.status == 1},
+                tx: ${txDetails.transactionHash},
+              `);
+      } else {
+        console.log("setBasis already initiated")
+      }
+      console.log("###########");
+    }
+   
+    {
+      console.log("\n########### Add DSAv2 Implementations ########");
 
-  const setBasicsArgs: [string, string, string, string] = [
-    deployerAddress,
-    instaList.address,
-    instaAccount.address,
-    instaConnectors.address,
-  ];
+      const defaultImplementation = await implementationsMapping.functions.defaultImplementation()
 
-  const tx = await instaIndex.setBasics(...setBasicsArgs);
-  const txDetails = await tx.wait();
-  console.log(`
-          status: ${txDetails.status == 1},
-          tx: ${txDetails.transactionHash},
-        `);
-  console.log("###########");
+      if (defaultImplementation == ethers.constants.AddressZero) {
+        let txSetDefaultImplementation = await implementationsMapping.setDefaultImplementation(
+          instaAccountV2DefaultImpl.address
+        );
+        let txSetDefaultImplementationDetails = await txSetDefaultImplementation.wait();
+      } else {
+        console.log("default implementation set")
+      }
 
-  console.log("\n########### Add DSAv2 Implementations ########");
-  let txSetDefaultImplementation = await implementationsMapping.setDefaultImplementation(
-    instaAccountV2DefaultImpl.address
-  );
-  let txSetDefaultImplementationDetails = await txSetDefaultImplementation.wait();
+      const implementationV1Args: [string, BytesLike[]] = [
+        instaAccountV2ImplM1.address,
+        ["cast(string[],bytes[],address)"].map((a) =>
+          web3.utils.keccak256(a).slice(0, 10)
+        ),
+      ];
 
-  const implementationV1Args: [string, BytesLike[]] = [
-    instaAccountV2ImplM1.address,
-    ["cast(string[],bytes[],address)"].map((a) =>
-      web3.utils.keccak256(a).slice(0, 10)
-    ),
-  ];
-  const txAddImplementation = await implementationsMapping.addImplementation(
-    ...implementationV1Args
-  );
-  const txAddImplementationDetails = await txAddImplementation.wait();
-  console.log(`
-        status: ${txAddImplementationDetails.status == 1},
-        tx: ${txAddImplementationDetails.transactionHash},
-      `);
-  console.log("###########\n");
+      const implementationAddress = await implementationsMapping.callStatic.getSigImplementation(implementationV1Args[1][0])
+      
+      if (implementationAddress == instaAccountV2ImplM1.address) {
+        console.log("instaAccountV2ImplM1 is set")
+      } else if (implementationAddress != instaAccountV2ImplM1.address) {
+        throw new Error("Wrong instaAccountV2ImplM1 is set")
+      } else {
+        const txAddImplementation = await implementationsMapping.addImplementation(
+          ...implementationV1Args
+        );
+        const txAddImplementationDetails = await txAddImplementation.wait();
+        console.log(`
+              status: ${txAddImplementationDetails.status == 1},
+              tx: ${txAddImplementationDetails.transactionHash},
+            `);
+        }
+        console.log("###########\n");
+    }
+    
+    {
+      console.log("\n\n########### Add DSAv2 ########");
+      
+      const instaAccountV2AddressOnInstaIndex = await instaIndex.callStatic.account(2)
 
-  console.log("\n\n########### Add DSAv2 ########");
-  const addNewAccountArgs: [string, string, string] = [
-    instaAccountV2Proxy.address,
-    instaConnectorsV2Proxy.address,
-    ethers.constants.AddressZero,
-  ];
-  const txAddNewAccount = await instaIndex.addNewAccount(...addNewAccountArgs);
-  const txDetailsAddNewAccount = await txAddNewAccount.wait();
-
-  console.log(`
-          status: ${txDetailsAddNewAccount.status == 1},
-          tx: ${txDetailsAddNewAccount.transactionHash},
-      `);
-  console.log("###########\n");
+      if (instaAccountV2AddressOnInstaIndex == instaAccountV2Proxy.address) {
+        console.log("InstaAccountV2Proxy set on InstaIndex")
+      } else if (instaAccountV2AddressOnInstaIndex != instaAccountV2Proxy.address) {
+        throw new Error("InstaAccountV2Proxy set wrong on InstaIndex")
+      } else {
+        const addNewAccountArgs: [string, string, string] = [
+          instaAccountV2Proxy.address,
+          instaConnectorsV2Proxy.address,
+          ethers.constants.AddressZero,
+        ];
+        const txAddNewAccount = await instaIndex.addNewAccount(...addNewAccountArgs);
+        const txDetailsAddNewAccount = await txAddNewAccount.wait();
+      
+        console.log(`
+                status: ${txDetailsAddNewAccount.status == 1},
+                tx: ${txDetailsAddNewAccount.transactionHash},
+            `);
+      }
+      console.log("###########\n");
+    }
 
   console.log("Contract Deployment",  JSON.stringify(
     {
@@ -211,42 +246,42 @@ async function main() {
     }, null, 2)
   )
 
-  if (hre.network.name === "mainnet" || hre.network.name === "kovan") {
+  if (hre.network.name != "hardhat") {
     // InstaIndex
     await hre.run("verify:verify", {
       address: instaIndex.address,
       constructorArguments: [],
-    });
+    }).catch(console.error)
 
     // InstaList
     await hre.run("verify:verify", {
       address: instaList.address,
       constructorArguments: [instaIndex.address],
-    });
+    }).catch(console.error)
 
     // InstaAccount
     await hre.run("verify:verify", {
       address: instaAccount.address,
       constructorArguments: [instaIndex.address],
-    });
+    }).catch(console.error)
 
     // InstaConnectors
     await hre.run("verify:verify", {
       address: instaConnectors.address,
       constructorArguments: [instaIndex.address],
-    });
+    }).catch(console.error)
 
     // InstaEvent
     await hre.run("verify:verify", {
       address: instaEvent.address,
       constructorArguments: [instaList.address],
-    });
+    }).catch(console.error)
 
     // InstaMemory
     await hre.run("verify:verify", {
       address: instaMemory.address,
       constructorArguments: [],
-    });
+    }).catch(console.error)
 
     // v2
     await hre.run("verify:verify", {
@@ -254,7 +289,8 @@ async function main() {
       constructorArguments: [],
       contract:
         "contracts/v2/proxy/dummyConnectorsImpl.sol:InstaConnectorsV2Impl",
-    });
+    }).catch(console.error)
+
     await hre.run("verify:verify", {
       address: instaConnectorsV2Proxy.address,
       constructorArguments: [
@@ -263,32 +299,32 @@ async function main() {
         "0x",
       ],
       contract: "contracts/v2/proxy/connectorsProxy.sol:InstaConnectorsV2Proxy",
-    });
+    }).catch(console.error)
 
     await hre.run("verify:verify", {
       address: instaConnectorsV2.address,
-      constructorArguments: [],
-    });
+      constructorArguments: [ instaIndex.address ],
+    }).catch(console.error)
 
     await hre.run("verify:verify", {
       address: implementationsMapping.address,
-      constructorArguments: [],
-    });
+      constructorArguments: [instaIndex.address],
+    }).catch(console.error)
 
     await hre.run("verify:verify", {
       address: instaAccountV2DefaultImpl.address,
-      constructorArguments: [],
-    });
+      constructorArguments: [instaIndex.address],
+    }).catch(console.error)
 
     await hre.run("verify:verify", {
       address: instaAccountV2ImplM1.address,
-      constructorArguments: [instaConnectorsV2.address],
-    });
+      constructorArguments: [instaIndex.address, instaConnectorsV2.address],
+    }).catch(console.error)
 
     await hre.run("verify:verify", {
       address: instaAccountV2Proxy.address,
       constructorArguments: [implementationsMapping.address],
-    });
+    }).catch(console.error)
   } else {
     console.log("Contracts deployed to", hre.network.name);
   }
