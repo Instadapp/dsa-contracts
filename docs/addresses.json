@@ -140,5 +140,25 @@
           "InstaImplementationM1": "0x28846f4051EB05594B3fF9dE76b7B5bf00431155"
       }
     }
+  },
+  "scroll": {
+    "InstaIndex": "0x17417f8cA2f6e4Ad49F9B561a66D3dE7DdE6db1c",
+    "InstaList": "0xdF791173aFd1798718D7d1dd6E37366D1907bB02",
+    "versions": {
+      "v1": {
+        "InstaAccount": "0x497Bc53507DF17e60F731e9534cff74E8BC9DBb8",
+        "InstaConnectors": "0xcD7661f786D5fd6b87ee33497Dd9cCD3b2702012",
+        "InstaEvent": "0x8358A92707824476f0d788075D53b627E85490a7",
+        "InstaMemory": "0x89305678Cc853A929428fA6a97ab35bD864e3F14"
+      },
+      "v2": {
+        "InstaAccountV2": "0xC7Cb1dE2721BFC0E0DA1b9D526bCdC54eF1C0eFC",
+        "InstaConnectorsV2Proxy": "0x6f40d4A6237C257fff2dB00FA0510DeEECd303eb",
+        "InstaConnectorsV2": "0x171aeB3Ba7F12E67d3D3e2f523e6C02E1670cD33",
+        "InstaImplementations": "0x0204Cd037B2ec03605CFdFe482D8e257C765fA1B",
+        "InstaDefaultImplementation": "0xf70FE590f1C47e327302bd13E615fE7d9608fae9",
+        "InstaImplementationM1": "0x697860CeE594c577F18f71cAf3d8B68D913c7366"
+      }
+    }
   }
-  }
+}
