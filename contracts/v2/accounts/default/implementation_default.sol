@@ -39,16 +39,16 @@ contract Constants is Variables {
     // "magic value" according to EIP1271 https://eips.ethereum.org/EIPS/eip-1271#specification
     bytes4 internal constant EIP1271_MAGIC_VALUE = 0x1626ba7e;
 
-    function getChainID() internal pure returns (uint256) {
+    // chainId
+    uint256 public immutable CHAIN_ID;
+
+    constructor(address _instaIndex) {
+        instaIndex = _instaIndex;
         uint256 id;
         assembly {
             id := chainid()
         }
-        return id;
-    }
-
-    constructor(address _instaIndex) {
-        instaIndex = _instaIndex;
+        CHAIN_ID = id;
     }
 }
 
@@ -86,7 +86,7 @@ contract Record is Constants {
                     TYPE_HASH,
                     DOMAIN_SEPARATOR_NAME_HASHED,
                     DOMAIN_SEPARATOR_VERSION_HASHED,
-                    getChainID(),
+                    CHAIN_ID,
                     address(this)
                 )
             );
