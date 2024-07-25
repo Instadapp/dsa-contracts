@@ -23,7 +23,7 @@ contract Constants is Variables {
     uint256 public constant version = 2;
 
     // constants for EIP712 values
-    string public constant DOMAIN_SEPARATOR_NAME = "DeFi-Smart-Wallet";
+    string public constant DOMAIN_SEPARATOR_NAME = "DeFi-Smart-Account";
     string public constant DOMAIN_SEPARATOR_VERSION = "2.0.0";
 
     // hashed EIP712 values
