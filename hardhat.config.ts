@@ -49,7 +49,7 @@ function createConfig(network: string) {
 
 function getNetworkUrl(networkType: string) {
   if (networkType === "avalanche")
-    return "https://api.avax.network/ext/bc/C/rpc";
+    return "https://avalanche.drpc.org";
   else if (networkType === "polygon")
     return `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_ID}`;
   else if (networkType === "arbitrum")
@@ -85,9 +85,33 @@ const config = {
     },
     kovan: createConfig("kovan"),
     mainnet: createConfig("mainnet"),
-    matic: createConfig("polygon"),
-    avax: createConfig("avalanche"),
+    polygon: createConfig("polygon"),
+    avalanche: {
+      url: "https://avalanche.drpc.org",
+      accounts: !!PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : { mnemonic },
+      timeout: 150000,
+    },
     arbitrum: createConfig("arbitrum"),
+    optimism: {
+      url: "https://rpc.ankr.com/optimism",
+      accounts: !!PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : { mnemonic },
+      timeout: 150000,
+    },
+    base: {
+      url: "https://rpc.ankr.com/base",
+      accounts: !!PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : { mnemonic },
+      timeout: 150000,
+    },
+    scroll: {
+      url: "https://rpc.ankr.com/scroll",
+      accounts: !!PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : { mnemonic },
+      timeout: 150000,
+    },
+    gnosis: {
+      url: "https://rpc.ankr.com/gnosis",
+      accounts: !!PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : { mnemonic },
+      timeout: 150000,
+    }
   },
   solidity: {
     compilers: [
@@ -118,7 +142,35 @@ const config = {
     tests: "./test",
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN,
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY || "",
+      polygon: process.env.POLYGONSCAN_API_KEY || "",
+      arbitrumOne: process.env.ARBITRUM_API_KEY || "",
+      optimisticEthereum: process.env.OPTIMISIM_API_KEY || "",
+      base: process.env.BASE_API_KEY || "",
+      avalanche: process.env.SNOWTRACE_API_KEY || "",
+      scroll: process.env.SCROLL_API_KEY || "",
+      xdai: process.env.GNOSIS_API_KEY || "",
+      gnosis: process.env.GNOSIS_API_KEY || "",
+    },
+    customChains: [
+      {
+        network: "base",
+        chainId: 8453,
+        urls: {
+          apiURL: "https://api.basescan.org/api",
+          browserURL: "https://basescan.org/",
+        },
+      },
+      {
+        network: "scroll",
+        chainId: 534352,
+        urls: {
+          apiURL: "https://api.scrollscan.com/api",
+          browserURL: "https://scrollscan.com/",
+        },
+      },
+    ],
   },
   typechain: {
     outDir: "typechain",
