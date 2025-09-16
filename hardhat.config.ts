@@ -3,7 +3,7 @@ import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-web3";
 import "@nomiclabs/hardhat-etherscan";
-import "@tenderly/hardhat-tenderly";
+// import "@tenderly/hardhat-tenderly";
 import "hardhat-deploy";
 import "hardhat-deploy-ethers";
 import "@openzeppelin/hardhat-upgrades";
@@ -111,6 +111,11 @@ const config = {
       url: "https://rpc.ankr.com/gnosis",
       accounts: !!PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : { mnemonic },
       timeout: 150000,
+    },
+    plasma: {
+      url: "https://rpc.plasma.to",
+      accounts: !!PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : { mnemonic },
+      timeout: 150000,
     }
   },
   solidity: {
@@ -152,6 +157,7 @@ const config = {
       scroll: process.env.SCROLL_API_KEY || "",
       xdai: process.env.GNOSIS_API_KEY || "",
       gnosis: process.env.GNOSIS_API_KEY || "",
+      plasma: process.env.PLASMACAN_API_KEY || "placeholder",
     },
     customChains: [
       {
@@ -168,6 +174,14 @@ const config = {
         urls: {
           apiURL: "https://api.scrollscan.com/api",
           browserURL: "https://scrollscan.com/",
+        },
+      },
+      {
+        network: "plasma",
+        chainId: 1337,
+        urls: {
+          apiURL: "https://api.plasmascan.to/api",
+          browserURL: "https://plasmascan.to/",
         },
       },
     ],
