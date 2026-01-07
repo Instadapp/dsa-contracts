@@ -1,7 +1,7 @@
 import { BytesLike } from "ethers";
 import hre from "hardhat";
 const { web3, ethers } = hre;
-import instaDeployContract from "./deployContract";
+import instaDeployContract from "./deployContract.js";
 
 async function main() {
   const [deployer] = await ethers.getSigners();

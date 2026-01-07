@@ -1,0 +1,206 @@
+// // Buidler
+import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-waffle";
+import "@nomiclabs/hardhat-web3";
+import "@nomiclabs/hardhat-etherscan";
+// import "@tenderly/hardhat-tenderly";
+import "hardhat-deploy";
+import "hardhat-deploy-ethers";
+import "@openzeppelin/hardhat-upgrades";
+import "@typechain/hardhat";
+import "hardhat-gas-reporter";
+import "solidity-coverage";
+
+import { resolve } from "path";
+import { config as dotenvConfig } from "dotenv";
+import { HardhatUserConfig } from "hardhat/config";
+import { NetworkUserConfig } from "hardhat/types";
+import { utils } from "ethers";
+import Web3 from "web3";
+
+dotenvConfig({ path: resolve(__dirname, "./.env") });
+
+const chainIds = {
+  ganache: 1337,
+  hardhat: 31337,
+  mainnet: 1,
+  avalanche: 43114,
+  polygon: 137,
+  arbitrum: 42161,
+  bnb: 56,
+};
+
+const ALCHEMY_ID = process.env.ALCHEMY_ID;
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const ETHERSCAN_API = process.env.ETHERSCAN_API_KEY;
+const POLYGONSCAN_API = process.env.POLYGON_API_KEY;
+const ARBISCAN_API = process.env.ARBISCAN_API_KEY;
+const SNOWTRACE_API = process.env.SNOWTRACE_API_KEY;
+const BSCSCAN_API = process.env.BSCSCAN_API_KEY;
+
+const mnemonic =
+  process.env.MNEMONIC ??
+  "test test test test test test test test test test test junk";
+
+function createConfig(network: string) {
+  return {
+    url: getNetworkUrl(network),
+    accounts: !!PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : { mnemonic },
+    timeout: 150000,
+  };
+}
+
+function getNetworkUrl(networkType: string) {
+  if (networkType === "avalanche")
+    return "https://avalanche.drpc.org";
+  else if (networkType === "polygon")
+    return `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_ID}`;
+  else if (networkType === "arbitrum")
+    return `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_ID}`;
+  else if (networkType === "kovan")
+    return `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_ID}`;
+  else return `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_ID}`;
+}
+const INSTA_MASTER = "0xb1DC62EC38E6E3857a887210C38418E4A17Da5B2";
+
+// ================================= CONFIG =========================================
+const config = {
+  defaultNetwork: "hardhat",
+  gasReporter: {
+    enabled: true,
+    currency: "ETH",
+    coinmarketcap: process.env.COINMARKETCAP_API_KEY
+  },
+  tenderly: {
+    project: "team-development",
+    username: "InstaDApp",
+    forkNetwork: "1",
+  },
+  networks: {
+    hardhat: {
+      forking: {
+        url: String(getNetworkUrl(String(process.env.networkType))),
+        // blockNumber: 11739260,`
+        blockNumber: 15010000,
+      },
+      blockGasLimit: 12000000,
+      masterAddress: INSTA_MASTER,
+    },
+    kovan: createConfig("kovan"),
+    mainnet: createConfig("mainnet"),
+    polygon: createConfig("polygon"),
+    avalanche: {
+      url: "https://avalanche.drpc.org",
+      accounts: !!PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : { mnemonic },
+      timeout: 150000,
+    },
+    arbitrum: createConfig("arbitrum"),
+    optimism: {
+      url: "https://rpc.ankr.com/optimism",
+      accounts: !!PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : { mnemonic },
+      timeout: 150000,
+    },
+    base: {
+      url: "https://rpc.ankr.com/base",
+      accounts: !!PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : { mnemonic },
+      timeout: 150000,
+    },
+    scroll: {
+      url: "https://rpc.ankr.com/scroll",
+      accounts: !!PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : { mnemonic },
+      timeout: 150000,
+    },
+    gnosis: {
+      url: "https://rpc.ankr.com/gnosis",
+      accounts: !!PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : { mnemonic },
+      timeout: 150000,
+    },
+    plasma: {
+      url: "https://rpc.plasma.to",
+      accounts: !!PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : { mnemonic },
+      timeout: 150000,
+    },
+    bsc: {
+      url: "https://binance.llamarpc.com",
+      accounts: !!PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : { mnemonic },
+      timeout: 150000,
+    }
+  },
+  solidity: {
+    compilers: [
+      {
+        version: "0.6.0",
+        settings: {
+          optimizer: { enabled: false },
+        },
+      },
+      {
+        version: "0.6.8",
+        settings: {
+          optimizer: { enabled: false },
+        },
+      },
+      {
+        version: "0.7.0",
+        settings: {
+          optimizer: { enabled: false },
+        },
+      },
+    ],
+  },
+  paths: {
+    artifacts: "./artifacts",
+    cache: "./cache",
+    sources: "./contracts",
+    tests: "./test",
+  },
+  etherscan: {
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY || "",
+      polygon: process.env.POLYGONSCAN_API_KEY || "",
+      arbitrumOne: process.env.ARBITRUM_API_KEY || "",
+      optimisticEthereum: process.env.OPTIMISIM_API_KEY || "",
+      base: process.env.BASE_API_KEY || "",
+      avalanche: process.env.SNOWTRACE_API_KEY || "",
+      scroll: process.env.SCROLL_API_KEY || "",
+      xdai: process.env.GNOSIS_API_KEY || "",
+      gnosis: process.env.GNOSIS_API_KEY || "",
+      plasma: process.env.PLASMACAN_API_KEY || "placeholder",
+      bsc: process.env.ETHERSCAN_V2_KEY || "",
+    },
+    customChains: [
+      {
+        network: "base",
+        chainId: 8453,
+        urls: {
+          apiURL: "https://api.basescan.org/api",
+          browserURL: "https://basescan.org/",
+        },
+      },
+      {
+        network: "scroll",
+        chainId: 534352,
+        urls: {
+          apiURL: "https://api.scrollscan.com/api",
+          browserURL: "https://scrollscan.com/",
+        },
+      },
+      {
+        network: "plasma",
+        chainId: 1337,
+        urls: {
+          apiURL: "https://api.plasmascan.to/api",
+          browserURL: "https://plasmascan.to/",
+        },
+      },
+    ],
+  },
+  typechain: {
+    outDir: "typechain",
+    target: "ethers-v5",
+  },
+  mocha: {
+    timeout: 10000 * 1000, // 10,000 seconds
+  },
+};
+export default config;

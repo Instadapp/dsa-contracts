@@ -1,20 +1,21 @@
 // tsconfig.json
 {
     "compilerOptions": {
-        "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
         "lib": [
-            "es5",
-            "es6"
+          "es2023"
         ],
-        "module": "commonjs",
-        "moduleResolution": "node",
-        "outDir": "dist",
-        "resolveJsonModule": true,
-        "noImplicitAny": false,
-        "sourceMap": true,
+        "module": "node16",
+        "target": "es2022",
         "strict": true,
-        "target": "es5",
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "moduleResolution": "node16",
+        "outDir": "dist",
+        "resolveJsonModule": true
+    },
+    "ts-node": {
+        "esm": true,
+        "experimentalSpecifierResolution": "node"
     },
     "exclude": [
         "artifacts",

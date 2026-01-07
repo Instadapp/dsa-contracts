@@ -41,4 +41,6 @@ artifacts
 typechain
 .openzeppelin
 flatten
+typechain
+types
 
