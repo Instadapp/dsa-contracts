@@ -140,5 +140,47 @@
           "InstaImplementationM1": "0x28846f4051EB05594B3fF9dE76b7B5bf00431155"
       }
     }
+  },
+  "scroll": {
+    "InstaIndex": "0x17417f8cA2f6e4Ad49F9B561a66D3dE7DdE6db1c",
+    "InstaList": "0xdF791173aFd1798718D7d1dd6E37366D1907bB02",
+    "versions": {
+      "v1": {
+        "InstaAccount": "0x497Bc53507DF17e60F731e9534cff74E8BC9DBb8",
+        "InstaConnectors": "0xcD7661f786D5fd6b87ee33497Dd9cCD3b2702012",
+        "InstaEvent": "0x8358A92707824476f0d788075D53b627E85490a7",
+        "InstaMemory": "0x89305678Cc853A929428fA6a97ab35bD864e3F14"
+      },
+      "v2": {
+        "InstaAccountV2": "0xC7Cb1dE2721BFC0E0DA1b9D526bCdC54eF1C0eFC",
+        "InstaConnectorsV2Proxy": "0x6f40d4A6237C257fff2dB00FA0510DeEECd303eb",
+        "InstaConnectorsV2": "0x171aeB3Ba7F12E67d3D3e2f523e6C02E1670cD33",
+        "InstaImplementations": "0x0204Cd037B2ec03605CFdFe482D8e257C765fA1B",
+        "InstaDefaultImplementation": "0xf70FE590f1C47e327302bd13E615fE7d9608fae9",
+        "InstaImplementationM1": "0x697860CeE594c577F18f71cAf3d8B68D913c7366",
+        "InstaConnectorsV2EmptyImplementation": "0x31de2088f38ed7f8a4231de03973814eda1f8773"
+      }
+    }
+  },
+  "gnosis": {
+    "InstaIndex": "0x6CE3e607C808b4f4C26B7F6aDAeB619e49CAbb25",
+    "InstaList": "0x9926955e0Dd681Dc303370C52f4Ad0a4dd061687",
+    "versions": {
+      "v1": {
+        "InstaAccount": "0xA9B99766E6C676Cf1975c0D3166F96C0848fF5ad",
+        "InstaConnectors": "0x839c2D3aDe63DF5b0b8F3E57D5e145057Ab41556",
+        "InstaEvent": "0xA7c805e4ad4E7B51d2a1eB442B2014a9B63D3703",
+        "InstaMemory": "0x3254Ce8f5b1c82431B8f21Df01918342215825C2"
+      },
+      "v2": {
+        "InstaAccountV2": "0x0a0a82D2F86b9E46AE60E22FCE4e8b916F858Ddc",
+        "InstaConnectorsV2Proxy": "0x6C7256cf7C003dD85683339F75DdE9971f98f2FD",
+        "InstaConnectorsV2": "0x127d8cD0E2b2E0366D522DeA53A787bfE9002C14",
+        "InstaImplementations": "0x01fEF4d2B513C9F69E34b2f93Ef707FA9Ff60109",
+        "InstaDefaultImplementation": "0x39d3d5e7c11D61E072511485878dd84711c19d4A",
+        "InstaImplementationM1": "0x28846f4051EB05594B3fF9dE76b7B5bf00431155",
+        "InstaConnectorsV2EmptyImplementation": "0xA4BF319968986D2352FA1c550D781bBFCCE3FcaB"
+      }
+    }
   }
-  }
+}
